@@ -1,0 +1,21 @@
+{
+  "name": "@qodewk/action",
+  "version": "0.1.0",
+  "description": "GitHub Action to generate privacy-safe digital receipts for PRs",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@actions/core": "^1.11.1",
+    "@actions/github": "^6.0.0",
+    "@qodewk/core": "workspace:*",
+    "@qodewk/protocol": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.10",
+    "typescript": "^5.8.2"
+  }
+}

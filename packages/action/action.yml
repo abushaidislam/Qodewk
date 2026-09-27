@@ -1,0 +1,42 @@
+name: "Qodewk Digital Receipt"
+description: "Universal telemetry and digital receipt generator for the AI coding agent era"
+author: "Qodewk"
+inputs:
+  github-token:
+    description: "GitHub token for commenting on pull requests"
+    required: false
+    default: "${{ github.token }}"
+  base-ref:
+    description: "Target base git ref or commit SHA (e.g. origin/main)"
+    required: false
+    default: "${{ github.base_ref }}"
+  head-sha:
+    description: "Head commit SHA"
+    required: false
+    default: "${{ github.sha }}"
+  publish-cloud:
+    description: "Whether to publish receipt metadata to Qodewk cloud"
+    required: false
+    default: "true"
+  api-url:
+    description: "Qodewk API ingestion endpoint"
+    required: false
+    default: "https://qodewk.dev/api/receipts"
+  comment-pr:
+    description: "Whether to upsert a sticky comment on the pull request"
+    required: false
+    default: "true"
+outputs:
+  receipt-id:
+    description: "Generated receipt ID"
+  receipt-url:
+    description: "Public URL of digital receipt"
+  cost:
+    description: "Estimated AI cost in USD"
+  tokens:
+    description: "Total token consumption"
+  markdown:
+    description: "Formatted Markdown receipt"
+runs:
+  using: "node20"
+  main: "dist/index.js"

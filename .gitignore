@@ -36,3 +36,6 @@ Desktop.ini
 # Testing & Coverage
 coverage/
 .nyc_output/
+
+# Trubo cach
+.turbo

@@ -1,0 +1,111 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --canvas: #faf9f5;
+    --surface-soft: #f5f0e8;
+    --surface-card: #efe9de;
+    --surface-cream-strong: #e8e0d2;
+    --surface-dark: #181715;
+    --surface-dark-elevated: #252320;
+    --surface-dark-soft: #1f1e1b;
+    --primary: #cc785c;
+    --primary-active: #a9583e;
+    --primary-disabled: #e6dfd8;
+    --ink: #141413;
+    --body: #3d3d3a;
+    --body-strong: #252523;
+    --muted: #6c6a64;
+    --muted-soft: #8e8b82;
+    --hairline: #e6dfd8;
+    --hairline-soft: #ebe6df;
+    --accent-teal: #5db8a6;
+    --accent-amber: #e8a55a;
+    --success: #5db872;
+    --on-primary: #ffffff;
+    --on-dark: #faf9f5;
+    --on-dark-soft: #a09d96;
+  }
+
+  body {
+    background-color: var(--canvas);
+    color: var(--body);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+.font-serif-display {
+  font-family: 'Cormorant Garamond', 'Tiempos Headline', 'Copernicus', Georgia, serif;
+  letter-spacing: -0.03em;
+  font-weight: 400;
+}
+
+.font-mono-receipt {
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Authentic Thermal Receipt Jagged Edge */
+.receipt-serrated-top {
+  position: relative;
+}
+.receipt-serrated-top::before {
+  content: "";
+  position: absolute;
+  top: -10px;
+  left: 0;
+  right: 0;
+  height: 10px;
+  background-image: repeating-linear-gradient(
+    45deg,
+    var(--surface-card) 0px,
+    var(--surface-card) 7px,
+    transparent 7px,
+    transparent 14px
+  ), repeating-linear-gradient(
+    -45deg,
+    var(--surface-card) 0px,
+    var(--surface-card) 7px,
+    transparent 7px,
+    transparent 14px
+  );
+  background-position: left top;
+  background-repeat: repeat-x;
+  background-size: 14px 10px;
+}
+
+.receipt-serrated-bottom {
+  position: relative;
+}
+.receipt-serrated-bottom::after {
+  content: "";
+  position: absolute;
+  bottom: -10px;
+  left: 0;
+  right: 0;
+  height: 10px;
+  background-image: repeating-linear-gradient(
+    135deg,
+    var(--surface-card) 0px,
+    var(--surface-card) 7px,
+    transparent 7px,
+    transparent 14px
+  ), repeating-linear-gradient(
+    -135deg,
+    var(--surface-card) 0px,
+    var(--surface-card) 7px,
+    transparent 7px,
+    transparent 14px
+  );
+  background-position: left bottom;
+  background-repeat: repeat-x;
+  background-size: 14px 10px;
+}
+
+/* Subtle thermal paper texture */
+.paper-texture {
+  background-color: var(--surface-card);
+  box-shadow: 0 4px 20px -2px rgba(20, 20, 19, 0.06), 0 2px 6px -1px rgba(20, 20, 19, 0.04);
+}

@@ -1,0 +1,23 @@
+{
+  "name": "qodewk",
+  "version": "0.1.0",
+  "type": "module",
+  "bin": {
+    "qodewk": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@qodewk/core": "workspace:*",
+    "@qodewk/pricing": "workspace:*",
+    "@qodewk/protocol": "workspace:*",
+    "commander": "^13.1.0",
+    "picocolors": "^1.1.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.10",
+    "typescript": "^5.8.2"
+  }
+}
