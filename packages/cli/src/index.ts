@@ -79,6 +79,13 @@ program
         model: options.model
       });
 
+      if (process.env.QODEWK_TELEMETRY === "off") {
+        console.log(pc.yellow("\n⚠️ Cloud publishing is disabled because QODEWK_TELEMETRY=off."));
+        console.log(pc.dim("Telemetry remains strictly stored in local SQLite (~/.qodewk/state.db).\n"));
+        renderTerminalReceipt(receipt);
+        return;
+      }
+
       const endpoint = process.env.QODEWK_API_URL || "https://qodewk.dev/api/receipts";
       console.log(pc.dim(`Publishing receipt ${receipt.receipt.id} to ${endpoint}...`));
 
@@ -184,6 +191,9 @@ function renderTerminalReceipt(receipt: ReceiptV1, publicUrl?: string) {
   const urlToDisplay = publicUrl || `https://qodewk.dev/r/${receipt.receipt.id}`;
   console.log(`  |   ${pc.underline(pc.cyan(urlToDisplay.slice(0, 48))).padEnd(59)}|`);
   console.log("  |                                                      |");
+  if (process.env.QODEWK_TELEMETRY === "off") {
+    console.log(`  |   ${teal("[✓]")} QODEWK_TELEMETRY=off (Cloud sync disabled)        |`);
+  }
   console.log(`  |   ${green("[✓]")} Source code was never uploaded to Qodewk        |`);
   console.log(pc.bold(coral("  \\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/")));
   console.log("");
