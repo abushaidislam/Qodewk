@@ -1,11 +1,10 @@
 {
-  "name": "@abushaidislam/qodewk",
+  "name": "qodewk",
   "version": "0.1.0",
   "description": "Universal telemetry and digital receipt generator for the AI coding agent era",
   "type": "module",
   "bin": {
-    "qodewk": "./dist/index.js",
-    "qodewk-cli": "./dist/index.js"
+    "qodewk": "./dist/index.js"
   },
   "files": [
     "dist",
@@ -31,7 +30,7 @@
     "developer-receipt",
     "llm-cost"
   ],
-  "author": "abushaidislam",
+  "author": "Qodewk Contributors",
   "license": "MIT",
   "homepage": "https://qodewk.dev",
   "repository": {
