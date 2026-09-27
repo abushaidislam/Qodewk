@@ -33,15 +33,15 @@ npx qodewk audit --base origin/main --head HEAD --format markdown --out receipt.
   |                   Q O D E W K                        |
   |             *** PROOF OF SHIPMENT ***                |
   |                                                      |
-  | ID:     rec_dd56d34a6bb4ff290b1d DATE: 2026-09-27   |
+  | ID:     rec_dd56d34a6bb4ff290b1d DATE: 2026-09-27    |
   | REPO:   qodewk             BRANCH: master            |
   | ==================================================== |
   | ITEMS CHANGED                                    QTY |
   | ---------------------------------------------------- |
-  | Files Touched                                       40 |
-  | Lines Inserted                                  + 3952 |
-  | Lines Deleted                                      - 0 |
-  | Net Code Delta                                  + 3952 |
+  | Files Touched                                     40 |
+  | Lines Inserted                                + 3952 |
+  | Lines Deleted                                    - 0 |
+  | Net Code Delta                                + 3952 |
   | ---------------------------------------------------- |
   | AI TELEMETRY                                         |
   | Provider: anthropic · claude-3-7-sonnet              |
@@ -53,9 +53,9 @@ npx qodewk audit --base origin/main --head HEAD --format markdown --out receipt.
   | ==================================================== |
   |                                                      |
   |   ||| | ||||| ||| |||| |||||| |||| ||| ||||||| |||   |
-  |   https://qodewk.dev/r/rec_dd56d34a6bb4ff290b1d830  |
+  |   https://qodewk.dev/r/rec_dd56d34a6bb4ff290b1d830   |
   |                                                      |
-  |   [✓] Source code was never uploaded to Qodewk        |
+  |   [✓] Source code was never uploaded to Qodewk       |
   \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
 ```
 
