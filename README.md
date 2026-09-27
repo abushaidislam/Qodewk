@@ -3,6 +3,7 @@
 > **Universal telemetry and digital receipt generator for autonomous software development.**  
 > Built for Claude Code, Cursor, Copilot, Codex, and multi-agent Git workflows.
 
+[![npm version](https://img.shields.io/npm/v/qodewk.svg?color=cc785c&label=npm%20package)](https://www.npmjs.com/package/qodewk)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Built with Turborepo](https://img.shields.io/badge/monorepo-Turborepo-ef4444.svg)](https://turbo.build)
 [![Design: Claude Warm Editorial](https://img.shields.io/badge/design-Claude%20Editorial-cc785c.svg)](docs/design-system.md)
@@ -11,7 +12,7 @@
 
 ## ⚡️ Quickstart (Zero Install)
 
-Generate a digital proof-of-work receipt directly from any Git repository:
+Run directly from any Git repository without installing any packages globally:
 
 ```bash
 # Generate monospace thermal receipt in terminal
@@ -57,6 +58,56 @@ npx qodewk audit --base origin/main --head HEAD --format markdown --out receipt.
   |                                                      |
   |   [✓] Source code was never uploaded to Qodewk       |
   \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
+```
+
+---
+
+## 💻 CLI Command Reference
+
+| Command / Option | Description | Output / Example |
+|---|---|---|
+| `npx qodewk` | Inspect latest Git commit and generate monospace thermal receipt | Monospace terminal box |
+| `npx qodewk --json` | Export machine-readable telemetry conforming to canonical `ReceiptV1` schema | Formatted JSON output |
+| `npx qodewk share` | Publish privacy-safe metadata to Qodewk Cloud and generate short link | `https://qodewk.dev/r/rec_...` |
+| `npx qodewk audit --base <branch>` | Calculate aggregate diff and telemetry across an entire PR branch range | Git revision delta receipt |
+| `npx qodewk -f markdown -o receipt.md` | Export sticky Markdown receipt directly formatted for GitHub PR comments | File `receipt.md` |
+| `npx qodewk -p <provider> -m <model>` | Override detected provider & frontier model pricing rate card | Custom model cost estimate |
+| `npx qodewk --anon` | Redact sensitive repository and branch identifiers | Privacy-hardened receipt |
+
+---
+
+## 🤖 GitHub Action (Automated PR Sticky Receipts)
+
+Add Qodewk directly to your repository workflow to generate verifiable shipment receipts on every Pull Request:
+
+```yaml
+# .github/workflows/qodewk.yml
+name: "Qodewk Telemetry Receipt"
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  audit-receipt:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Qodewk Audit
+        uses: abushaidislam/Qodewk/packages/action@v0.1.6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          base-ref: origin/${{ github.base_ref }}
+          head-sha: ${{ github.sha }}
+          publish-cloud: "true"
 ```
 
 ---
@@ -122,8 +173,8 @@ pnpm build
 pnpm --filter web dev
 # App is available at http://localhost:3000
 
-# Run CLI directly
-node packages/cli/dist/index.js
+# Run CLI standalone bundle directly
+node packages/cli/dist/index.cjs
 ```
 
 ---

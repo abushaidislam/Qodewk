@@ -1,5 +1,6 @@
 import React from "react";
 import { ThermalReceipt } from "@/components/ThermalReceipt";
+import { CliShowcase } from "@/components/CliShowcase";
 import { ReceiptV1 } from "@qodewk/protocol";
 import { Terminal, Shield, ArrowRight, GitCommit, Cpu, Zap } from "lucide-react";
 import Link from "next/link";
@@ -163,64 +164,8 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 3. Dark Terminal Product Chrome Mockup (#181715) */}
-      <section className="max-w-6xl mx-auto">
-        <div className="bg-[#181715] text-[#faf9f5] rounded-2xl p-8 md:p-12 border border-[#252320] shadow-xl">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-            <div className="lg:col-span-5 space-y-4">
-              <span className="text-xs font-mono uppercase tracking-wider text-[#cc785c]">
-                Non-Blocking CLI Workflow
-              </span>
-              <h2 className="font-serif-display text-3xl md:text-4xl text-[#faf9f5]">
-                Generate receipts in terminal or CI.
-              </h2>
-              <p className="text-sm text-[#a09d96] leading-relaxed">
-                Run <code className="text-[#faf9f5] font-mono">qodewk</code> right after an agent finishes a task. Instantly output ASCII receipts, machine-readable JSON, or shareable web URLs.
-              </p>
-              <div className="pt-2">
-                <a
-                  href="https://github.com/qodewk/qodewk"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-2 text-sm text-[#cc785c] hover:underline font-mono"
-                >
-                  <span>Explore on GitHub</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </a>
-              </div>
-            </div>
-
-            <div className="lg:col-span-7 bg-[#1f1e1b] rounded-xl border border-[#252320] p-5 font-mono text-xs text-[#a09d96] overflow-x-auto">
-              <div className="flex items-center gap-1.5 pb-3 border-b border-[#252320] text-[#6c6a64] mb-3">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#c64545]"></span>
-                <span className="w-2.5 h-2.5 rounded-full bg-[#d4a017]"></span>
-                <span className="w-2.5 h-2.5 rounded-full bg-[#5db872]"></span>
-                <span className="ml-2 text-[11px]">terminal — qodewk</span>
-              </div>
-              <pre className="text-[#faf9f5] leading-relaxed">
-{`$ npx qodewk
-
-  /\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\
-  |                   Q O D E W K                        |
-  |             *** PROOF OF SHIPMENT ***                |
-  | ID: rec_01J8Y29K4Z00ABC      DATE: 2026-09-27        |
-  | REPO: hyper-engine           BRANCH: feat/auth-v2    |
-  | ==================================================== |
-  | Files Touched:   14   | Lines: +381 / -72            |
-  | AI Telemetry:    Claude Code · Opus 4                |
-  | Tokens:          ~183K (60% cached)                  |
-  | ESTIMATED COST:  ~$2.41 (74% confidence)             |
-  |                                                      |
-  |   ||| | ||||| ||| |||| |||||| |||| ||| ||||||| |||   |
-  |   https://qodewk.dev/r/rec_01J8Y29K4Z00ABC           |
-  |                                                      |
-  |   [✓] Source code was never uploaded to Qodewk        |
-  \\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/`}
-              </pre>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* 3. Interactive CLI Commands & Quickstart Showcase */}
+      <CliShowcase />
 
       {/* 4. Coral Full-Bleed Callout Band (#cc785c) */}
       <section className="max-w-6xl mx-auto">
@@ -231,15 +176,30 @@ export default function HomePage() {
           <p className="max-w-xl mx-auto text-white/90 text-sm md:text-base">
             Free, open-source, and local-first. Works with Claude Code, Cursor, Windsurf, Copilot, and manual Git workflows.
           </p>
-          <div className="pt-2">
+          <div className="pt-2 flex flex-wrap items-center justify-center gap-4">
+            <div className="bg-[#181715] text-[#faf9f5] font-mono text-xs px-4 py-3 rounded-lg border border-[#252320]">
+              <span className="text-[#8e8b82] mr-2">$</span>
+              <span>npx qodewk</span>
+            </div>
+
             <a
-              href="https://github.com/qodewk/qodewk"
+              href="https://github.com/abushaidislam/Qodewk"
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-2 bg-[#181715] hover:bg-[#252320] text-white px-6 py-3.5 rounded-lg text-sm font-medium transition-colors shadow-lg"
+              className="inline-flex items-center gap-2 bg-[#181715] hover:bg-[#252320] text-white px-6 py-3 rounded-lg text-sm font-medium transition-colors shadow-lg"
             >
               <Terminal className="w-4 h-4" />
-              <span>Get Started in 30 Seconds</span>
+              <span>Star on GitHub</span>
+            </a>
+
+            <a
+              href="https://www.npmjs.com/package/qodewk"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-5 py-3 rounded-lg text-sm font-medium transition-colors"
+            >
+              <span>View on NPM</span>
+              <ArrowRight className="w-4 h-4" />
             </a>
           </div>
         </div>

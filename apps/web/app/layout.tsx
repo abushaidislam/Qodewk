@@ -51,19 +51,19 @@ export default function RootLayout({
             </a>
 
             <nav className="flex items-center gap-6 text-sm font-medium">
+              <a href="#cli-guide" className="text-[#6c6a64] hover:text-[#141413] transition-colors">
+                CLI & NPM
+              </a>
               <a href="#how-it-works" className="text-[#6c6a64] hover:text-[#141413] transition-colors">
                 How It Works
               </a>
-              <a href="#receipt-protocol" className="text-[#6c6a64] hover:text-[#141413] transition-colors">
-                Receipt Protocol
-              </a>
               <a
-                href="https://github.com/qodewk/qodewk"
+                href="https://github.com/abushaidislam/Qodewk"
                 target="_blank"
                 rel="noreferrer"
                 className="bg-[#cc785c] hover:bg-[#a9583e] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm"
               >
-                Install CLI
+                GitHub
               </a>
             </nav>
           </div>
