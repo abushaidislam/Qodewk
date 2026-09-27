@@ -11,7 +11,7 @@ const program = new Command();
 program
   .name("qodewk")
   .description("Universal telemetry and digital receipt generator for the AI coding agent era")
-  .version("0.1.0")
+  .version("0.1.6")
   .option("-j, --json", "Output receipt in machine-readable JSON format")
   .option("-f, --format <format>", "Output format (terminal, json, markdown)", "terminal")
   .option("-o, --out <path>", "Write receipt output to specified file path")
