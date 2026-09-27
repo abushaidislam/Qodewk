@@ -1,13 +1,30 @@
-import { DatabaseSync } from "node:sqlite";
+import { createRequire } from "node:module";
 import * as path from "node:path";
 import * as fs from "node:fs";
 import * as os from "node:os";
 import { ReceiptV1 } from "@qodewk/protocol";
 
+function getDatabaseSyncClass(): any {
+  try {
+    const req = createRequire(import.meta.url);
+    const sqlite = req("node:sqlite");
+    return sqlite.DatabaseSync;
+  } catch {
+    return null;
+  }
+}
+
+const DatabaseSync = getDatabaseSyncClass();
+
 export class LocalStateDB {
-  private db: DatabaseSync;
+  private db: any;
 
   constructor(inMemory: boolean = false) {
+    if (!DatabaseSync) {
+      this.db = null;
+      return;
+    }
+
     if (inMemory || process.env.CI === "true" || process.env.QODEWK_NO_DB === "true") {
       this.db = new DatabaseSync(":memory:");
     } else {
@@ -23,6 +40,7 @@ export class LocalStateDB {
   }
 
   private migrate() {
+    if (!this.db) return;
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS repos (
         id TEXT PRIMARY KEY,
@@ -60,6 +78,7 @@ export class LocalStateDB {
   }
 
   public saveReceipt(receipt: ReceiptV1, claimToken?: string) {
+    if (!this.db) return;
     const stmt = this.db.prepare(`
       INSERT OR REPLACE INTO receipts (id, public_id, repo_id, head_sha, base_sha, payload_json, claim_token, sync_status)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
@@ -78,12 +97,15 @@ export class LocalStateDB {
   }
 
   public getReceipt(id: string): ReceiptV1 | null {
+    if (!this.db) return null;
     const row = this.db.prepare("SELECT payload_json FROM receipts WHERE id = ? OR public_id = ?").get(id, id) as { payload_json: string } | undefined;
     if (!row) return null;
     return JSON.parse(row.payload_json) as ReceiptV1;
   }
 
   public close() {
-    this.db.close();
+    if (this.db) {
+      this.db.close();
+    }
   }
 }

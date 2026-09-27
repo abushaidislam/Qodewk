@@ -1,11 +1,9 @@
 {
   "name": "qodewk",
-  "version": "0.1.1",
+  "version": "0.1.4",
   "description": "Universal telemetry and digital receipt generator for the AI coding agent era",
   "type": "module",
-  "bin": {
-    "qodewk": "./dist/index.js"
-  },
+  "bin": "dist/index.cjs",
   "files": [
     "dist",
     "README.md",
@@ -35,7 +33,7 @@
   "homepage": "https://qodewk.dev",
   "repository": {
     "type": "git",
-    "url": "https://github.com/abushaidislam/Qodewk.git"
+    "url": "git+https://github.com/abushaidislam/Qodewk.git"
   },
   "bugs": {
     "url": "https://github.com/abushaidislam/Qodewk/issues"
