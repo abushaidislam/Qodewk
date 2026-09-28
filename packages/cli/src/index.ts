@@ -3,6 +3,7 @@
 import * as fs from "node:fs";
 import { Command } from "commander";
 import pc from "picocolors";
+import { renderTerminalQr } from "./qr.js";
 import { generateReceipt, formatMarkdownReceipt, LocalStateDB } from "@qodewk/core";
 import { ReceiptV1 } from "@qodewk/protocol";
 
@@ -21,6 +22,7 @@ program
   .option("--today", "Harvest agent footprints for today")
   .option("--platform <platform>", "Filter agent platform (antigravity, claude, cursor, all)")
   .option("--anon", "Anonymize branch name in output")
+  .option("--barcode", "Render 1D barcode simulation instead of scannable 2D QR code")
   .action(async (options) => {
     try {
       const since = options.today ? "today" : options.since;
@@ -41,7 +43,7 @@ program
         // Fallback for CI or read-only environments
       }
 
-      outputReceipt(receipt, options);
+      await outputReceipt(receipt, options);
     } catch (err: any) {
       console.error(pc.red(`Error generating receipt: ${err.message}`));
       process.exit(1);
@@ -57,6 +59,7 @@ program
   .option("-o, --out <path>", "Write receipt output to specified file path")
   .option("-p, --provider <provider>", "Specify AI provider")
   .option("-m, --model <model>", "Specify AI model")
+  .option("--barcode", "Render 1D barcode simulation instead of scannable 2D QR code")
   .action(async (options) => {
     try {
       const receipt = await generateReceipt({
@@ -66,7 +69,7 @@ program
         model: options.model
       });
 
-      outputReceipt(receipt, options);
+      await outputReceipt(receipt, options);
     } catch (err: any) {
       console.error(pc.red(`Error auditing git range: ${err.message}`));
       process.exit(1);
@@ -78,6 +81,7 @@ program
   .description("Publish privacy-safe receipt to Qodewk cloud and get a shareable URL")
   .option("-p, --provider <provider>", "Specify AI provider")
   .option("-m, --model <model>", "Specify AI model")
+  .option("--barcode", "Render 1D barcode simulation instead of scannable 2D QR code")
   .action(async (options) => {
     try {
       const receipt = await generateReceipt({
@@ -88,7 +92,7 @@ program
       if (process.env.QODEWK_TELEMETRY === "off") {
         console.log(pc.yellow("\n⚠️ Cloud publishing is disabled because QODEWK_TELEMETRY=off."));
         console.log(pc.dim("Telemetry remains strictly stored in local SQLite (~/.qodewk/state.db).\n"));
-        renderTerminalReceipt(receipt);
+        await renderTerminalReceipt(receipt, undefined, options.barcode);
         return;
       }
 
@@ -115,10 +119,10 @@ program
         db.saveReceipt(receipt, data.claimToken);
         db.close();
 
-        renderTerminalReceipt(receipt, data.url, options.qr);
+        await renderTerminalReceipt(receipt, data.url, options.barcode);
       } catch (networkErr: any) {
         console.log(pc.yellow(`\nCould not reach cloud API (${networkErr.message}). Rendered locally:`));
-        renderTerminalReceipt(receipt, undefined, options.qr);
+        await renderTerminalReceipt(receipt, undefined, options.barcode);
       }
     } catch (err: any) {
       console.error(pc.red(`Error sharing receipt: ${err.message}`));
@@ -134,7 +138,7 @@ const ansiHex = (hexColor: string) => {
   return (text: string) => `\x1b[38;2;${r};${g};${b}m${text}\x1b[39m`;
 };
 
-function outputReceipt(receipt: ReceiptV1, options: { json?: boolean; format?: string; out?: string; qr?: boolean }, publicUrl?: string) {
+async function outputReceipt(receipt: ReceiptV1, options: { json?: boolean; format?: string; out?: string; barcode?: boolean }, publicUrl?: string) {
   let content = "";
   const format = options.json ? "json" : options.format || "terminal";
 
@@ -150,7 +154,7 @@ function outputReceipt(receipt: ReceiptV1, options: { json?: boolean; format?: s
   }
 
   if (format === "terminal" && !options.out) {
-    renderTerminalReceipt(receipt, publicUrl, options.qr);
+    await renderTerminalReceipt(receipt, publicUrl, options.barcode);
   } else if (format !== "terminal" && !options.out) {
     console.log(content);
   }
@@ -164,7 +168,7 @@ const visibleWidth = (str: string): number => {
   return stripAnsi(str).length;
 };
 
-function renderTerminalReceipt(receipt: ReceiptV1, publicUrl?: string, showQr?: boolean) {
+async function renderTerminalReceipt(receipt: ReceiptV1, publicUrl?: string, useBarcode?: boolean) {
   const coral = ansiHex("#cc785c");
   const green = ansiHex("#5db872");
   const red = ansiHex("#c64545");
@@ -263,17 +267,31 @@ function renderTerminalReceipt(receipt: ReceiptV1, publicUrl?: string, showQr?: 
   const urlToDisplay = publicUrl || `${baseUrl}/r/${receipt.receipt.id}`;
   const displayHost = baseUrl.replace(/^https?:\/\//, "");
 
-  // Deterministic Code 128 barcode pattern generated from unique receipt ID
-  const barChars = ["||| ", "| | ", "|||| ", "|| | ", "|| || "];
-  let barcodePattern = "||| ";
-  for (let i = 0; i < 7; i++) {
-    const charCode = receipt.receipt.id.charCodeAt(i % receipt.receipt.id.length) +
-      (receipt.receipt.id.charCodeAt((i + 7) % receipt.receipt.id.length) || 0);
-    barcodePattern += barChars[charCode % barChars.length];
+  if (useBarcode) {
+    // Deterministic Code 128 barcode pattern generated from unique receipt ID
+    const barChars = ["||| ", "| | ", "|||| ", "|| | ", "|| || "];
+    let barcodePattern = "||| ";
+    for (let i = 0; i < 7; i++) {
+      const charCode = receipt.receipt.id.charCodeAt(i % receipt.receipt.id.length) +
+        (receipt.receipt.id.charCodeAt((i + 7) % receipt.receipt.id.length) || 0);
+      barcodePattern += barChars[charCode % barChars.length];
+    }
+    barcodePattern += "|||";
+    printCenteredRow(pc.bold(barcodePattern));
+  } else {
+    const qrRows = renderTerminalQr(urlToDisplay);
+    if (qrRows.length > 0) {
+      printCenteredRow(pc.dim("--- SCAN WITH PHONE ---"));
+      printRow("");
+      for (const qrRow of qrRows) {
+        printCenteredRow(qrRow);
+      }
+      printRow("");
+    } else {
+      printCenteredRow(pc.bold("||| | ||||| ||| |||| |||||| |||| ||| ||||||| |||"));
+    }
   }
-  barcodePattern += "|||";
 
-  printCenteredRow(pc.bold(barcodePattern));
   printCenteredRow(pc.cyan(displayHost));
   printCenteredRow(pc.underline(pc.cyan(`r/${receipt.receipt.id}`)));
   printRow("");
@@ -284,6 +302,9 @@ function renderTerminalReceipt(receipt: ReceiptV1, publicUrl?: string, showQr?: 
   console.log("  " + pc.bold(coral("\\/".repeat(28))));
   console.log("");
   console.log(`  ${pc.dim("🔗 Public Receipt:")} ${pc.underline(pc.cyan(urlToDisplay))}`);
+  if (!useBarcode) {
+    console.log(`  ${pc.dim("📊 View classic 1D barcode:")} ${pc.cyan("pnpm qodewk --barcode")}`);
+  }
   console.log("");
 }
 
