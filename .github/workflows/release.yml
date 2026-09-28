@@ -84,6 +84,8 @@ jobs:
         if: env.SHOULD_RELEASE == 'true'
         run: |
           echo "Publishing qodewk v${{ env.CLI_VERSION }} to Public NPM via Trusted Publisher (OIDC)..."
+          cp README.md packages/cli/README.md 2>/dev/null || true
+          cp LICENSE packages/cli/LICENSE 2>/dev/null || true
           cd packages/cli
           npm publish --provenance --access public
 
