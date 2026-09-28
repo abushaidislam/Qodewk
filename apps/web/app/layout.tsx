@@ -50,22 +50,36 @@ export default function RootLayout({
               </span>
             </a>
 
-            <nav className="flex items-center gap-6 text-sm font-medium">
-              <a href="#cli-guide" className="text-[#6c6a64] hover:text-[#141413] transition-colors">
-                CLI & NPM
+            <nav className="hidden sm:flex items-center gap-5 text-sm font-medium">
+              <a href="#how-it-works" className="text-[#6c6a64] hover:text-[#141413] transition-colors duration-200">
+                How it works
               </a>
-              <a href="#how-it-works" className="text-[#6c6a64] hover:text-[#141413] transition-colors">
-                How It Works
+              <a href="#features" className="text-[#6c6a64] hover:text-[#141413] transition-colors duration-200">
+                Features
+              </a>
+              <a href="#cli-guide" className="text-[#6c6a64] hover:text-[#141413] transition-colors duration-200">
+                CLI
+              </a>
+              <a href="#faq" className="text-[#6c6a64] hover:text-[#141413] transition-colors duration-200">
+                FAQ
               </a>
               <a
                 href="https://github.com/abushaidislam/Qodewk"
                 target="_blank"
                 rel="noreferrer"
-                className="bg-[#cc785c] hover:bg-[#a9583e] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm"
+                className="bg-[#cc785c] hover:bg-[#a9583e] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 cursor-pointer"
               >
                 GitHub
               </a>
             </nav>
+            <a
+              href="https://github.com/abushaidislam/Qodewk"
+              target="_blank"
+              rel="noreferrer"
+              className="sm:hidden bg-[#cc785c] hover:bg-[#a9583e] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 cursor-pointer"
+            >
+              GitHub
+            </a>
           </div>
         </header>
 
@@ -73,15 +87,49 @@ export default function RootLayout({
           {children}
         </main>
 
-        <footer className="border-t border-[#e6dfd8] bg-[#181715] text-[#a09d96] py-12 px-6">
-          <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 text-sm">
-            <div className="flex items-center gap-2">
-              <span className="text-white text-base">✱</span>
-              <span className="text-[#faf9f5] font-serif-display text-lg">Qodewk</span>
-              <span className="text-[#6c6a64] ml-2">Open-source AI development receipt layer.</span>
+        <footer className="bg-[#181715] text-[#a09d96] py-16 px-6">
+          <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-10 text-sm">
+            <div className="md:col-span-5 space-y-3">
+              <div className="flex items-center gap-2">
+                <span className="text-[#faf9f5] text-base" aria-hidden="true">✱</span>
+                <span className="text-[#faf9f5] font-serif-display text-xl">Qodewk</span>
+              </div>
+              <p className="text-[#a09d96] max-w-sm leading-relaxed">
+                Open-source receipt layer for the AI coding agent era. Git tells what changed. Telemetry tells what was consumed.
+              </p>
             </div>
-            <div className="text-xs text-[#8e8b82] font-mono-receipt">
-              Source code never leaves the local machine. Privacy by construction.
+            <div className="md:col-span-3 space-y-3">
+              <p className="text-[11px] font-mono uppercase tracking-[1.5px] text-[#8e8b82]">Product</p>
+              <div className="flex flex-col gap-2">
+                <a href="#how-it-works" className="hover:text-[#faf9f5] transition-colors duration-200">How it works</a>
+                <a href="#features" className="hover:text-[#faf9f5] transition-colors duration-200">Features</a>
+                <a href="#cli-guide" className="hover:text-[#faf9f5] transition-colors duration-200">CLI & NPM</a>
+                <a href="#faq" className="hover:text-[#faf9f5] transition-colors duration-200">FAQ</a>
+              </div>
+            </div>
+            <div className="md:col-span-4 space-y-3">
+              <p className="text-[11px] font-mono uppercase tracking-[1.5px] text-[#8e8b82]">Trust</p>
+              <p className="text-xs font-mono-receipt text-[#8e8b82] leading-relaxed">
+                [✓] Source code was never uploaded to Qodewk. Privacy by construction.
+              </p>
+              <div className="flex flex-wrap gap-3 pt-1">
+                <a
+                  href="https://github.com/abushaidislam/Qodewk"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-[#faf9f5] hover:text-[#cc785c] transition-colors duration-200"
+                >
+                  GitHub
+                </a>
+                <a
+                  href="https://www.npmjs.com/package/qodewk"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-[#faf9f5] hover:text-[#cc785c] transition-colors duration-200"
+                >
+                  NPM
+                </a>
+              </div>
             </div>
           </div>
         </footer>

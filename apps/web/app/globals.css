@@ -109,3 +109,339 @@
   background-color: var(--surface-card);
   box-shadow: 0 4px 20px -2px rgba(20, 20, 19, 0.06), 0 2px 6px -1px rgba(20, 20, 19, 0.04);
 }
+
+/* ── Marketing motion system ─────────────────────────────────────── */
+html {
+  scroll-behavior: smooth;
+}
+
+.hero-atmosphere {
+  background:
+    radial-gradient(ellipse 70% 50% at 15% 20%, rgba(204, 120, 92, 0.08), transparent 55%),
+    radial-gradient(ellipse 50% 40% at 85% 60%, rgba(93, 184, 166, 0.06), transparent 50%);
+}
+
+.reveal {
+  opacity: 0;
+  will-change: transform, opacity, filter;
+  transition:
+    opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.reveal-up {
+  transform: translateY(18px);
+}
+
+.reveal-fade {
+  transform: none;
+}
+
+.reveal-scale {
+  transform: scale(0.96);
+}
+
+.reveal-morph {
+  transform: translateY(24px) scale(0.94);
+  filter: blur(6px);
+}
+
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+  filter: none;
+}
+
+.hero-receipt-float {
+  animation: receipt-float 7s ease-in-out infinite;
+  transform-origin: center bottom;
+}
+
+@keyframes receipt-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-0.4deg);
+  }
+  50% {
+    transform: translateY(-10px) rotate(0.4deg);
+  }
+}
+
+.status-pulse {
+  animation: status-pulse 2.2s ease-in-out infinite;
+}
+
+@keyframes status-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.55;
+    transform: scale(0.85);
+  }
+}
+
+.agent-chip {
+  animation: chip-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes chip-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.feature-card-lift {
+  transition:
+    transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.25s ease,
+    border-color 0.25s ease;
+}
+
+.feature-card-lift:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 1px 3px rgba(20, 20, 19, 0.08);
+  border-color: #e8e0d2;
+}
+
+.morph-stage-shell {
+  box-shadow: inset 0 1px 0 rgba(250, 249, 245, 0.04);
+}
+
+.morph-grain {
+  background-image: radial-gradient(rgba(250, 249, 245, 0.04) 1px, transparent 1px);
+  background-size: 12px 12px;
+}
+
+.morph-panel {
+  animation: morph-swap 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes morph-swap {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+
+.faq-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.faq-panel-inner {
+  overflow: hidden;
+  min-height: 0;
+}
+
+.faq-panel-inner > p {
+  opacity: 0;
+  transform: translateY(-4px);
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease;
+}
+
+.faq-panel.is-open {
+  grid-template-rows: 1fr;
+}
+
+.faq-panel.is-open .faq-panel-inner > p {
+  opacity: 1;
+  transform: none;
+  transition-delay: 0.05s;
+}
+
+.cta-morph-glow {
+  position: relative;
+  overflow: hidden;
+}
+
+.cta-morph-glow::after {
+  content: "";
+  position: absolute;
+  inset: -40% auto auto -20%;
+  width: 60%;
+  height: 80%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.18), transparent 65%);
+  animation: cta-sheen 8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes cta-sheen {
+  0%,
+  100% {
+    transform: translate(0, 0);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translate(40%, 20%);
+    opacity: 0.85;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .reveal,
+  .reveal-up,
+  .reveal-fade,
+  .reveal-scale,
+  .reveal-morph,
+  .reveal.is-visible {
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+    transition: none !important;
+  }
+
+  .hero-receipt-float,
+  .status-pulse,
+  .agent-chip,
+  .morph-panel,
+  .cta-morph-glow::after {
+    animation: none !important;
+  }
+
+  .feature-card-lift,
+  .feature-card-lift:hover {
+    transition: none;
+    transform: none;
+  }
+
+  .faq-panel {
+    transition: none;
+  }
+}
+
+/* ── CLI interactive demo morph ──────────────────────────────────── */
+.cli-demo-tabs {
+  position: relative;
+}
+
+.cli-demo-pill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 0;
+  border-radius: 12px;
+  background: #efe9de;
+  border: 1px solid rgba(204, 120, 92, 0.35);
+  box-shadow: 0 1px 3px rgba(20, 20, 19, 0.06);
+  transition:
+    transform 280ms cubic-bezier(0.22, 1, 0.36, 1),
+    width 280ms cubic-bezier(0.22, 1, 0.36, 1),
+    height 280ms cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+}
+
+.cli-demo-stage {
+  box-shadow:
+    0 24px 48px -24px rgba(20, 20, 19, 0.35),
+    inset 0 1px 0 rgba(250, 249, 245, 0.04);
+}
+
+.cli-demo-progress {
+  transition: width 120ms linear;
+}
+
+.cli-demo-morph {
+  animation: cli-morph-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes cli-morph-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+    filter: blur(5px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+
+.cli-demo-caret {
+  display: inline-block;
+  width: 7px;
+  height: 1.05em;
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  background: #cc785c;
+  animation: cli-caret-blink 1s steps(1) infinite;
+}
+
+@keyframes cli-caret-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.cli-demo-line {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.cli-demo-line.is-fresh {
+  animation: cli-line-in 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.cli-demo-line.is-in {
+  opacity: 1;
+}
+
+@keyframes cli-line-in {
+  from {
+    opacity: 0;
+    filter: blur(2px);
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    filter: none;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cli-demo-pill {
+    transition: none !important;
+  }
+
+  .cli-demo-morph,
+  .cli-demo-line.is-fresh,
+  .cli-demo-caret {
+    animation: none !important;
+  }
+
+  .cli-demo-progress {
+    transition: none !important;
+  }
+
+  .cli-demo-caret {
+    opacity: 1;
+  }
+}
