@@ -11,7 +11,7 @@ const program = new Command();
 program
   .name("qodewk")
   .description("Universal telemetry and digital receipt generator for the AI coding agent era")
-  .version("0.1.6")
+  .version("0.1.10")
   .option("-j, --json", "Output receipt in machine-readable JSON format")
   .option("-f, --format <format>", "Output format (terminal, json, markdown)", "terminal")
   .option("-o, --out <path>", "Write receipt output to specified file path")
@@ -92,7 +92,7 @@ program
         return;
       }
 
-      const endpoint = process.env.QODEWK_API_URL || "https://qodewk.dev/api/receipts";
+      const endpoint = process.env.QODEWK_API_URL || "https://qodewk.flinkeo.online/api/receipts";
       console.log(pc.dim(`Publishing receipt ${receipt.receipt.id} to ${endpoint}...`));
 
       try {
@@ -115,10 +115,10 @@ program
         db.saveReceipt(receipt, data.claimToken);
         db.close();
 
-        renderTerminalReceipt(receipt, data.url);
+        renderTerminalReceipt(receipt, data.url, options.qr);
       } catch (networkErr: any) {
         console.log(pc.yellow(`\nCould not reach cloud API (${networkErr.message}). Rendered locally:`));
-        renderTerminalReceipt(receipt);
+        renderTerminalReceipt(receipt, undefined, options.qr);
       }
     } catch (err: any) {
       console.error(pc.red(`Error sharing receipt: ${err.message}`));
@@ -134,7 +134,7 @@ const ansiHex = (hexColor: string) => {
   return (text: string) => `\x1b[38;2;${r};${g};${b}m${text}\x1b[39m`;
 };
 
-function outputReceipt(receipt: ReceiptV1, options: { json?: boolean; format?: string; out?: string }, publicUrl?: string) {
+function outputReceipt(receipt: ReceiptV1, options: { json?: boolean; format?: string; out?: string; qr?: boolean }, publicUrl?: string) {
   let content = "";
   const format = options.json ? "json" : options.format || "terminal";
 
@@ -150,7 +150,7 @@ function outputReceipt(receipt: ReceiptV1, options: { json?: boolean; format?: s
   }
 
   if (format === "terminal" && !options.out) {
-    renderTerminalReceipt(receipt, publicUrl);
+    renderTerminalReceipt(receipt, publicUrl, options.qr);
   } else if (format !== "terminal" && !options.out) {
     console.log(content);
   }
@@ -164,7 +164,7 @@ const visibleWidth = (str: string): number => {
   return stripAnsi(str).length;
 };
 
-function renderTerminalReceipt(receipt: ReceiptV1, publicUrl?: string) {
+function renderTerminalReceipt(receipt: ReceiptV1, publicUrl?: string, showQr?: boolean) {
   const coral = ansiHex("#cc785c");
   const green = ansiHex("#5db872");
   const red = ansiHex("#c64545");
@@ -258,16 +258,32 @@ function renderTerminalReceipt(receipt: ReceiptV1, publicUrl?: string) {
   );
   printDivider("=");
   printRow("");
-  printCenteredRow(pc.bold("||| | ||||| ||| |||| |||||| |||| ||| ||||||| |||"));
-  const urlToDisplay = publicUrl || `https://qodewk.dev/r/${receipt.receipt.id}`;
-  const cleanUrl = urlToDisplay.length > 48 ? urlToDisplay.slice(0, 47) + "…" : urlToDisplay;
-  printCenteredRow(pc.underline(pc.cyan(cleanUrl)));
+
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.QODEWK_APP_URL || "https://qodewk.flinkeo.online";
+  const urlToDisplay = publicUrl || `${baseUrl}/r/${receipt.receipt.id}`;
+  const displayHost = baseUrl.replace(/^https?:\/\//, "");
+
+  // Deterministic Code 128 barcode pattern generated from unique receipt ID
+  const barChars = ["||| ", "| | ", "|||| ", "|| | ", "|| || "];
+  let barcodePattern = "||| ";
+  for (let i = 0; i < 7; i++) {
+    const charCode = receipt.receipt.id.charCodeAt(i % receipt.receipt.id.length) +
+      (receipt.receipt.id.charCodeAt((i + 7) % receipt.receipt.id.length) || 0);
+    barcodePattern += barChars[charCode % barChars.length];
+  }
+  barcodePattern += "|||";
+
+  printCenteredRow(pc.bold(barcodePattern));
+  printCenteredRow(pc.cyan(displayHost));
+  printCenteredRow(pc.underline(pc.cyan(`r/${receipt.receipt.id}`)));
   printRow("");
   if (process.env.QODEWK_TELEMETRY === "off") {
     printRow(`  ${teal("[✓]")} QODEWK_TELEMETRY=off (Cloud sync disabled)`);
   }
   printRow(`  ${green("[✓]")} Source code was never uploaded to Qodewk`);
   console.log("  " + pc.bold(coral("\\/".repeat(28))));
+  console.log("");
+  console.log(`  ${pc.dim("🔗 Public Receipt:")} ${pc.underline(pc.cyan(urlToDisplay))}`);
   console.log("");
 }
 

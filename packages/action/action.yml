@@ -21,7 +21,7 @@ inputs:
   api-url:
     description: "Qodewk API ingestion endpoint"
     required: false
-    default: "https://qodewk.dev/api/receipts"
+    default: "https://qodewk.flinkeo.online/api/receipts"
   comment-pr:
     description: "Whether to upsert a sticky comment on the pull request"
     required: false

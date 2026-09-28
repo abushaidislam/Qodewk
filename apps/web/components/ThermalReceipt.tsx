@@ -31,7 +31,7 @@ Estimated Tokens:  ~${totalTokens}
 Estimated Cost:    ${costPrefix}${receipt.ai.cost.toFixed(2)} (${confidencePercent} confidence)
 \`\`\`
 [✓] Source code was not uploaded to Qodewk.
-[View Verified Receipt](https://qodewk.dev/r/${receipt.receipt.id})`;
+[View Verified Receipt](https://qodewk.flinkeo.online/r/${receipt.receipt.id})`;
 
     navigator.clipboard.writeText(md);
     setCopied(true);
@@ -207,7 +207,7 @@ Estimated Cost:    ${costPrefix}${receipt.ai.cost.toFixed(2)} (${confidencePerce
             </svg>
           </div>
           <div className="text-[10px] text-[#6c6a64] mt-0.5 tracking-wider">
-            https://qodewk.dev/r/{receipt.receipt.id}
+            https://qodewk.flinkeo.online/r/{receipt.receipt.id}
           </div>
         </div>
 

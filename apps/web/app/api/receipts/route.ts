@@ -38,7 +38,8 @@ export async function POST(req: NextRequest) {
       createdAt: new Date().toISOString()
     });
 
-    const publicUrl = `https://qodewk.dev/r/${receipt.receipt.id}`;
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.QODEWK_APP_URL || "https://qodewk.flinkeo.online";
+    const publicUrl = `${baseUrl}/r/${receipt.receipt.id}`;
 
     return NextResponse.json({
       publicId: receipt.receipt.id,

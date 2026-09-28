@@ -8,7 +8,7 @@ async function run() {
     const baseRef = core.getInput("base-ref") || undefined;
     const headSha = core.getInput("head-sha") || undefined;
     const publishCloud = core.getInput("publish-cloud") === "true";
-    const apiUrl = core.getInput("api-url") || "https://qodewk.dev/api/receipts";
+    const apiUrl = core.getInput("api-url") || process.env.QODEWK_API_URL || "https://qodewk.flinkeo.online/api/receipts";
     const commentPr = core.getInput("comment-pr") !== "false";
 
     core.info("Generating Qodewk telemetry receipt...");
@@ -17,7 +17,8 @@ async function run() {
       headSha: headSha
     });
 
-    let publicUrl = `https://qodewk.dev/r/${receipt.receipt.id}`;
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.QODEWK_APP_URL || "https://qodewk.flinkeo.online";
+    let publicUrl = `${baseUrl}/r/${receipt.receipt.id}`;
 
     if (publishCloud) {
       core.info(`Publishing privacy-safe receipt to ${apiUrl}...`);

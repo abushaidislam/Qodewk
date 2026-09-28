@@ -46,7 +46,7 @@ export default function RootLayout({
                 Qodewk
               </span>
               <span className="text-[11px] font-mono-receipt bg-[#efe9de] text-[#141413] px-2 py-0.5 rounded-full border border-[#e6dfd8] ml-1">
-                v1.0
+                v{process.env.NEXT_PUBLIC_QODEWK_VERSION ?? "0.0.0"}
               </span>
             </a>
 
