@@ -15,6 +15,7 @@ export interface GitDiffMetrics {
   repoHash: string;
   projectAlias: string;
   commitMessage?: string;
+  commitsCount?: number;
 }
 
 export function computeSaltedHash(value: string, salt: string = "qodewk-default-salt"): string {
@@ -25,6 +26,38 @@ export interface ExtractGitMetricsOptions {
   repoPath?: string;
   baseSha?: string;
   headSha?: string;
+  since?: string | Date;
+}
+
+function parseSinceOption(since?: string | Date): Date | undefined {
+  if (!since) return undefined;
+  if (since instanceof Date) return since;
+
+  const s = since.trim().toLowerCase();
+  const now = new Date();
+
+  if (s === "today") {
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  }
+
+  const hoursMatch = s.match(/^(\d+)\s*h(?:ours?)?$/);
+  if (hoursMatch && hoursMatch[1]) {
+    const hours = parseInt(hoursMatch[1], 10);
+    return new Date(now.getTime() - hours * 60 * 60 * 1000);
+  }
+
+  const daysMatch = s.match(/^(\d+)\s*d(?:ays?)?$/);
+  if (daysMatch && daysMatch[1]) {
+    const days = parseInt(daysMatch[1], 10);
+    return new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+  }
+
+  const parsed = new Date(since);
+  if (!isNaN(parsed.getTime())) {
+    return parsed;
+  }
+
+  return undefined;
 }
 
 export async function extractGitMetrics(
@@ -47,20 +80,54 @@ export async function extractGitMetrics(
   let headSha = options.headSha || "0000000000000000000000000000000000000000";
   let baseSha: string | undefined = options.baseSha;
   let commitMessage: string | undefined = undefined;
+  let commitsCount = 1;
 
-  try {
-    const log = await git.log({ maxCount: 2 });
-    if (log.latest) {
-      if (!options.headSha) {
-        headSha = log.latest.hash;
+  // 1. Time-window aware commit range if 'since' option is specified
+  const sinceDate = parseSinceOption(options.since);
+  if (sinceDate && !options.baseSha) {
+    try {
+      const sinceIso = sinceDate.toISOString();
+      const commitsRaw = await git.raw(["log", `--since=${sinceIso}`, "--format=%H"]);
+      const commitShas = commitsRaw
+        .split("\n")
+        .map(s => s.trim())
+        .filter(Boolean);
+
+      if (commitShas.length > 0) {
+        commitsCount = commitShas.length;
+        if (!options.headSha) {
+          headSha = commitShas[0];
+        }
+        const oldestSha = commitShas[commitShas.length - 1];
+        try {
+          const parentSha = (await git.raw(["rev-parse", `${oldestSha}^`])).trim();
+          baseSha = parentSha;
+        } catch {
+          // If oldestSha is the root commit of the repository
+          baseSha = oldestSha;
+        }
       }
-      commitMessage = log.latest.message;
-      if (!options.baseSha && log.all.length > 1 && log.all[1]) {
-        baseSha = log.all[1].hash;
-      }
+    } catch {
+      // Fallback
     }
-  } catch {
-    // Fresh repo with no commits yet
+  }
+
+  // 2. Default latest commit inspection if baseSha was not found via since window
+  if (!baseSha) {
+    try {
+      const log = await git.log({ maxCount: 2 });
+      if (log.latest) {
+        if (!options.headSha) {
+          headSha = log.latest.hash;
+        }
+        commitMessage = log.latest.message;
+        if (!options.baseSha && log.all.length > 1 && log.all[1]) {
+          baseSha = log.all[1].hash;
+        }
+      }
+    } catch {
+      // Fresh repo with no commits yet
+    }
   }
 
   // Repository Identity Hash
@@ -81,15 +148,20 @@ export async function extractGitMetrics(
   // Compute Diff
   let diffSummary;
   if (baseSha && headSha && baseSha !== headSha) {
-    // Explicit base and head comparison (e.g. PR branch against target base)
-    diffSummary = await git.diffSummary([`${baseSha}...${headSha}`]);
+    const status = await git.status();
+    if (status.files.length > 0) {
+      // Include unstaged/working tree modifications on top of base commit
+      diffSummary = await git.diffSummary([baseSha]);
+    } else {
+      diffSummary = await git.diffSummary([`${baseSha}..${headSha}`]);
+    }
   } else {
     const status = await git.status();
     if (status.files.length > 0) {
       // Diff of working tree changes
       diffSummary = await git.diffSummary(["HEAD"]);
     } else if (baseSha) {
-      diffSummary = await git.diffSummary([`${baseSha}...${headSha}`]);
+      diffSummary = await git.diffSummary([`${baseSha}..${headSha}`]);
     } else if (headSha !== "0000000000000000000000000000000000000000") {
       // First commit
       diffSummary = await git.diffSummary([headSha]);
@@ -141,7 +213,8 @@ export async function extractGitMetrics(
     baseSha,
     repoHash,
     projectAlias,
-    commitMessage
+    commitMessage,
+    commitsCount
   };
 }
 

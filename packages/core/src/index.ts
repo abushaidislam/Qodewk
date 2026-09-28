@@ -34,7 +34,8 @@ export async function generateReceipt(options: GenerateReceiptOptions = {}): Pro
   const metrics: GitDiffMetrics = await extractGitMetrics({
     repoPath: options.repoPath || process.cwd(),
     baseSha: options.baseSha,
-    headSha: options.headSha
+    headSha: options.headSha,
+    since: options.since
   });
 
   // 1. Universal Multi-Platform Footprint Harvesting (Antigravity, Claude, Cursor, etc.)
@@ -110,7 +111,7 @@ export async function generateReceipt(options: GenerateReceiptOptions = {}): Pro
       branch: options.anonymizeBranch ? "anonymized-branch" : metrics.branch,
       headSha: metrics.headSha,
       baseSha: metrics.baseSha,
-      commitsCount: 1
+      commitsCount: metrics.commitsCount || 1
     },
     mutation: {
       files: metrics.files,

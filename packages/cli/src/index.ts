@@ -221,7 +221,10 @@ function renderTerminalReceipt(receipt: ReceiptV1, publicUrl?: string) {
     printRow(`TASK: ${taskClean}`);
   }
   printDivider("=");
-  printRowSplit("ITEMS CHANGED", "QTY");
+  const itemsHeader = receipt.repository.commitsCount && receipt.repository.commitsCount > 1
+    ? `ITEMS CHANGED (${receipt.repository.commitsCount} COMMITS)`
+    : "ITEMS CHANGED";
+  printRowSplit(itemsHeader, "QTY");
   printDivider("-");
   printRowSplit("Files Touched", String(receipt.mutation.files));
   printRowSplit("Lines Inserted", green("+ " + receipt.mutation.insertions));
