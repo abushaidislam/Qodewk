@@ -4,7 +4,7 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import { Command } from "commander";
 import pc from "picocolors";
-import { renderTerminalQr } from "./qr.js";
+import { pickBarcodePayload, renderTerminalBarcode } from "./barcode.js";
 import {
   generateReceipt,
   formatMarkdownReceipt,
@@ -19,6 +19,7 @@ type OutputOptions = {
   json?: boolean;
   format?: string;
   out?: string;
+  /** Kept for backward-compatible CLI flags; thermal 1D barcode is always used. */
   barcode?: boolean;
 };
 
@@ -160,7 +161,7 @@ program
   .option("--platform <platform>", "Filter agent platform (antigravity, claude, cursor, all)")
   .option("--anon", "Anonymize branch name in output")
   .option("--local", "Force local-only mode (never open network sockets)")
-  .option("--barcode", "Render 1D barcode simulation instead of scannable 2D QR code")
+  .option("--barcode", "Render classic 1D thermal barcode (always on; kept for compatibility)")
   .action(async (options) => {
     try {
       const receipt = await generateReceipt({
@@ -194,7 +195,7 @@ program
   .option("--today", "Harvest agent footprints for today")
   .option("--platform <platform>", "Filter agent platform")
   .option("--anon", "Anonymize branch name in output")
-  .option("--barcode", "Render 1D barcode simulation instead of scannable 2D QR code")
+  .option("--barcode", "Render classic 1D thermal barcode (always on; kept for compatibility)")
   .action(async (options) => {
     try {
       const receipt = await generateReceipt({
@@ -228,7 +229,7 @@ program
   .option("--anon", "Anonymize branch name in output")
   .option("-f, --format <format>", "Local fallback output format", "terminal")
   .option("-j, --json", "Also print JSON after share")
-  .option("--barcode", "Render 1D barcode simulation instead of scannable 2D QR code")
+  .option("--barcode", "Render classic 1D thermal barcode (always on; kept for compatibility)")
   .action(async (options) => {
     try {
       const receipt = await generateReceipt({
@@ -249,7 +250,7 @@ program
         );
         console.log(pc.dim("Telemetry remains strictly stored in local SQLite (~/.qodewk/state.db).\n"));
         persistReceipt(receipt);
-        await renderTerminalReceipt(receipt, undefined, options.barcode);
+        await renderTerminalReceipt(receipt);
         return;
       }
 
@@ -302,7 +303,7 @@ program
         console.log(pc.dim("  Saved to ~/.qodewk/state.db — required to prove authorship later."));
         console.log("");
 
-        await renderTerminalReceipt(sanitized, data.url, options.barcode);
+        await renderTerminalReceipt(sanitized, data.url);
 
         if (options.json) {
           console.log(JSON.stringify({ url: data.url, claimToken: data.claimToken, receipt: sanitized }, null, 2));
@@ -311,7 +312,7 @@ program
         const message = networkErr instanceof Error ? networkErr.message : String(networkErr);
         console.log(pc.yellow(`\nCould not reach cloud API (${message}). Rendered locally:`));
         persistReceipt(receipt);
-        await renderTerminalReceipt(receipt, undefined, options.barcode);
+        await renderTerminalReceipt(receipt);
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
@@ -433,11 +434,7 @@ const visibleWidth = (str: string): number => {
   return stripAnsi(str).length;
 };
 
-function buildTerminalReceipt(
-  receipt: ReceiptV1,
-  publicUrl?: string,
-  useBarcode?: boolean
-): string {
+function buildTerminalReceipt(receipt: ReceiptV1, publicUrl?: string): string {
   const lines: string[] = [];
   const coral = ansiHex("#cc785c");
   const green = ansiHex("#5db872");
@@ -534,32 +531,19 @@ function buildTerminalReceipt(
   const isPublished = Boolean(publicUrl);
   const displayHost = baseUrl.replace(/^https?:\/\//, "");
 
-  if (useBarcode) {
-    const barChars = ["||| ", "| | ", "|||| ", "|| | ", "|| || "];
-    let barcodePattern = "||| ";
-    for (let i = 0; i < 7; i++) {
-      const charCode =
-        receipt.receipt.id.charCodeAt(i % receipt.receipt.id.length) +
-        (receipt.receipt.id.charCodeAt((i + 7) % receipt.receipt.id.length) || 0);
-      barcodePattern += barChars[charCode % barChars.length];
-    }
-    barcodePattern += "|||";
-    printCenteredRow(pc.bold(barcodePattern));
-  } else if (isPublished && publicUrl) {
-    const qrRows = renderTerminalQr(publicUrl);
-    if (qrRows.length > 0) {
-      printCenteredRow(pc.dim("--- SCAN PUBLIC RECEIPT ---"));
-      printRow("");
-      for (const qrRow of qrRows) {
-        printCenteredRow(qrRow);
-      }
-      printRow("");
-    } else {
-      printCenteredRow(pc.bold("||| | ||||| ||| |||| |||||| |||| ||| ||||||| |||"));
-    }
-  } else {
-    printCenteredRow(pc.dim("--- LOCAL PROOF (NOT PUBLISHED) ---"));
-    printCenteredRow(pc.dim(`id ${receipt.receipt.id.slice(0, 28)}`));
+  const barcodePayload = pickBarcodePayload({
+    publicUrl,
+    receiptId: receipt.receipt.id,
+    displayHost,
+    maxChars: 28
+  });
+  const barcodeRows = renderTerminalBarcode(barcodePayload, {
+    maxWidth: INNER_WIDTH,
+    height: 3,
+    quietZone: 8
+  });
+  for (const barRow of barcodeRows) {
+    printCenteredRow(pc.bold(barRow));
   }
 
   if (isPublished) {
@@ -583,20 +567,13 @@ function buildTerminalReceipt(
     push(`  ${pc.dim("To publish & get shareable URL:")} ${pc.cyan("qodewk share")}`);
   }
 
-  if (!useBarcode) {
-    push(`  ${pc.dim("View classic 1D barcode:")} ${pc.cyan("qodewk --barcode")}`);
-  }
   push("");
 
   return lines.join("\n");
 }
 
-async function renderTerminalReceipt(
-  receipt: ReceiptV1,
-  publicUrl?: string,
-  useBarcode?: boolean
-): Promise<void> {
-  console.log(buildTerminalReceipt(receipt, publicUrl, useBarcode));
+async function renderTerminalReceipt(receipt: ReceiptV1, publicUrl?: string): Promise<void> {
+  console.log(buildTerminalReceipt(receipt, publicUrl));
 }
 
 async function outputReceipt(
@@ -612,7 +589,7 @@ async function outputReceipt(
   } else if (format === "markdown") {
     content = formatMarkdownReceipt(receipt, publicUrl);
   } else {
-    content = buildTerminalReceipt(receipt, publicUrl, options.barcode);
+    content = buildTerminalReceipt(receipt, publicUrl);
   }
 
   if (options.out) {
