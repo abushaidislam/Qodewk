@@ -42,8 +42,8 @@ jobs:
       - name: Install Monorepo Dependencies
         run: pnpm install --no-frozen-lockfile
 
-      - name: Build Monorepo (Turbo)
-        run: pnpm build
+      - name: Build CLI & Dependencies
+        run: pnpm --filter qodewk... build
 
       - name: Check Package Version & Determine Release Need
         id: check_release
