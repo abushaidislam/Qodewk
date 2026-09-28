@@ -47,7 +47,7 @@ const COMMAND_TABS: CommandTab[] = [
   | ==================================================== |
   |                                                      |
   |   ||| | ||||| ||| |||| |||||| |||| ||| ||||||| |||   |
-  |   https://qodewk.dev/r/rec_5b04095a59f6a59b8db0c2a    |
+   |   https://qodewk.flinkeo.online/r/rec_5b04095a59f6a59b8db0c2a    |
   |                                                      |
   |   [✓] Source code was never uploaded to Qodewk        |
   \\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/`
@@ -104,12 +104,12 @@ const COMMAND_TABS: CommandTab[] = [
 
 [1/3] Extracting local Git diff metadata... [4 files, +78/-12]
 [2/3] Computing token telemetry & cryptographic HMAC-SHA256...
-[3/3] Publishing receipt to https://qodewk.dev/api/receipts...
+[3/3] Publishing receipt to https://qodewk.flinkeo.online/api/receipts...
 
 ✓ Receipt published successfully!
 
 Receipt ID:  rec_5b04095a59f6a59b8db0
-Public URL:  https://qodewk.dev/r/rec_5b04095a59f6a59b8db0
+Public URL:  https://qodewk.flinkeo.online/r/rec_5b04095a59f6a59b8db0
 Claim Token: clm_948a2bc901e84d7... (saved in ~/.qodewk/claim_tokens.json)
 
 [✓] Source code was never uploaded to Qodewk`

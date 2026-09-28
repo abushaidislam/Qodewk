@@ -1,16 +1,18 @@
 import React from "react";
 import { notFound } from "next/navigation";
+import { Metadata } from "next";
 import { ThermalReceipt } from "@/components/ThermalReceipt";
 import { ReceiptV1 } from "@qodewk/protocol";
 import { ArrowLeft, GitBranch, GitCommit, Shield } from "lucide-react";
 import Link from "next/link";
+import { getReceiptFromStore } from "@/lib/storage";
 
 interface PageProps {
   params: Promise<{ id: string }>;
 }
 
-// In-memory / ephemeral store for MVP demonstration
-const sampleReceipt: ReceiptV1 = {
+// Built-in demo receipt for showcasing or testing
+const fallbackDemoReceipt: ReceiptV1 = {
   version: "1.0",
   receipt: {
     id: "rec_demo_7f8b2c1e4d3a",
@@ -64,17 +66,71 @@ const sampleReceipt: ReceiptV1 = {
   }
 };
 
-export default async function ReceiptPage({ params }: PageProps) {
-  const { id } = await params;
+async function resolveReceipt(id: string): Promise<ReceiptV1 | null> {
+  // 1. If explicit demo ID, return demo receipt
+  if (id === "rec_demo_7f8b2c1e4d3a" || id === "rec_01J8Y29K4Z00ABC123DEF456" || id.startsWith("rec_demo")) {
+    return {
+      ...fallbackDemoReceipt,
+      receipt: {
+        ...fallbackDemoReceipt.receipt,
+        id
+      }
+    };
+  }
 
-  // Use sample receipt if demo or matching ID
-  const receipt = {
-    ...sampleReceipt,
-    receipt: {
-      ...sampleReceipt.receipt,
-      id
+  // 2. Fetch from storage (memory or Supabase)
+  const stored = await getReceiptFromStore(id);
+  if (stored) return stored;
+
+  return null;
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { id } = await params;
+  const receipt = await resolveReceipt(id);
+
+  if (!receipt) {
+    return {
+      title: "Receipt Not Found — Qodewk",
+      description: "This digital receipt could not be found or has expired."
+    };
+  }
+
+  const title = `Qodewk Receipt: ${receipt.repository.projectAlias} (+${receipt.mutation.insertions} / -${receipt.mutation.deletions})`;
+  const description = `Digital proof of shipment for ${receipt.repository.projectAlias} (${receipt.mutation.files} files touched, est. AI cost: ~$${receipt.ai.cost.toFixed(2)}). Source code was not uploaded.`;
+  const ogUrl = `/api/og/${receipt.receipt.id}`;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      images: [
+        {
+          url: ogUrl,
+          width: 1200,
+          height: 630,
+          alt: `Qodewk Receipt for ${receipt.repository.projectAlias}`
+        }
+      ]
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [ogUrl]
     }
   };
+}
+
+export default async function ReceiptPage({ params }: PageProps) {
+  const { id } = await params;
+  const receipt = await resolveReceipt(id);
+
+  if (!receipt) {
+    notFound();
+  }
 
   return (
     <div className="py-12 px-6">
@@ -117,6 +173,11 @@ export default async function ReceiptPage({ params }: PageProps) {
               <GitCommit className="w-3.5 h-3.5 text-[#cc785c]" />
               <span>{receipt.repository.headSha.slice(0, 7)}</span>
             </div>
+            {receipt.receipt.contentHash && (
+              <div className="flex items-center gap-1.5 text-[#8e8b82]">
+                <span>Hash: {receipt.receipt.contentHash.slice(0, 8)}…</span>
+              </div>
+            )}
           </div>
         </div>
       </div>
