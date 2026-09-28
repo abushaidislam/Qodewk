@@ -36,8 +36,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          registry-url: 'https://registry.npmjs.org'
           cache: 'pnpm'
+
+      - name: Upgrade npm to latest (Required for Trusted Publishing)
+        run: npm install -g npm@latest
 
       - name: Install Monorepo Dependencies
         run: pnpm install --no-frozen-lockfile
