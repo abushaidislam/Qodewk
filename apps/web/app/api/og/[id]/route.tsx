@@ -1,5 +1,6 @@
 import { ImageResponse } from "next/og";
 import { NextRequest } from "next/server";
+import { getReceiptFromStore } from "@/lib/storage";
 
 export const runtime = "edge";
 
@@ -8,6 +9,21 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
+  let receipt = await getReceiptFromStore(id);
+
+  // Fallback demo values if receipt not yet saved or matching demo ID
+  const projectAlias = receipt?.repository?.projectAlias || "hyper-engine";
+  const filesTouched = receipt?.mutation?.files ?? 14;
+  const insertions = receipt?.mutation?.insertions ?? 381;
+  const deletions = receipt?.mutation?.deletions ?? 72;
+  const providerName = receipt?.ai?.provider ? `${receipt.ai.provider} · ${receipt.ai.model || "frontier"}` : "Claude Code · Opus 4";
+  const totalTokens = receipt?.ai?.tokens 
+    ? receipt.ai.tokens.input + receipt.ai.tokens.output 
+    : 183000;
+  const tokensStr = totalTokens >= 1000 ? `~${Math.round(totalTokens / 1000)}K tokens` : `${totalTokens} tokens`;
+  const costVal = receipt?.ai?.cost ?? 2.41;
+  const costPrefix = receipt?.ai?.mode === "verified" ? "$" : "~$";
+  const costLabel = receipt?.ai?.mode === "verified" ? "VERIFIED AI COST" : "ESTIMATED AI COST";
 
   return new ImageResponse(
     (
@@ -26,7 +42,7 @@ export async function GET(
       >
         <div
           style={{
-            width: "560px",
+            width: "600px",
             backgroundColor: "#efe9de",
             border: "2px solid #e6dfd8",
             borderRadius: "12px",
@@ -49,13 +65,13 @@ export async function GET(
           >
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
               <span style={{ fontSize: "24px", color: "#141413" }}>✱</span>
-              <span style={{ fontSize: "28px", fontWeight: "bold", color: "#141413", letterSpacing: "-1px" }}>
+              <span style={{ fontSize: "26px", fontWeight: "bold", color: "#141413", letterSpacing: "-1px" }}>
                 QODEWK
               </span>
             </div>
             <div
               style={{
-                fontSize: "13px",
+                fontSize: "12px",
                 fontWeight: "bold",
                 color: "#cc785c",
                 backgroundColor: "#faf9f5",
@@ -69,22 +85,26 @@ export async function GET(
           </div>
 
           {/* Metric Rows */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "10px", fontSize: "16px", color: "#3d3d3a" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px", fontSize: "16px", color: "#3d3d3a" }}>
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <span style={{ color: "#8e8b82" }}>Project / Repo:</span>
+              <span style={{ fontWeight: "bold", color: "#141413" }}>{projectAlias}</span>
+            </div>
             <div style={{ display: "flex", justifyContent: "space-between" }}>
               <span style={{ color: "#8e8b82" }}>Files Touched:</span>
-              <span style={{ fontWeight: "bold", color: "#141413" }}>14 files</span>
+              <span style={{ fontWeight: "bold", color: "#141413" }}>{filesTouched} files</span>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between" }}>
               <span style={{ color: "#8e8b82" }}>Lines Inserted / Deleted:</span>
-              <span style={{ fontWeight: "bold", color: "#5db872" }}>+381 / -72</span>
+              <span style={{ fontWeight: "bold", color: "#5db872" }}>+{insertions} / -{deletions}</span>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between" }}>
               <span style={{ color: "#8e8b82" }}>AI Provider:</span>
-              <span style={{ fontWeight: "bold", color: "#141413" }}>Claude Code · Opus 4</span>
+              <span style={{ fontWeight: "bold", color: "#141413" }}>{providerName}</span>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between" }}>
               <span style={{ color: "#8e8b82" }}>Estimated Tokens:</span>
-              <span style={{ fontWeight: "bold", color: "#141413" }}>~183K tokens</span>
+              <span style={{ fontWeight: "bold", color: "#141413" }}>{tokensStr}</span>
             </div>
           </div>
 
@@ -101,10 +121,10 @@ export async function GET(
             }}
           >
             <div style={{ fontSize: "14px", fontWeight: "bold", color: "#6c6a64" }}>
-              ESTIMATED AI COST
+              {costLabel}
             </div>
             <div style={{ fontSize: "36px", fontWeight: "bold", color: "#cc785c" }}>
-              ~$2.41
+              {costPrefix}{costVal.toFixed(2)}
             </div>
           </div>
 

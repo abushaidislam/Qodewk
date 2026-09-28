@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ReceiptV1Schema } from "@qodewk/protocol";
 import * as crypto from "node:crypto";
-
-// Ephemeral in-memory store for unauthenticated receipts
-const receiptsStore = new Map<string, any>();
+import { saveReceiptToStore, getReceiptFromStore } from "@/lib/storage";
 
 export async function POST(req: NextRequest) {
   try {
@@ -31,12 +29,8 @@ export async function POST(req: NextRequest) {
     const claimToken = `clm_${crypto.randomBytes(16).toString("hex")}`;
     const claimTokenHash = crypto.createHash("sha256").update(claimToken).digest("hex");
 
-    // Store in ephemeral map
-    receiptsStore.set(receipt.receipt.id, {
-      ...receipt,
-      claimTokenHash,
-      createdAt: new Date().toISOString()
-    });
+    // Store in persistence layer
+    await saveReceiptToStore(receipt, claimTokenHash);
 
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.QODEWK_APP_URL || "https://qodewk.flinkeo.online";
     const publicUrl = `${baseUrl}/r/${receipt.receipt.id}`;
@@ -62,12 +56,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Missing receipt id" }, { status: 400 });
   }
 
-  const receipt = receiptsStore.get(id);
+  const receipt = await getReceiptFromStore(id);
   if (!receipt) {
     return NextResponse.json({ error: "Receipt not found" }, { status: 404 });
   }
 
-  // Remove secret hash from public output
-  const { claimTokenHash, ...publicData } = receipt;
-  return NextResponse.json(publicData);
+  return NextResponse.json(receipt);
 }

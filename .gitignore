@@ -12,6 +12,7 @@ out/
 # Local Environment & Secrets
 .env
 .env*.local
+!.env.example
 *.pem
 
 # Local databases & Qodewk state

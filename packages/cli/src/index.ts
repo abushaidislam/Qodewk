@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import * as fs from "node:fs";
+import * as path from "node:path";
 import { Command } from "commander";
 import pc from "picocolors";
 import { renderTerminalQr } from "./qr.js";
@@ -12,7 +13,7 @@ const program = new Command();
 program
   .name("qodewk")
   .description("Universal telemetry and digital receipt generator for the AI coding agent era")
-  .version("0.1.10")
+  .version("0.2.1")
   .option("-j, --json", "Output receipt in machine-readable JSON format")
   .option("-f, --format <format>", "Output format (terminal, json, markdown)", "terminal")
   .option("-o, --out <path>", "Write receipt output to specified file path")
@@ -96,7 +97,7 @@ program
         return;
       }
 
-      const endpoint = process.env.QODEWK_API_URL || "https://qodewk.flinkeo.online/api/receipts";
+      const endpoint = process.env.QODEWK_API_URL || `${process.env.NEXT_PUBLIC_APP_URL || process.env.QODEWK_APP_URL || "https://qodewk.flinkeo.online"}/api/receipts`;
       console.log(pc.dim(`Publishing receipt ${receipt.receipt.id} to ${endpoint}...`));
 
       try {
@@ -126,6 +127,97 @@ program
       }
     } catch (err: any) {
       console.error(pc.red(`Error sharing receipt: ${err.message}`));
+      process.exit(1);
+    }
+  });
+
+program
+  .command("record")
+  .description("Silently record local telemetry receipt into SQLite (used by git hooks)")
+  .action(async () => {
+    try {
+      const receipt = await generateReceipt();
+      const db = new LocalStateDB();
+      db.saveReceipt(receipt);
+      db.close();
+      process.exit(0);
+    } catch {
+      // Non-blocking, never fail git commit
+      process.exit(0);
+    }
+  });
+
+const hookCommand = program
+  .command("hook")
+  .description("Manage non-blocking Git hooks for automatic telemetry recording");
+
+hookCommand
+  .command("install")
+  .description("Install non-blocking post-commit Git hook into current repository")
+  .action(async () => {
+    try {
+      const gitDir = path.join(process.cwd(), ".git");
+      if (!fs.existsSync(gitDir)) {
+        console.error(pc.red("Error: Current directory is not a Git repository root (.git not found)."));
+        process.exit(1);
+      }
+
+      const hooksDir = path.join(gitDir, "hooks");
+      if (!fs.existsSync(hooksDir)) {
+        fs.mkdirSync(hooksDir, { recursive: true });
+      }
+
+      const hookFile = path.join(hooksDir, "post-commit");
+      const hookMarkerBegin = "# --- BEGIN QODEWK HOOK ---";
+      const hookMarkerEnd = "# --- END QODEWK HOOK ---";
+      const hookSnippet = `\n${hookMarkerBegin}\n# Non-blocking Qodewk background recorder (< 5ms)\nif command -v qodewk >/dev/null 2>&1 || command -v pnpm >/dev/null 2>&1 || [ -f "./node_modules/.bin/qodewk" ]; then\n  ( ( qodewk record || pnpm qodewk record || npx qodewk record ) >/dev/null 2>&1 & )\nfi\n${hookMarkerEnd}\n`;
+
+      let content = "";
+      if (fs.existsSync(hookFile)) {
+        content = fs.readFileSync(hookFile, "utf-8");
+      } else {
+        content = "#!/bin/sh\n";
+      }
+
+      if (content.includes(hookMarkerBegin)) {
+        console.log(pc.yellow("Qodewk post-commit hook is already installed."));
+        return;
+      }
+
+      fs.writeFileSync(hookFile, content + hookSnippet, { mode: 0o755 });
+      console.log(pc.green("✓ Non-blocking Qodewk post-commit hook successfully installed in .git/hooks/post-commit"));
+    } catch (err: any) {
+      console.error(pc.red(`Failed to install Git hook: ${err.message}`));
+      process.exit(1);
+    }
+  });
+
+hookCommand
+  .command("uninstall")
+  .description("Remove Qodewk post-commit Git hook")
+  .action(async () => {
+    try {
+      const hookFile = path.join(process.cwd(), ".git", "hooks", "post-commit");
+      if (!fs.existsSync(hookFile)) {
+        console.log(pc.yellow("No post-commit hook found."));
+        return;
+      }
+
+      const content = fs.readFileSync(hookFile, "utf-8");
+      const hookMarkerBegin = "# --- BEGIN QODEWK HOOK ---";
+      const hookMarkerEnd = "# --- END QODEWK HOOK ---";
+
+      if (!content.includes(hookMarkerBegin)) {
+        console.log(pc.yellow("Qodewk hook is not installed."));
+        return;
+      }
+
+      const regex = new RegExp(`\\n?${hookMarkerBegin}[\\s\\S]*?${hookMarkerEnd}\\n?`, "g");
+      const updated = content.replace(regex, "");
+      fs.writeFileSync(hookFile, updated, { mode: 0o755 });
+      console.log(pc.green("✓ Qodewk post-commit hook removed."));
+    } catch (err: any) {
+      console.error(pc.red(`Failed to uninstall hook: ${err.message}`));
       process.exit(1);
     }
   });
@@ -264,6 +356,7 @@ async function renderTerminalReceipt(receipt: ReceiptV1, publicUrl?: string, use
   printRow("");
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.QODEWK_APP_URL || "https://qodewk.flinkeo.online";
+  const isPublished = Boolean(publicUrl);
   const urlToDisplay = publicUrl || `${baseUrl}/r/${receipt.receipt.id}`;
   const displayHost = baseUrl.replace(/^https?:\/\//, "");
 
@@ -281,7 +374,7 @@ async function renderTerminalReceipt(receipt: ReceiptV1, publicUrl?: string, use
   } else {
     const qrRows = renderTerminalQr(urlToDisplay);
     if (qrRows.length > 0) {
-      printCenteredRow(pc.dim("--- SCAN WITH PHONE ---"));
+      printCenteredRow(pc.dim(isPublished ? "--- SCAN PUBLIC RECEIPT ---" : "--- LOCAL PROOF OF WORK ---"));
       printRow("");
       for (const qrRow of qrRows) {
         printCenteredRow(qrRow);
@@ -292,8 +385,12 @@ async function renderTerminalReceipt(receipt: ReceiptV1, publicUrl?: string, use
     }
   }
 
-  printCenteredRow(pc.cyan(displayHost));
-  printCenteredRow(pc.underline(pc.cyan(`r/${receipt.receipt.id}`)));
+  if (isPublished) {
+    printCenteredRow(pc.cyan(displayHost));
+    printCenteredRow(pc.underline(pc.cyan(`r/${receipt.receipt.id}`)));
+  } else {
+    printCenteredRow(pc.yellow("[ LOCAL RECORD — NOT PUBLISHED ]"));
+  }
   printRow("");
   if (process.env.QODEWK_TELEMETRY === "off") {
     printRow(`  ${teal("[✓]")} QODEWK_TELEMETRY=off (Cloud sync disabled)`);
@@ -301,9 +398,16 @@ async function renderTerminalReceipt(receipt: ReceiptV1, publicUrl?: string, use
   printRow(`  ${green("[✓]")} Source code was never uploaded to Qodewk`);
   console.log("  " + pc.bold(coral("\\/".repeat(28))));
   console.log("");
-  console.log(`  ${pc.dim("🔗 Public Receipt:")} ${pc.underline(pc.cyan(urlToDisplay))}`);
+
+  if (isPublished) {
+    console.log(`  ${pc.dim("🔗 Public Receipt:")} ${pc.underline(pc.cyan(urlToDisplay))}`);
+  } else {
+    console.log(`  ${pc.dim("💾 Saved to local DB:")} ${pc.dim("~/.qodewk/state.db")}`);
+    console.log(`  ${pc.dim("💡 To publish & get shareable URL:")} ${pc.cyan("qodewk share")}`);
+  }
+
   if (!useBarcode) {
-    console.log(`  ${pc.dim("📊 View classic 1D barcode:")} ${pc.cyan("pnpm qodewk --barcode")}`);
+    console.log(`  ${pc.dim("📊 View classic 1D barcode:")} ${pc.cyan("qodewk --barcode")}`);
   }
   console.log("");
 }

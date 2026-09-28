@@ -19,6 +19,9 @@ export function ThermalReceipt({ receipt, showActions = true }: ThermalReceiptPr
   const costPrefix = receipt.ai.mode === "verified" ? "$" : "~$";
   const confidencePercent = `${Math.round(receipt.ai.confidence * 100)}%`;
 
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.QODEWK_APP_URL || "https://qodewk.flinkeo.online";
+  const publicUrl = `${baseUrl.replace(/\/$/, "")}/r/${receipt.receipt.id}`;
+
   const copyMarkdown = () => {
     const md = `### 🤖 Qodewk Receipt
 \`\`\`text
@@ -31,7 +34,7 @@ Estimated Tokens:  ~${totalTokens}
 Estimated Cost:    ${costPrefix}${receipt.ai.cost.toFixed(2)} (${confidencePercent} confidence)
 \`\`\`
 [✓] Source code was not uploaded to Qodewk.
-[View Verified Receipt](https://qodewk.flinkeo.online/r/${receipt.receipt.id})`;
+[View Verified Receipt](${publicUrl})`;
 
     navigator.clipboard.writeText(md);
     setCopied(true);
@@ -145,7 +148,7 @@ Estimated Cost:    ${costPrefix}${receipt.ai.cost.toFixed(2)} (${confidencePerce
         <div className="py-4 my-2 border-y-2 border-[#141413] flex justify-between items-baseline">
           <div>
             <div className="text-[11px] text-[#8e8b82] uppercase font-bold tracking-wider">
-              ESTIMATED AI COST
+              {receipt.ai.mode === "verified" ? "VERIFIED AI COST" : "ESTIMATED AI COST"}
             </div>
             <div className="text-[10px] text-[#6c6a64] mt-0.5">
               Confidence: {confidencePercent}
@@ -206,8 +209,8 @@ Estimated Cost:    ${costPrefix}${receipt.ai.cost.toFixed(2)} (${confidencePerce
               <rect x="231" y="0" width="4" height="40" fill="#141413" />
             </svg>
           </div>
-          <div className="text-[10px] text-[#6c6a64] mt-0.5 tracking-wider">
-            https://qodewk.flinkeo.online/r/{receipt.receipt.id}
+          <div className="text-[10px] text-[#6c6a64] mt-0.5 tracking-wider truncate max-w-full px-2">
+            {publicUrl}
           </div>
         </div>
 
