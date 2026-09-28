@@ -1,14 +1,9 @@
 import * as crypto from "node:crypto";
 import { ReceiptV1, ReceiptV1Schema, ProviderSession } from "@qodewk/protocol";
-import { extractGitMetrics, GitDiffMetrics } from "./git.js";
-import {
-  detectProviderFromCommit,
-  discoverLocalClaudeSessions,
-  discoverAntigravityEnvironment
-} from "./discovery.js";
+import { extractGitMetrics, GitDiffMetrics, computeAiWrittenRatio } from "./git.js";
+import { detectProviderFromCommit } from "./discovery.js";
 import { harvestUniversalFootprints } from "./harvester/index.js";
 import { estimateCost } from "./estimator.js";
-import { LocalStateDB } from "./db.js";
 
 export * from "./git.js";
 export * from "./discovery.js";
@@ -30,6 +25,35 @@ export interface GenerateReceiptOptions {
   anonymizeBranch?: boolean;
 }
 
+/**
+ * Strip path-level session detail before cloud publish.
+ * Keeps aggregate telemetry; drops filesTouched (paths).
+ */
+export function sanitizeReceiptForShare(receipt: ReceiptV1): ReceiptV1 {
+  const sessions = receipt.ai.sessions?.map((s) => ({
+    provider: s.provider,
+    model: s.model,
+    task: s.task,
+    tokens: s.tokens,
+    cost: s.cost,
+    confidence: s.confidence,
+    mode: s.mode
+  }));
+
+  return {
+    ...receipt,
+    privacy: {
+      ...receipt.privacy,
+      sourceExcluded: true as const,
+      isPublic: true
+    },
+    ai: {
+      ...receipt.ai,
+      sessions
+    }
+  };
+}
+
 export async function generateReceipt(options: GenerateReceiptOptions = {}): Promise<ReceiptV1> {
   const metrics: GitDiffMetrics = await extractGitMetrics({
     repoPath: options.repoPath || process.cwd(),
@@ -38,7 +62,6 @@ export async function generateReceipt(options: GenerateReceiptOptions = {}): Pro
     since: options.since
   });
 
-  // 1. Universal Multi-Platform Footprint Harvesting (Antigravity, Claude, Cursor, etc.)
   const repoPath = options.repoPath || process.cwd();
   const harvestResult = await harvestUniversalFootprints({
     repoPath,
@@ -48,14 +71,16 @@ export async function generateReceipt(options: GenerateReceiptOptions = {}): Pro
   });
 
   const primaryFp = harvestResult.primaryFootprint;
-  let detected = detectProviderFromCommit(metrics.commitMessage);
+  const detected = detectProviderFromCommit(metrics.commitMessage);
 
   const provider = options.provider || primaryFp?.platform || detected?.provider || "unknown";
   const model = options.model || primaryFp?.model || detected?.model;
-  const task = options.task || primaryFp?.taskTitle || (harvestResult.tasks.length > 0 ? harvestResult.tasks[0] : undefined);
+  const task =
+    options.task ||
+    primaryFp?.taskTitle ||
+    (harvestResult.tasks.length > 0 ? harvestResult.tasks[0] : undefined);
 
-  // Convert footprints to ProviderSession[]
-  const sessions: ProviderSession[] = harvestResult.footprints.map(fp => ({
+  const sessions: ProviderSession[] = harvestResult.footprints.map((fp) => ({
     provider: fp.platform,
     model: fp.model,
     task: fp.taskTitle,
@@ -66,12 +91,11 @@ export async function generateReceipt(options: GenerateReceiptOptions = {}): Pro
     mode: fp.mode
   }));
 
-  let aiWrittenRatio: number | undefined = undefined;
-  if (primaryFp) {
-    aiWrittenRatio = 0.88;
-  }
+  const aiWrittenRatio = computeAiWrittenRatio(
+    metrics.changedFiles,
+    harvestResult.filesEdited
+  );
 
-  // 2. Dual-Engine Cost Estimation
   const costResult = estimateCost({
     files: metrics.files,
     insertions: metrics.insertions,
@@ -82,21 +106,27 @@ export async function generateReceipt(options: GenerateReceiptOptions = {}): Pro
     confidence: primaryFp?.confidence || detected?.confidence
   });
 
-  // 3. Assemble Canonical Payload
-  const receiptId = `rec_${crypto.randomBytes(12).toString("hex")}`;
   const now = new Date().toISOString();
 
-  // Temporary object for content hash
   const payloadToHash = {
     repoHash: metrics.repoHash,
     headSha: metrics.headSha,
+    baseSha: metrics.baseSha,
     files: metrics.files,
     insertions: metrics.insertions,
     deletions: metrics.deletions,
     cost: costResult.cost,
-    tokens: costResult.tokens
+    tokens: costResult.tokens,
+    mode: costResult.mode,
+    provider: costResult.provider,
+    model: costResult.model
   };
-  const contentHash = crypto.createHash("sha256").update(JSON.stringify(payloadToHash)).digest("hex");
+  const contentHash = crypto
+    .createHash("sha256")
+    .update(JSON.stringify(payloadToHash))
+    .digest("hex");
+  // Idempotent id: same shipment content → same public receipt id
+  const receiptId = `rec_${contentHash.slice(0, 24)}`;
 
   const receipt: ReceiptV1 = {
     version: "1.0",
@@ -134,11 +164,10 @@ export async function generateReceipt(options: GenerateReceiptOptions = {}): Pro
     },
     privacy: {
       sourceExcluded: true,
-      isPublic: options.isPublic ?? true,
+      isPublic: options.isPublic ?? false,
       anonymizeBranch: options.anonymizeBranch ?? false
     }
   };
 
-  // Validate against Zod schema
   return ReceiptV1Schema.parse(receipt);
 }

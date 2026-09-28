@@ -9,6 +9,8 @@ export interface GitDiffMetrics {
   netLines: number;
   renames: number;
   languages: Record<string, number>;
+  /** Relative paths of files in the inspected diff (for AI attribution overlap). */
+  changedFiles: string[];
   branch: string;
   headSha: string;
   baseSha?: string;
@@ -179,10 +181,16 @@ export async function extractGitMetrics(
   let renames = 0;
   const extCounts: Record<string, number> = {};
   let totalTrackedFiles = 0;
+  const changedFiles: string[] = [];
 
   for (const f of diffSummary.files) {
     if (f.file.includes(" => ")) {
       renames++;
+      // Take the destination side of a rename for path matching
+      const dest = f.file.split(" => ").pop()?.trim();
+      if (dest) changedFiles.push(dest.replace(/\\/g, "/"));
+    } else {
+      changedFiles.push(f.file.replace(/\\/g, "/"));
     }
     const ext = path.extname(f.file).replace(/^\./, "").toLowerCase();
     const lang = mapExtensionToLanguage(ext);
@@ -208,6 +216,7 @@ export async function extractGitMetrics(
     netLines,
     renames,
     languages,
+    changedFiles,
     branch,
     headSha,
     baseSha,
@@ -216,6 +225,40 @@ export async function extractGitMetrics(
     commitMessage,
     commitsCount
   };
+}
+
+/**
+ * Fraction of changed files that also appear in agent footprint edit lists.
+ * Returns undefined when either side is empty — never invents a ratio.
+ */
+export function computeAiWrittenRatio(
+  changedFiles: string[],
+  aiEditedFiles: string[]
+): number | undefined {
+  if (changedFiles.length === 0 || aiEditedFiles.length === 0) {
+    return undefined;
+  }
+
+  const norm = (f: string) =>
+    f.replace(/\\/g, "/").replace(/^\.\//, "").toLowerCase();
+
+  const aiNorm = aiEditedFiles.map(norm);
+  let hit = 0;
+
+  for (const cf of changedFiles) {
+    const c = norm(cf);
+    const matched = aiNorm.some(
+      (a) =>
+        a === c ||
+        c.endsWith("/" + a) ||
+        a.endsWith("/" + c) ||
+        c.endsWith(a) ||
+        a.endsWith(c)
+    );
+    if (matched) hit++;
+  }
+
+  return Math.round((hit / changedFiles.length) * 100) / 100;
 }
 
 function mapExtensionToLanguage(ext: string): string | null {

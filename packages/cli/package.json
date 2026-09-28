@@ -1,6 +1,6 @@
 {
   "name": "qodewk",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Universal telemetry and digital receipt generator for the AI coding agent era",
   "type": "module",
   "bin": {
@@ -14,6 +14,7 @@
   "scripts": {
     "build": "tsup",
     "typecheck": "tsc --noEmit",
+    "test": "node --test test/smoke.test.mjs",
     "prepublishOnly": "pnpm run build"
   },
   "publishConfig": {
@@ -43,8 +44,7 @@
   "dependencies": {
     "commander": "^13.1.0",
     "picocolors": "^1.1.1",
-    "qrcode": "^1.5.4",
-    "simple-git": "^3.27.0"
+    "qrcode": "^1.5.4"
   },
   "devDependencies": {
     "@qodewk/core": "workspace:*",

@@ -114,10 +114,14 @@ Unlike single-vendor utilities (like Chit, which only support Claude Code CLI), 
 | `npx qodewk --platform <platform>` | Filter telemetry to a specific platform (`antigravity`, `claude`, `cursor`, `all`) | Single-platform audit |
 | `npx qodewk --json` | Export machine-readable telemetry conforming to canonical `ReceiptV1` schema | Formatted JSON output |
 | `npx qodewk share` | Publish privacy-safe metadata to Qodewk Cloud and generate short link | `https://qodewk.dev/r/rec_...` |
+| `npx qodewk share --today` | Share today's harvested footprint window | Public URL + claim token |
 | `npx qodewk audit --base <branch>` | Calculate aggregate diff and telemetry across an entire PR branch range | Git revision delta receipt |
+| `npx qodewk hook install` / `hooks install` | Install non-blocking `post-commit` + `post-rewrite` hooks | Local auto-record |
+| `npx qodewk record` / `record-event` | Silent SQLite record (hook entrypoint) | exit 0 always |
 | `npx qodewk -f markdown -o receipt.md` | Export sticky Markdown receipt directly formatted for GitHub PR comments | File `receipt.md` |
 | `npx qodewk -p <provider> -m <model>` | Override detected provider & frontier model pricing rate card | Custom model cost estimate |
 | `npx qodewk --anon` | Redact sensitive repository and branch identifiers | Privacy-hardened receipt |
+| `npx qodewk --local` | Force local-only mode (no cloud sockets on share) | Local thermal receipt |
 
 ---
 

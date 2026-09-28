@@ -5,15 +5,151 @@ import * as path from "node:path";
 import { Command } from "commander";
 import pc from "picocolors";
 import { renderTerminalQr } from "./qr.js";
-import { generateReceipt, formatMarkdownReceipt, LocalStateDB } from "@qodewk/core";
+import {
+  generateReceipt,
+  formatMarkdownReceipt,
+  LocalStateDB,
+  sanitizeReceiptForShare
+} from "@qodewk/core";
 import { ReceiptV1 } from "@qodewk/protocol";
+
+const SHARE_PAYLOAD_MAX_BYTES = 50_000;
+
+type OutputOptions = {
+  json?: boolean;
+  format?: string;
+  out?: string;
+  barcode?: boolean;
+};
+
+type HarvestCliOptions = {
+  provider?: string;
+  model?: string;
+  since?: string;
+  today?: boolean;
+  platform?: string;
+  anon?: boolean;
+};
+
+function resolveCliVersion(): string {
+  try {
+    const argv1 = process.argv[1] ? path.dirname(path.resolve(process.argv[1])) : process.cwd();
+    const candidates = [
+      path.join(argv1, "..", "package.json"),
+      path.join(argv1, "package.json")
+    ];
+    for (const candidate of candidates) {
+      if (!fs.existsSync(candidate)) continue;
+      const pkg = JSON.parse(fs.readFileSync(candidate, "utf-8")) as {
+        name?: string;
+        version?: string;
+      };
+      if (pkg.name === "qodewk" && pkg.version) return pkg.version;
+    }
+  } catch {
+    // fall through
+  }
+  return "0.2.1";
+}
+
+function resolveSince(options: HarvestCliOptions): string | undefined {
+  return options.today ? "today" : options.since;
+}
+
+function persistReceipt(receipt: ReceiptV1, claimToken?: string): void {
+  try {
+    const db = new LocalStateDB();
+    db.saveReceipt(receipt, claimToken);
+    db.close();
+  } catch {
+    // CI / read-only / missing node:sqlite
+  }
+}
+
+/**
+ * Resolve the shared Git hooks directory, including worktrees where `.git` is a file.
+ */
+function resolveGitHooksDir(cwd: string = process.cwd()): string | null {
+  const gitPath = path.join(cwd, ".git");
+  if (!fs.existsSync(gitPath)) return null;
+
+  let gitCommonDir: string;
+
+  const stat = fs.statSync(gitPath);
+  if (stat.isDirectory()) {
+    gitCommonDir = gitPath;
+  } else {
+    const content = fs.readFileSync(gitPath, "utf-8");
+    const match = content.match(/gitdir:\s*(.+)/i);
+    if (!match?.[1]) return null;
+
+    let gitDir = match[1].trim();
+    if (!path.isAbsolute(gitDir)) {
+      gitDir = path.resolve(cwd, gitDir);
+    }
+
+    const commonFile = path.join(gitDir, "commondir");
+    if (fs.existsSync(commonFile)) {
+      let common = fs.readFileSync(commonFile, "utf-8").trim();
+      if (!path.isAbsolute(common)) {
+        common = path.resolve(gitDir, common);
+      }
+      gitCommonDir = common;
+    } else if (path.basename(path.dirname(gitDir)) === "worktrees") {
+      gitCommonDir = path.dirname(path.dirname(gitDir));
+    } else {
+      gitCommonDir = gitDir;
+    }
+  }
+
+  return path.join(gitCommonDir, "hooks");
+}
+
+const HOOK_MARKER_BEGIN = "# --- BEGIN QODEWK HOOK ---";
+const HOOK_MARKER_END = "# --- END QODEWK HOOK ---";
+const HOOK_SNIPPET = `
+${HOOK_MARKER_BEGIN}
+# Non-blocking Qodewk background recorder (< 5ms)
+if command -v qodewk >/dev/null 2>&1 || command -v pnpm >/dev/null 2>&1 || [ -f "./node_modules/.bin/qodewk" ]; then
+  ( ( qodewk record || pnpm qodewk record || npx qodewk record ) >/dev/null 2>&1 & )
+fi
+${HOOK_MARKER_END}
+`;
+
+function installHookFile(hookFile: string): "installed" | "exists" {
+  let content = "";
+  if (fs.existsSync(hookFile)) {
+    content = fs.readFileSync(hookFile, "utf-8");
+  } else {
+    content = "#!/bin/sh\n";
+  }
+
+  if (content.includes(HOOK_MARKER_BEGIN)) {
+    return "exists";
+  }
+
+  fs.writeFileSync(hookFile, content + HOOK_SNIPPET, { mode: 0o755 });
+  return "installed";
+}
+
+function uninstallHookFile(hookFile: string): "removed" | "missing" | "absent" {
+  if (!fs.existsSync(hookFile)) return "absent";
+
+  const content = fs.readFileSync(hookFile, "utf-8");
+  if (!content.includes(HOOK_MARKER_BEGIN)) return "missing";
+
+  const regex = new RegExp(`\\n?${HOOK_MARKER_BEGIN}[\\s\\S]*?${HOOK_MARKER_END}\\n?`, "g");
+  const updated = content.replace(regex, "");
+  fs.writeFileSync(hookFile, updated, { mode: 0o755 });
+  return "removed";
+}
 
 const program = new Command();
 
 program
   .name("qodewk")
   .description("Universal telemetry and digital receipt generator for the AI coding agent era")
-  .version("0.2.1")
+  .version(resolveCliVersion())
   .option("-j, --json", "Output receipt in machine-readable JSON format")
   .option("-f, --format <format>", "Output format (terminal, json, markdown)", "terminal")
   .option("-o, --out <path>", "Write receipt output to specified file path")
@@ -23,30 +159,24 @@ program
   .option("--today", "Harvest agent footprints for today")
   .option("--platform <platform>", "Filter agent platform (antigravity, claude, cursor, all)")
   .option("--anon", "Anonymize branch name in output")
+  .option("--local", "Force local-only mode (never open network sockets)")
   .option("--barcode", "Render 1D barcode simulation instead of scannable 2D QR code")
   .action(async (options) => {
     try {
-      const since = options.today ? "today" : options.since;
       const receipt = await generateReceipt({
         provider: options.provider,
         model: options.model,
-        since,
+        since: resolveSince(options),
         platform: options.platform,
-        anonymizeBranch: options.anon
+        anonymizeBranch: options.anon,
+        isPublic: false
       });
 
-      // Save to local SQLite database
-      try {
-        const db = new LocalStateDB();
-        db.saveReceipt(receipt);
-        db.close();
-      } catch {
-        // Fallback for CI or read-only environments
-      }
-
+      persistReceipt(receipt);
       await outputReceipt(receipt, options);
-    } catch (err: any) {
-      console.error(pc.red(`Error generating receipt: ${err.message}`));
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error(pc.red(`Error generating receipt: ${message}`));
       process.exit(1);
     }
   });
@@ -60,6 +190,10 @@ program
   .option("-o, --out <path>", "Write receipt output to specified file path")
   .option("-p, --provider <provider>", "Specify AI provider")
   .option("-m, --model <model>", "Specify AI model")
+  .option("-s, --since <duration>", "Harvest agent footprints since duration")
+  .option("--today", "Harvest agent footprints for today")
+  .option("--platform <platform>", "Filter agent platform")
+  .option("--anon", "Anonymize branch name in output")
   .option("--barcode", "Render 1D barcode simulation instead of scannable 2D QR code")
   .action(async (options) => {
     try {
@@ -67,12 +201,18 @@ program
         baseSha: options.base,
         headSha: options.head,
         provider: options.provider,
-        model: options.model
+        model: options.model,
+        since: resolveSince(options),
+        platform: options.platform,
+        anonymizeBranch: options.anon,
+        isPublic: false
       });
 
+      persistReceipt(receipt);
       await outputReceipt(receipt, options);
-    } catch (err: any) {
-      console.error(pc.red(`Error auditing git range: ${err.message}`));
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error(pc.red(`Error auditing git range: ${message}`));
       process.exit(1);
     }
   });
@@ -82,64 +222,112 @@ program
   .description("Publish privacy-safe receipt to Qodewk cloud and get a shareable URL")
   .option("-p, --provider <provider>", "Specify AI provider")
   .option("-m, --model <model>", "Specify AI model")
+  .option("-s, --since <duration>", "Harvest agent footprints since duration")
+  .option("--today", "Harvest agent footprints for today")
+  .option("--platform <platform>", "Filter agent platform")
+  .option("--anon", "Anonymize branch name in output")
+  .option("-f, --format <format>", "Local fallback output format", "terminal")
+  .option("-j, --json", "Also print JSON after share")
   .option("--barcode", "Render 1D barcode simulation instead of scannable 2D QR code")
   .action(async (options) => {
     try {
       const receipt = await generateReceipt({
         provider: options.provider,
-        model: options.model
+        model: options.model,
+        since: resolveSince(options),
+        platform: options.platform,
+        anonymizeBranch: options.anon,
+        isPublic: false
       });
 
-      if (process.env.QODEWK_TELEMETRY === "off") {
-        console.log(pc.yellow("\n⚠️ Cloud publishing is disabled because QODEWK_TELEMETRY=off."));
+      const localFlag = program.opts().local === true;
+      if (process.env.QODEWK_TELEMETRY === "off" || localFlag) {
+        console.log(
+          pc.yellow(
+            `\nCloud publishing is disabled (${localFlag ? "--local" : "QODEWK_TELEMETRY=off"}).`
+          )
+        );
         console.log(pc.dim("Telemetry remains strictly stored in local SQLite (~/.qodewk/state.db).\n"));
+        persistReceipt(receipt);
         await renderTerminalReceipt(receipt, undefined, options.barcode);
         return;
       }
 
-      const endpoint = process.env.QODEWK_API_URL || `${process.env.NEXT_PUBLIC_APP_URL || process.env.QODEWK_APP_URL || "https://qodewk.flinkeo.online"}/api/receipts`;
-      console.log(pc.dim(`Publishing receipt ${receipt.receipt.id} to ${endpoint}...`));
+      const sanitized = sanitizeReceiptForShare(receipt);
+      let body = JSON.stringify(sanitized);
+
+      // Drop optional sessions if still over the 50 KB API cap
+      if (Buffer.byteLength(body, "utf-8") > SHARE_PAYLOAD_MAX_BYTES && sanitized.ai.sessions) {
+        const trimmed = {
+          ...sanitized,
+          ai: { ...sanitized.ai, sessions: undefined }
+        };
+        body = JSON.stringify(trimmed);
+      }
+
+      if (Buffer.byteLength(body, "utf-8") > SHARE_PAYLOAD_MAX_BYTES) {
+        console.error(pc.red("Sanitized receipt still exceeds the 50 KB cloud payload limit."));
+        process.exit(1);
+      }
+
+      const endpoint =
+        process.env.QODEWK_API_URL ||
+        `${process.env.NEXT_PUBLIC_APP_URL || process.env.QODEWK_APP_URL || "https://qodewk.flinkeo.online"}/api/receipts`;
+      console.log(pc.dim(`Publishing receipt ${sanitized.receipt.id} to ${endpoint}...`));
 
       try {
         const response = await fetch(endpoint, {
           method: "POST",
           headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "Content-Length": String(Buffer.byteLength(body, "utf-8"))
           },
-          body: JSON.stringify(receipt)
+          body
         });
 
         if (!response.ok) {
-          throw new Error(`API responded with status ${response.status}`);
+          const errText = await response.text().catch(() => "");
+          throw new Error(`API responded with status ${response.status}${errText ? `: ${errText.slice(0, 200)}` : ""}`);
         }
 
-        const data = await response.json() as { url: string; claimToken: string };
+        const data = (await response.json()) as { url: string; claimToken: string };
 
-        // Save claim token to local DB
-        const db = new LocalStateDB();
-        db.saveReceipt(receipt, data.claimToken);
-        db.close();
+        persistReceipt(sanitized, data.claimToken);
 
-        await renderTerminalReceipt(receipt, data.url, options.barcode);
-      } catch (networkErr: any) {
-        console.log(pc.yellow(`\nCould not reach cloud API (${networkErr.message}). Rendered locally:`));
+        console.log("");
+        console.log(pc.green("  Published successfully."));
+        console.log(`  ${pc.dim("Public URL:")} ${pc.underline(pc.cyan(data.url))}`);
+        console.log(`  ${pc.bold(pc.yellow("  Claim token (store securely — shown once):"))}`);
+        console.log(`  ${pc.yellow(data.claimToken)}`);
+        console.log(pc.dim("  Saved to ~/.qodewk/state.db — required to prove authorship later."));
+        console.log("");
+
+        await renderTerminalReceipt(sanitized, data.url, options.barcode);
+
+        if (options.json) {
+          console.log(JSON.stringify({ url: data.url, claimToken: data.claimToken, receipt: sanitized }, null, 2));
+        }
+      } catch (networkErr: unknown) {
+        const message = networkErr instanceof Error ? networkErr.message : String(networkErr);
+        console.log(pc.yellow(`\nCould not reach cloud API (${message}). Rendered locally:`));
+        persistReceipt(receipt);
         await renderTerminalReceipt(receipt, undefined, options.barcode);
       }
-    } catch (err: any) {
-      console.error(pc.red(`Error sharing receipt: ${err.message}`));
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error(pc.red(`Error sharing receipt: ${message}`));
       process.exit(1);
     }
   });
 
 program
   .command("record")
+  .alias("record-event")
   .description("Silently record local telemetry receipt into SQLite (used by git hooks)")
   .action(async () => {
     try {
-      const receipt = await generateReceipt();
-      const db = new LocalStateDB();
-      db.saveReceipt(receipt);
-      db.close();
+      const receipt = await generateReceipt({ isPublic: false });
+      persistReceipt(receipt);
       process.exit(0);
     } catch {
       // Non-blocking, never fail git commit
@@ -149,75 +337,82 @@ program
 
 const hookCommand = program
   .command("hook")
+  .aliases(["hooks"])
   .description("Manage non-blocking Git hooks for automatic telemetry recording");
 
 hookCommand
   .command("install")
-  .description("Install non-blocking post-commit Git hook into current repository")
+  .description("Install non-blocking post-commit and post-rewrite Git hooks")
   .action(async () => {
     try {
-      const gitDir = path.join(process.cwd(), ".git");
-      if (!fs.existsSync(gitDir)) {
-        console.error(pc.red("Error: Current directory is not a Git repository root (.git not found)."));
+      const hooksDir = resolveGitHooksDir();
+      if (!hooksDir) {
+        console.error(pc.red("Error: Current directory is not a Git repository (.git not found)."));
         process.exit(1);
       }
 
-      const hooksDir = path.join(gitDir, "hooks");
       if (!fs.existsSync(hooksDir)) {
         fs.mkdirSync(hooksDir, { recursive: true });
       }
 
-      const hookFile = path.join(hooksDir, "post-commit");
-      const hookMarkerBegin = "# --- BEGIN QODEWK HOOK ---";
-      const hookMarkerEnd = "# --- END QODEWK HOOK ---";
-      const hookSnippet = `\n${hookMarkerBegin}\n# Non-blocking Qodewk background recorder (< 5ms)\nif command -v qodewk >/dev/null 2>&1 || command -v pnpm >/dev/null 2>&1 || [ -f "./node_modules/.bin/qodewk" ]; then\n  ( ( qodewk record || pnpm qodewk record || npx qodewk record ) >/dev/null 2>&1 & )\nfi\n${hookMarkerEnd}\n`;
+      const targets = ["post-commit", "post-rewrite"] as const;
+      let installed = 0;
+      let existing = 0;
 
-      let content = "";
-      if (fs.existsSync(hookFile)) {
-        content = fs.readFileSync(hookFile, "utf-8");
-      } else {
-        content = "#!/bin/sh\n";
+      for (const name of targets) {
+        const result = installHookFile(path.join(hooksDir, name));
+        if (result === "installed") installed++;
+        else existing++;
       }
 
-      if (content.includes(hookMarkerBegin)) {
-        console.log(pc.yellow("Qodewk post-commit hook is already installed."));
+      if (installed === 0 && existing > 0) {
+        console.log(pc.yellow("Qodewk Git hooks are already installed (post-commit, post-rewrite)."));
         return;
       }
 
-      fs.writeFileSync(hookFile, content + hookSnippet, { mode: 0o755 });
-      console.log(pc.green("✓ Non-blocking Qodewk post-commit hook successfully installed in .git/hooks/post-commit"));
-    } catch (err: any) {
-      console.error(pc.red(`Failed to install Git hook: ${err.message}`));
+      console.log(
+        pc.green(
+          `✓ Non-blocking Qodewk hooks installed in ${hooksDir} (post-commit${installed > 1 || existing > 0 ? ", post-rewrite" : installed === 1 && targets.length === 2 ? " + post-rewrite" : ""})`
+        )
+      );
+      if (existing > 0) {
+        console.log(pc.dim(`  (${existing} hook file(s) already contained the Qodewk marker)`));
+      }
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error(pc.red(`Failed to install Git hook: ${message}`));
       process.exit(1);
     }
   });
 
 hookCommand
   .command("uninstall")
-  .description("Remove Qodewk post-commit Git hook")
+  .description("Remove Qodewk post-commit and post-rewrite Git hooks")
   .action(async () => {
     try {
-      const hookFile = path.join(process.cwd(), ".git", "hooks", "post-commit");
-      if (!fs.existsSync(hookFile)) {
-        console.log(pc.yellow("No post-commit hook found."));
+      const hooksDir = resolveGitHooksDir();
+      if (!hooksDir) {
+        console.log(pc.yellow("No Git repository found."));
         return;
       }
 
-      const content = fs.readFileSync(hookFile, "utf-8");
-      const hookMarkerBegin = "# --- BEGIN QODEWK HOOK ---";
-      const hookMarkerEnd = "# --- END QODEWK HOOK ---";
+      const targets = ["post-commit", "post-rewrite"] as const;
+      let removed = 0;
 
-      if (!content.includes(hookMarkerBegin)) {
-        console.log(pc.yellow("Qodewk hook is not installed."));
+      for (const name of targets) {
+        const result = uninstallHookFile(path.join(hooksDir, name));
+        if (result === "removed") removed++;
+      }
+
+      if (removed === 0) {
+        console.log(pc.yellow("Qodewk hooks are not installed."));
         return;
       }
 
-      const regex = new RegExp(`\\n?${hookMarkerBegin}[\\s\\S]*?${hookMarkerEnd}\\n?`, "g");
-      const updated = content.replace(regex, "");
-      fs.writeFileSync(hookFile, updated, { mode: 0o755 });
-      console.log(pc.green("✓ Qodewk post-commit hook removed."));
-    } catch (err: any) {
-      console.error(pc.red(`Failed to uninstall hook: ${err.message}`));
+      console.log(pc.green(`✓ Qodewk hook markers removed from ${removed} file(s).`));
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error(pc.red(`Failed to uninstall hook: ${message}`));
       process.exit(1);
     }
   });
@@ -230,28 +425,6 @@ const ansiHex = (hexColor: string) => {
   return (text: string) => `\x1b[38;2;${r};${g};${b}m${text}\x1b[39m`;
 };
 
-async function outputReceipt(receipt: ReceiptV1, options: { json?: boolean; format?: string; out?: string; barcode?: boolean }, publicUrl?: string) {
-  let content = "";
-  const format = options.json ? "json" : options.format || "terminal";
-
-  if (format === "json") {
-    content = JSON.stringify(receipt, null, 2);
-  } else if (format === "markdown") {
-    content = formatMarkdownReceipt(receipt, publicUrl);
-  }
-
-  if (options.out) {
-    fs.writeFileSync(options.out, content || formatMarkdownReceipt(receipt, publicUrl), "utf-8");
-    console.log(pc.green(`✓ Receipt written to ${options.out}`));
-  }
-
-  if (format === "terminal" && !options.out) {
-    await renderTerminalReceipt(receipt, publicUrl, options.barcode);
-  } else if (format !== "terminal" && !options.out) {
-    console.log(content);
-  }
-}
-
 const stripAnsi = (str: string): string => {
   return str.replace(/\x1B\[[0-9;]*[a-zA-Z]/g, "").replace(/\x1B\([B0]/g, "");
 };
@@ -260,25 +433,31 @@ const visibleWidth = (str: string): number => {
   return stripAnsi(str).length;
 };
 
-async function renderTerminalReceipt(receipt: ReceiptV1, publicUrl?: string, useBarcode?: boolean) {
+function buildTerminalReceipt(
+  receipt: ReceiptV1,
+  publicUrl?: string,
+  useBarcode?: boolean
+): string {
+  const lines: string[] = [];
   const coral = ansiHex("#cc785c");
   const green = ansiHex("#5db872");
   const red = ansiHex("#c64545");
   const teal = ansiHex("#5db8a6");
-
   const INNER_WIDTH = 52;
+
+  const push = (line: string) => lines.push(line);
 
   const printRow = (content: string, width = INNER_WIDTH) => {
     const visLen = visibleWidth(content);
     const pad = Math.max(0, width - visLen);
-    console.log(`  | ${content}${" ".repeat(pad)} |`);
+    push(`  | ${content}${" ".repeat(pad)} |`);
   };
 
   const printRowSplit = (left: string, right: string, width = INNER_WIDTH) => {
     const leftVis = visibleWidth(left);
     const rightVis = visibleWidth(right);
     const pad = Math.max(1, width - leftVis - rightVis);
-    console.log(`  | ${left}${" ".repeat(pad)}${right} |`);
+    push(`  | ${left}${" ".repeat(pad)}${right} |`);
   };
 
   const printCenteredRow = (content: string, width = INNER_WIDTH) => {
@@ -286,11 +465,11 @@ async function renderTerminalReceipt(receipt: ReceiptV1, publicUrl?: string, use
     const totalPad = Math.max(0, width - visLen);
     const leftPad = Math.floor(totalPad / 2);
     const rightPad = totalPad - leftPad;
-    console.log(`  | ${" ".repeat(leftPad)}${content}${" ".repeat(rightPad)} |`);
+    push(`  | ${" ".repeat(leftPad)}${content}${" ".repeat(rightPad)} |`);
   };
 
   const printDivider = (char = "=", width = INNER_WIDTH) => {
-    console.log(`  | ${char.repeat(width)} |`);
+    push(`  | ${char.repeat(width)} |`);
   };
 
   const totalTokens = (receipt.ai.tokens.input + receipt.ai.tokens.output).toLocaleString();
@@ -299,8 +478,8 @@ async function renderTerminalReceipt(receipt: ReceiptV1, publicUrl?: string, use
   const costPrefix = receipt.ai.mode === "verified" ? "$" : "~$";
   const confidencePercent = `${Math.round(receipt.ai.confidence * 100)}%`;
 
-  console.log("");
-  console.log("  " + pc.bold(coral("/\\".repeat(28))));
+  push("");
+  push("  " + pc.bold(coral("/\\".repeat(28))));
   printCenteredRow(pc.bold(pc.white("Q O D E W K")));
   printCenteredRow(coral("*** PROOF OF SHIPMENT ***"));
   printRow("");
@@ -317,9 +496,10 @@ async function renderTerminalReceipt(receipt: ReceiptV1, publicUrl?: string, use
     printRow(`TASK: ${taskClean}`);
   }
   printDivider("=");
-  const itemsHeader = receipt.repository.commitsCount && receipt.repository.commitsCount > 1
-    ? `ITEMS CHANGED (${receipt.repository.commitsCount} COMMITS)`
-    : "ITEMS CHANGED";
+  const itemsHeader =
+    receipt.repository.commitsCount && receipt.repository.commitsCount > 1
+      ? `ITEMS CHANGED (${receipt.repository.commitsCount} COMMITS)`
+      : "ITEMS CHANGED";
   printRowSplit(itemsHeader, "QTY");
   printDivider("-");
   printRowSplit("Files Touched", String(receipt.mutation.files));
@@ -344,37 +524,31 @@ async function renderTerminalReceipt(receipt: ReceiptV1, publicUrl?: string, use
   printRowSplit("Total Tokens:", totalTokens);
   printDivider("=");
   const costLabel = receipt.ai.mode === "verified" ? "VERIFIED AI COST" : "ESTIMATED AI COST";
-  printRowSplit(
-    costLabel,
-    pc.bold(coral(costPrefix + receipt.ai.cost.toFixed(2)))
-  );
-  printRowSplit(
-    `CONFIDENCE: ${confidencePercent}`,
-    `[Mode: ${receipt.ai.mode}]`
-  );
+  printRowSplit(costLabel, pc.bold(coral(costPrefix + receipt.ai.cost.toFixed(2))));
+  printRowSplit(`CONFIDENCE: ${confidencePercent}`, `[Mode: ${receipt.ai.mode}]`);
   printDivider("=");
   printRow("");
 
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.QODEWK_APP_URL || "https://qodewk.flinkeo.online";
+  const baseUrl =
+    process.env.NEXT_PUBLIC_APP_URL || process.env.QODEWK_APP_URL || "https://qodewk.flinkeo.online";
   const isPublished = Boolean(publicUrl);
-  const urlToDisplay = publicUrl || `${baseUrl}/r/${receipt.receipt.id}`;
   const displayHost = baseUrl.replace(/^https?:\/\//, "");
 
   if (useBarcode) {
-    // Deterministic Code 128 barcode pattern generated from unique receipt ID
     const barChars = ["||| ", "| | ", "|||| ", "|| | ", "|| || "];
     let barcodePattern = "||| ";
     for (let i = 0; i < 7; i++) {
-      const charCode = receipt.receipt.id.charCodeAt(i % receipt.receipt.id.length) +
+      const charCode =
+        receipt.receipt.id.charCodeAt(i % receipt.receipt.id.length) +
         (receipt.receipt.id.charCodeAt((i + 7) % receipt.receipt.id.length) || 0);
       barcodePattern += barChars[charCode % barChars.length];
     }
     barcodePattern += "|||";
     printCenteredRow(pc.bold(barcodePattern));
-  } else {
-    const qrRows = renderTerminalQr(urlToDisplay);
+  } else if (isPublished && publicUrl) {
+    const qrRows = renderTerminalQr(publicUrl);
     if (qrRows.length > 0) {
-      printCenteredRow(pc.dim(isPublished ? "--- SCAN PUBLIC RECEIPT ---" : "--- LOCAL PROOF OF WORK ---"));
+      printCenteredRow(pc.dim("--- SCAN PUBLIC RECEIPT ---"));
       printRow("");
       for (const qrRow of qrRows) {
         printCenteredRow(qrRow);
@@ -383,6 +557,9 @@ async function renderTerminalReceipt(receipt: ReceiptV1, publicUrl?: string, use
     } else {
       printCenteredRow(pc.bold("||| | ||||| ||| |||| |||||| |||| ||| ||||||| |||"));
     }
+  } else {
+    printCenteredRow(pc.dim("--- LOCAL PROOF (NOT PUBLISHED) ---"));
+    printCenteredRow(pc.dim(`id ${receipt.receipt.id.slice(0, 28)}`));
   }
 
   if (isPublished) {
@@ -396,20 +573,65 @@ async function renderTerminalReceipt(receipt: ReceiptV1, publicUrl?: string, use
     printRow(`  ${teal("[✓]")} QODEWK_TELEMETRY=off (Cloud sync disabled)`);
   }
   printRow(`  ${green("[✓]")} Source code was never uploaded to Qodewk`);
-  console.log("  " + pc.bold(coral("\\/".repeat(28))));
-  console.log("");
+  push("  " + pc.bold(coral("\\/".repeat(28))));
+  push("");
 
-  if (isPublished) {
-    console.log(`  ${pc.dim("🔗 Public Receipt:")} ${pc.underline(pc.cyan(urlToDisplay))}`);
+  if (isPublished && publicUrl) {
+    push(`  ${pc.dim("Public Receipt:")} ${pc.underline(pc.cyan(publicUrl))}`);
   } else {
-    console.log(`  ${pc.dim("💾 Saved to local DB:")} ${pc.dim("~/.qodewk/state.db")}`);
-    console.log(`  ${pc.dim("💡 To publish & get shareable URL:")} ${pc.cyan("qodewk share")}`);
+    push(`  ${pc.dim("Saved to local DB:")} ${pc.dim("~/.qodewk/state.db")}`);
+    push(`  ${pc.dim("To publish & get shareable URL:")} ${pc.cyan("qodewk share")}`);
   }
 
   if (!useBarcode) {
-    console.log(`  ${pc.dim("📊 View classic 1D barcode:")} ${pc.cyan("qodewk --barcode")}`);
+    push(`  ${pc.dim("View classic 1D barcode:")} ${pc.cyan("qodewk --barcode")}`);
   }
-  console.log("");
+  push("");
+
+  return lines.join("\n");
+}
+
+async function renderTerminalReceipt(
+  receipt: ReceiptV1,
+  publicUrl?: string,
+  useBarcode?: boolean
+): Promise<void> {
+  console.log(buildTerminalReceipt(receipt, publicUrl, useBarcode));
+}
+
+async function outputReceipt(
+  receipt: ReceiptV1,
+  options: OutputOptions,
+  publicUrl?: string
+): Promise<void> {
+  const format = options.json ? "json" : options.format || "terminal";
+
+  let content: string;
+  if (format === "json") {
+    content = JSON.stringify(receipt, null, 2);
+  } else if (format === "markdown") {
+    content = formatMarkdownReceipt(receipt, publicUrl);
+  } else {
+    content = buildTerminalReceipt(receipt, publicUrl, options.barcode);
+  }
+
+  if (options.out) {
+    const fileContent = format === "terminal" ? stripAnsi(content) : content;
+    fs.writeFileSync(options.out, fileContent.endsWith("\n") ? fileContent : fileContent + "\n", "utf-8");
+    console.log(pc.green(`✓ Receipt written to ${options.out}`));
+  }
+
+  // Always echo to stdout unless writing terminal-only to a file without wanting duplicate —
+  // if -o was set, still print a short confirmation; for non-file runs print full content.
+  if (!options.out) {
+    if (format === "terminal") {
+      console.log(content);
+    } else {
+      console.log(content);
+    }
+  } else if (format !== "terminal") {
+    // File already written; also show path was enough. Optionally skip stdout spam for json/md files.
+  }
 }
 
 program.parse(process.argv);

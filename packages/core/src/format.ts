@@ -11,10 +11,18 @@ export function formatMarkdownReceipt(receipt: ReceiptV1, publicUrl?: string): s
   const confidencePercent = `${Math.round(receipt.ai.confidence * 100)}%`;
   const confidenceTier =
     receipt.ai.confidence >= 0.8 ? "High" : receipt.ai.confidence >= 0.4 ? "Medium" : "Low";
+  const tokenProvenance =
+    receipt.ai.mode === "verified" || receipt.ai.mode === "observed" ? "Observed" : "Estimated";
+  const costProvenance =
+    receipt.ai.mode === "verified" ? "Verified" : receipt.ai.mode === "observed" ? "Observed" : "Estimated";
+  const tokenDisplay =
+    receipt.ai.mode === "verified" || receipt.ai.mode === "observed"
+      ? totalTokens
+      : `~${totalTokens}`;
 
   const lines = [
     `<!-- QODEWK_RECEIPT_START:${receipt.receipt.id} -->`,
-    `### 🧾 Qodewk Telemetry Receipt`,
+    `### Qodewk Telemetry Receipt`,
     ``,
     `| Metric | Measurement | Provenance |`,
     `| :--- | :--- | :--- |`,
@@ -23,13 +31,13 @@ export function formatMarkdownReceipt(receipt: ReceiptV1, publicUrl?: string): s
     `| **Lines Deleted** | \`-${receipt.mutation.deletions}\` | Observed |`,
     `| **Net Delta** | \`${receipt.mutation.netLines >= 0 ? "+" : ""}${receipt.mutation.netLines}\` | Observed |`,
     `| **AI Model** | \`${receipt.ai.provider} · ${receipt.ai.model || "Unknown"}\` | ${receipt.ai.mode} |`,
-    `| **Tokens Consumed** | \`~${totalTokens}\` | Estimated |`,
-    `| **AI Spend** | \`${costPrefix}${receipt.ai.cost.toFixed(2)}\` | Estimated |`,
+    `| **Tokens Consumed** | \`${tokenDisplay}\` | ${tokenProvenance} |`,
+    `| **AI Spend** | \`${costPrefix}${receipt.ai.cost.toFixed(2)}\` | ${costProvenance} |`,
     `| **Confidence** | \`${confidencePercent}\` (${confidenceTier}) | Dual-Engine |`,
     ``,
-    `> 🔒 **Privacy Guarantee:** *Source code was never uploaded to Qodewk. Telemetry computed strictly from cryptographic Git metadata.*`,
+    `> **Privacy Guarantee:** *Source code was never uploaded to Qodewk. Telemetry computed strictly from cryptographic Git metadata.*`,
     ``,
-    `🔗 [**View Full Digital Receipt →**](${url})`,
+    `[**View Full Digital Receipt →**](${url})`,
     `<!-- QODEWK_RECEIPT_END -->`
   ];
 
