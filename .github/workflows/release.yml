@@ -2,6 +2,8 @@ name: "Release & Publish Package"
 
 on:
   push:
+    branches:
+      - master
     tags:
       - 'v*'
   release:
@@ -9,9 +11,9 @@ on:
   workflow_dispatch:
     inputs:
       tag_name:
-        description: 'Release version tag (e.g. v0.1.0)'
+        description: 'Release version tag (e.g. v0.1.7)'
         required: false
-        default: 'v0.1.0'
+        default: ''
 
 permissions:
   contents: write
@@ -43,18 +45,52 @@ jobs:
       - name: Build Monorepo (Turbo)
         run: pnpm build
 
-      - name: Publish to NPM Registry (Trusted Publisher / OIDC)
+      - name: Check Package Version & Determine Release Need
+        id: check_release
         run: |
-          echo "Publishing qodewk to Public NPM via Trusted Publisher (OIDC)..."
-          cd packages/cli
-          npm publish --provenance --access public || echo "Package version already published, continuing..."
+          CLI_VERSION=$(node -p "require('./packages/cli/package.json').version")
+          echo "CLI_VERSION=$CLI_VERSION" >> $GITHUB_ENV
+          echo "CLI Version from package.json: $CLI_VERSION"
 
-      - name: Create or Update GitHub Release
+          # Check if pushed as explicit tag
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            echo "Explicit tag push detected. Will publish and release."
+            echo "SHOULD_RELEASE=true" >> $GITHUB_ENV
+            exit 0
+          fi
+
+          # Check if manual dispatch with tag specified
+          if [ -n "${{ inputs.tag_name }}" ]; then
+            echo "Manual dispatch triggered with tag: ${{ inputs.tag_name }}."
+            echo "SHOULD_RELEASE=true" >> $GITHUB_ENV
+            exit 0
+          fi
+
+          # Check against published npm version
+          PUBLISHED_VERSION=$(npm view qodewk version 2>/dev/null || echo "")
+          echo "Currently published version on NPM: $PUBLISHED_VERSION"
+
+          if [ "$PUBLISHED_VERSION" != "$CLI_VERSION" ]; then
+            echo "New version detected ($CLI_VERSION vs published $PUBLISHED_VERSION)! Preparing to release."
+            echo "SHOULD_RELEASE=true" >> $GITHUB_ENV
+          else
+            echo "Version $CLI_VERSION is already published on npm. Skipping publish and release."
+            echo "SHOULD_RELEASE=false" >> $GITHUB_ENV
+          fi
+
+      - name: Publish to NPM Registry (Trusted Publisher / OIDC)
+        if: env.SHOULD_RELEASE == 'true'
+        run: |
+          echo "Publishing qodewk v${{ env.CLI_VERSION }} to Public NPM via Trusted Publisher (OIDC)..."
+          cd packages/cli
+          npm publish --provenance --access public
+
+      - name: Create Git Tag and GitHub Release
         uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'release' || github.event_name == 'workflow_dispatch'
+        if: env.SHOULD_RELEASE == 'true'
         with:
-          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || inputs.tag_name || 'v0.1.0' }}
-          name: "Qodewk Release ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || inputs.tag_name || 'v0.1.0' }}"
+          tag_name: "v${{ env.CLI_VERSION }}"
+          name: "Qodewk Release v${{ env.CLI_VERSION }}"
           generate_release_notes: true
           draft: false
           prerelease: false

@@ -6,9 +6,15 @@ import { ReceiptV1 } from "@qodewk/protocol";
 
 function getDatabaseSyncClass(): any {
   try {
+    const mod = "node:" + "sqlite";
+    if (typeof require !== "undefined") {
+      return require(mod).DatabaseSync;
+    }
+  } catch {}
+  try {
+    const mod = "node:" + "sqlite";
     const req = createRequire(import.meta.url);
-    const sqlite = req("node:sqlite");
-    return sqlite.DatabaseSync;
+    return req(mod).DatabaseSync;
   } catch {
     return null;
   }
@@ -74,7 +80,78 @@ export class LocalStateDB {
         sync_status TEXT DEFAULT 'local',
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       );
+
+      CREATE TABLE IF NOT EXISTS agent_footprints (
+        id TEXT PRIMARY KEY,
+        platform TEXT NOT NULL,
+        repo_path TEXT NOT NULL,
+        session_id TEXT NOT NULL,
+        task_title TEXT,
+        model TEXT NOT NULL,
+        steps_count INTEGER DEFAULT 0,
+        files_edited TEXT,
+        timestamp DATETIME NOT NULL,
+        tokens_input INTEGER DEFAULT 0,
+        tokens_output INTEGER DEFAULT 0,
+        tokens_cached INTEGER DEFAULT 0,
+        cost REAL DEFAULT 0,
+        mode TEXT DEFAULT 'verified',
+        confidence REAL DEFAULT 0.9,
+        raw_transcript_path TEXT,
+        captured_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
     `);
+  }
+
+  public saveFootprint(fp: any) {
+    if (!this.db) return;
+    try {
+      const stmt = this.db.prepare(`
+        INSERT OR REPLACE INTO agent_footprints (
+          id, platform, repo_path, session_id, task_title, model, steps_count,
+          files_edited, timestamp, tokens_input, tokens_output, tokens_cached,
+          cost, mode, confidence, raw_transcript_path
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `);
+
+      stmt.run(
+        fp.id,
+        fp.platform,
+        fp.repoPath,
+        fp.sessionId,
+        fp.taskTitle || null,
+        fp.model,
+        fp.stepsCount || 0,
+        JSON.stringify(fp.filesEdited || []),
+        fp.timestamp,
+        fp.tokens.input,
+        fp.tokens.output,
+        fp.tokens.cached,
+        fp.cost,
+        fp.mode,
+        fp.confidence,
+        fp.rawTranscriptPath || null
+      );
+    } catch {}
+  }
+
+  public getFootprints(repoPath: string, sinceDate?: Date): any[] {
+    if (!this.db) return [];
+    try {
+      const normTarget = repoPath.toLowerCase().replace(/\\/g, "/");
+      let query = "SELECT * FROM agent_footprints WHERE LOWER(REPLACE(repo_path, '\\', '/')) LIKE ? ";
+      const params: any[] = [`%${normTarget}%`];
+
+      if (sinceDate) {
+        query += "AND timestamp >= ? ";
+        params.push(sinceDate.toISOString());
+      }
+
+      query += "ORDER BY timestamp DESC";
+      return this.db.prepare(query).all(...params);
+    } catch {
+      return [];
+    }
   }
 
   public saveReceipt(receipt: ReceiptV1, claimToken?: string) {

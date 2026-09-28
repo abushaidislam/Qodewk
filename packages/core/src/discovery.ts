@@ -26,6 +26,26 @@ export function detectProviderFromCommit(commitMessage?: string): Partial<Provid
     };
   }
 
+  // Check Antigravity trailers
+  if (msg.includes("antigravity")) {
+    return {
+      provider: "antigravity",
+      model: "claude-sonnet-4-6-thinking",
+      confidence: 0.85,
+      mode: "observed"
+    };
+  }
+
+  // Check Gemini trailers
+  if (msg.includes("gemini")) {
+    return {
+      provider: "google",
+      model: "gemini-3-8-flash",
+      confidence: 0.85,
+      mode: "observed"
+    };
+  }
+
   // Check Cursor trailers
   if (msg.includes("cursor")) {
     return {
@@ -43,6 +63,32 @@ export function detectProviderFromCommit(commitMessage?: string): Partial<Provid
       model: "gpt-4o",
       confidence: 0.8,
       mode: "observed"
+    };
+  }
+
+  return null;
+}
+
+export function discoverAntigravityEnvironment(): Partial<ProviderDiscoveryResult> | null {
+  const isAgent = process.env.ANTIGRAVITY_AGENT === "1" || Boolean(process.env.ANTIGRAVITY_CONVERSATION_ID);
+  const homedir = os.homedir();
+  const antigravityDir = process.env.ANTIGRAVITY_APP_DATA_DIR || path.join(homedir, ".gemini", "antigravity");
+
+  if (isAgent) {
+    return {
+      provider: "antigravity",
+      model: "claude-sonnet-4-6-thinking",
+      confidence: 0.85,
+      mode: "observed"
+    };
+  }
+
+  if (fs.existsSync(antigravityDir)) {
+    return {
+      provider: "antigravity",
+      model: "claude-sonnet-4-6-thinking",
+      confidence: 0.65,
+      mode: "estimated"
     };
   }
 

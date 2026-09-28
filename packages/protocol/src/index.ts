@@ -10,8 +10,10 @@ export const AttributionModeSchema = z.enum([
 export type AttributionMode = z.infer<typeof AttributionModeSchema>;
 
 export const ProviderSessionSchema = z.object({
-  provider: z.string(), // e.g. "anthropic", "openai", "cursor", "copilot", "gemini"
+  provider: z.string(), // e.g. "anthropic", "openai", "cursor", "copilot", "gemini", "antigravity"
   model: z.string().optional(),
+  task: z.string().optional(),
+  filesTouched: z.array(z.string()).optional(),
   tokens: z.object({
     input: z.number().int().nonnegative().default(0),
     output: z.number().int().nonnegative().default(0),
@@ -52,6 +54,8 @@ export const ReceiptV1Schema = z.object({
   ai: z.object({
     provider: z.string(),
     model: z.string().optional(),
+    task: z.string().optional(),
+    aiWrittenRatio: z.number().min(0).max(1).optional(),
     tokens: z.object({
       input: z.number().int().nonnegative(),
       output: z.number().int().nonnegative(),

@@ -58,8 +58,8 @@ export function estimateCost(options: EstimateOptions): CostEstimateResult {
   }
 
   // Tier 3: Heuristic Fallback
-  const provider = options.provider || "anthropic";
-  const model = options.model || "claude-3-7-sonnet";
+  const provider = options.provider || "generic";
+  const model = options.model || (provider === "antigravity" ? "claude-sonnet-4-6-thinking" : provider === "anthropic" ? "claude-3-7-sonnet" : "standard-frontier");
   const rateCard = getRateCard(model);
 
   // Approximate changed characters (averaging 35 chars per line)

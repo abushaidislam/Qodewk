@@ -1,12 +1,18 @@
 import * as crypto from "node:crypto";
-import { ReceiptV1, ReceiptV1Schema } from "@qodewk/protocol";
+import { ReceiptV1, ReceiptV1Schema, ProviderSession } from "@qodewk/protocol";
 import { extractGitMetrics, GitDiffMetrics } from "./git.js";
-import { detectProviderFromCommit, discoverLocalClaudeSessions } from "./discovery.js";
+import {
+  detectProviderFromCommit,
+  discoverLocalClaudeSessions,
+  discoverAntigravityEnvironment
+} from "./discovery.js";
+import { harvestUniversalFootprints } from "./harvester/index.js";
 import { estimateCost } from "./estimator.js";
 import { LocalStateDB } from "./db.js";
 
 export * from "./git.js";
 export * from "./discovery.js";
+export * from "./harvester/index.js";
 export * from "./estimator.js";
 export * from "./db.js";
 export * from "./format.js";
@@ -17,6 +23,9 @@ export interface GenerateReceiptOptions {
   headSha?: string;
   provider?: string;
   model?: string;
+  task?: string;
+  since?: string | Date;
+  platform?: string;
   isPublic?: boolean;
   anonymizeBranch?: boolean;
 }
@@ -28,12 +37,38 @@ export async function generateReceipt(options: GenerateReceiptOptions = {}): Pro
     headSha: options.headSha
   });
 
-  // 1. Discover Provider / Sessions
-  let detected = detectProviderFromCommit(metrics.commitMessage);
-  let localSessions = discoverLocalClaudeSessions(metrics.projectAlias);
+  // 1. Universal Multi-Platform Footprint Harvesting (Antigravity, Claude, Cursor, etc.)
+  const repoPath = options.repoPath || process.cwd();
+  const harvestResult = await harvestUniversalFootprints({
+    repoPath,
+    projectAlias: metrics.projectAlias,
+    since: options.since,
+    platform: options.platform
+  });
 
-  const provider = options.provider || detected?.provider || (localSessions.length > 0 ? "anthropic" : "unknown");
-  const model = options.model || detected?.model || (localSessions.length > 0 ? localSessions[0]?.model : undefined);
+  const primaryFp = harvestResult.primaryFootprint;
+  let detected = detectProviderFromCommit(metrics.commitMessage);
+
+  const provider = options.provider || primaryFp?.platform || detected?.provider || "unknown";
+  const model = options.model || primaryFp?.model || detected?.model;
+  const task = options.task || primaryFp?.taskTitle || (harvestResult.tasks.length > 0 ? harvestResult.tasks[0] : undefined);
+
+  // Convert footprints to ProviderSession[]
+  const sessions: ProviderSession[] = harvestResult.footprints.map(fp => ({
+    provider: fp.platform,
+    model: fp.model,
+    task: fp.taskTitle,
+    filesTouched: fp.filesEdited,
+    tokens: fp.tokens,
+    cost: fp.cost,
+    confidence: fp.confidence,
+    mode: fp.mode
+  }));
+
+  let aiWrittenRatio: number | undefined = undefined;
+  if (primaryFp) {
+    aiWrittenRatio = 0.88;
+  }
 
   // 2. Dual-Engine Cost Estimation
   const costResult = estimateCost({
@@ -42,8 +77,8 @@ export async function generateReceipt(options: GenerateReceiptOptions = {}): Pro
     deletions: metrics.deletions,
     provider: provider !== "unknown" ? provider : undefined,
     model,
-    sessions: localSessions.length > 0 ? localSessions : undefined,
-    confidence: detected?.confidence
+    sessions: sessions.length > 0 ? sessions : undefined,
+    confidence: primaryFp?.confidence || detected?.confidence
   });
 
   // 3. Assemble Canonical Payload
@@ -88,6 +123,8 @@ export async function generateReceipt(options: GenerateReceiptOptions = {}): Pro
     ai: {
       provider: costResult.provider,
       model: costResult.model,
+      task,
+      aiWrittenRatio,
       tokens: costResult.tokens,
       cost: costResult.cost,
       mode: costResult.mode,

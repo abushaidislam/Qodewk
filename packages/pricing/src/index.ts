@@ -21,6 +21,26 @@ export const RATE_CARDS: Record<string, ModelRateCard> = {
     cacheWritePerMTok: 5.0,
     contextWindow: 200_000
   },
+  "claude-opus-4-6-thinking": {
+    id: "claude-opus-4-6-thinking",
+    provider: "anthropic",
+    name: "Claude Opus 4.6 Thinking",
+    inputPerMTok: 5.0,
+    outputPerMTok: 25.0,
+    cacheReadPerMTok: 0.25,
+    cacheWritePerMTok: 6.25,
+    contextWindow: 200_000
+  },
+  "claude-sonnet-4-6-thinking": {
+    id: "claude-sonnet-4-6-thinking",
+    provider: "anthropic",
+    name: "Claude Sonnet 4.6 Thinking",
+    inputPerMTok: 3.0,
+    outputPerMTok: 15.0,
+    cacheReadPerMTok: 0.3,
+    cacheWritePerMTok: 3.75,
+    contextWindow: 200_000
+  },
   "claude-3-7-sonnet": {
     id: "claude-3-7-sonnet",
     provider: "anthropic",
@@ -75,6 +95,26 @@ export const RATE_CARDS: Record<string, ModelRateCard> = {
   },
 
   // Google
+  "gemini-3-8-flash": {
+    id: "gemini-3-8-flash",
+    provider: "google",
+    name: "Gemini 3.8 Flash",
+    inputPerMTok: 0.1,
+    outputPerMTok: 0.4,
+    cacheReadPerMTok: 0.025,
+    cacheWritePerMTok: 0.1,
+    contextWindow: 1_000_000
+  },
+  "gemini-2-5-pro": {
+    id: "gemini-2-5-pro",
+    provider: "google",
+    name: "Gemini 2.5 Pro",
+    inputPerMTok: 1.25,
+    outputPerMTok: 5.0,
+    cacheReadPerMTok: 0.3,
+    cacheWritePerMTok: 1.25,
+    contextWindow: 2_000_000
+  },
   "gemini-2-0-flash": {
     id: "gemini-2-0-flash",
     provider: "google",
@@ -134,7 +174,28 @@ export const RATE_CARDS: Record<string, ModelRateCard> = {
 export function getRateCard(modelId?: string): ModelRateCard {
   if (!modelId) return RATE_CARDS["default"]!;
   const key = modelId.toLowerCase().replace(/[^a-z0-9-]/g, "-");
-  return RATE_CARDS[key] || RATE_CARDS["claude-3-7-sonnet"] || RATE_CARDS["default"]!;
+  if (RATE_CARDS[key]) return RATE_CARDS[key]!;
+
+  if (key.includes("opus")) {
+    return RATE_CARDS["claude-opus-4-6-thinking"] || RATE_CARDS["claude-opus-4"]!;
+  }
+  if (key.includes("sonnet") && (key.includes("4-6") || key.includes("thinking"))) {
+    return RATE_CARDS["claude-sonnet-4-6-thinking"]!;
+  }
+  if (key.includes("3-7") || key.includes("sonnet-3-7")) {
+    return RATE_CARDS["claude-3-7-sonnet"]!;
+  }
+  if (key.includes("3-5") || key.includes("sonnet-3-5")) {
+    return RATE_CARDS["claude-3-5-sonnet"]!;
+  }
+  if (key.includes("gemini") && key.includes("flash")) {
+    return RATE_CARDS["gemini-3-8-flash"] || RATE_CARDS["gemini-2-0-flash"]!;
+  }
+  if (key.includes("gemini") && (key.includes("pro") || key.includes("2-5"))) {
+    return RATE_CARDS["gemini-2-5-pro"] || RATE_CARDS["gemini-1-5-pro"]!;
+  }
+
+  return RATE_CARDS["default"]!;
 }
 
 export function computeCost(
