@@ -43,14 +43,11 @@ jobs:
       - name: Build Monorepo (Turbo)
         run: pnpm build
 
-      - name: Publish to NPM Registry
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        if: ${{ env.NODE_AUTH_TOKEN != '' }}
+      - name: Publish to NPM Registry (Trusted Publisher / OIDC)
         run: |
-          echo "Publishing qodewk to Public NPM..."
+          echo "Publishing qodewk to Public NPM via Trusted Publisher (OIDC)..."
           cd packages/cli
-          npm publish --access public --registry=https://registry.npmjs.org || echo "Package version already published, continuing..."
+          npm publish --provenance --access public || echo "Package version already published, continuing..."
 
       - name: Create or Update GitHub Release
         uses: softprops/action-gh-release@v2
