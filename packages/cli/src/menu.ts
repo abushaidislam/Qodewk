@@ -87,13 +87,13 @@ export function buildMenuFrame(selectedIndex: number, items: MenuItem[] = MENU_I
   };
 
   const printDivider = (char = "=", width = INNER_WIDTH) => {
-    push(`  | ${char.repeat(width)} |`);
+    push(`  |${char.repeat(width + 2)}|`);
   };
 
-  const teethCount = Math.floor(INNER_WIDTH / 2) + 2;
+  const teethPairs = Math.floor((INNER_WIDTH + 4) / 2); // 31 pairs = 62 chars
 
   push("");
-  push("  " + pc.bold(coral("/\\".repeat(teethCount))));
+  push("  " + pc.bold(coral("/\\".repeat(teethPairs))));
   printCenteredRow(pc.bold(pc.white("Q O D E W K")));
   printCenteredRow(coral("*** TELEMETRY CONTROL PANEL ***"));
   printDivider("=");
@@ -101,9 +101,13 @@ export function buildMenuFrame(selectedIndex: number, items: MenuItem[] = MENU_I
   printDivider("-");
   printRow("");
 
-  for (let i = 0; i < items.length; i++) {
-    const item = items[i];
-    const isSelected = i === selectedIndex;
+  const mainItems = items.filter((item) => item.id !== "exit");
+  const exitItem = items.find((item) => item.id === "exit");
+
+  for (let i = 0; i < mainItems.length; i++) {
+    const item = mainItems[i];
+    const itemIndex = items.indexOf(item);
+    const isSelected = itemIndex === selectedIndex;
 
     if (isSelected) {
       const pointer = pc.bold(coral("›"));
@@ -118,15 +122,34 @@ export function buildMenuFrame(selectedIndex: number, items: MenuItem[] = MENU_I
       printRow(`       ${pc.dim(item.description)}`);
     }
 
-    if (i < items.length - 1) {
+    if (i < mainItems.length - 1) {
       printRow("");
     }
   }
 
   printRow("");
+
+  if (exitItem) {
+    printDivider("-");
+    const exitIndex = items.indexOf(exitItem);
+    const isSelected = exitIndex === selectedIndex;
+    if (isSelected) {
+      const pointer = pc.bold(coral("›"));
+      const keyTag = pc.bold(coral(`[${exitItem.key}]`));
+      const label = pc.bold(pc.white(exitItem.label));
+      printRow(` ${pointer} ${keyTag} ${label}`);
+      printRow(`       ${amber(exitItem.description)}`);
+    } else {
+      const keyTag = mutedSoft(`[${exitItem.key}]`);
+      const label = pc.dim(pc.white(exitItem.label));
+      printRow(`   ${keyTag} ${label}`);
+      printRow(`       ${pc.dim(exitItem.description)}`);
+    }
+  }
+
   printDivider("-");
-  printCenteredRow(pc.dim("[✓] Zero code exfiltration · Raw code never leaves local machine"));
-  push("  " + pc.bold(coral("\\/".repeat(teethCount))));
+  printCenteredRow(pc.dim("[✓] Source code was never uploaded to Qodewk"));
+  push("  " + pc.bold(coral("\\/".repeat(teethPairs))));
   push("");
 
   return lines.join("\n");

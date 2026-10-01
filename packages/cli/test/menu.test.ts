@@ -40,7 +40,18 @@ describe("Qodewk CLI Menu System (`menu.test.ts`)", () => {
       expect(plain).toContain("Q O D E W K");
       expect(plain).toContain("*** TELEMETRY CONTROL PANEL ***");
       expect(plain).toContain("Use ↑ / ↓ to navigate · Enter to select · q to quit");
-      expect(plain).toContain("[✓] Zero code exfiltration");
+      expect(plain).toContain("[✓] Source code was never uploaded to Qodewk");
+    });
+
+    it("ensures every non-empty line has consistent exact width (no overflows)", () => {
+      for (let i = 0; i < MENU_ITEMS.length; i++) {
+        const frame = buildMenuFrame(i);
+        const lines = frame.split("\n").filter((l) => l.trim().length > 0);
+        for (const line of lines) {
+          const plain = stripAnsi(line);
+          expect(plain.length).toBe(64);
+        }
+      }
     });
 
     it("does NOT contain any cheap/tacky emojis in the rendered terminal output", () => {
