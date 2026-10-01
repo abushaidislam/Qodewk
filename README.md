@@ -74,6 +74,33 @@ npx qodewk audit --base origin/main --head HEAD --format markdown --out receipt.
 
 ---
 
+## 🎬 Product Demo Video (Remotion)
+
+An Apple & Claude-inspired 60-second high-end programmatic product demo video built natively using Remotion and React:
+
+> 📽️ **Video Location:** [`apps/web/public/qodewk-demo.mp4`](apps/web/public/qodewk-demo.mp4)
+
+<video src="apps/web/public/qodewk-demo.mp4" controls width="100%">
+  Your browser does not support embedded videos. You can view the demo video at <a href="apps/web/public/qodewk-demo.mp4">apps/web/public/qodewk-demo.mp4</a>.
+</video>
+
+### Video Highlights (60 Seconds / 1800 Frames at 30 FPS)
+1. **Scene 1 (0–10s): The Problem & Interactive Cursor** — Floating fragmented AI tool cards (Cursor, Claude Code, Copilot) & interactive SVG cursor collapse of chaotic token bills.
+2. **Scene 2 (10–26.6s): Terminal Focus & Command Typing** — Dark Navy Terminal (`#181715`) with Apple punch-in zoom & typewriter `npx qodewk --receipt`.
+3. **Scene 3 (26.6–40s): Thermal Paper Receipt Print** — Crisp white thermal receipt with SVG serrated edges, `ReceiptV1Schema` protocol metrics, and interactive "Verified" badge popover.
+4. **Scene 4 (40–50s): Zero-Exfiltration Privacy Shield** — Camera pan to blocked code exfiltration card with animated green shield and 0 Bytes Sent assertion.
+5. **Scene 5 (50–60s): High-Impact Call To Action** — Full-bleed Signature Coral (`#cc785c`) transition, Copernicus serif typography, and copy command click feedback.
+
+```bash
+# Preview the video composition interactively in Remotion Studio
+pnpm --filter @qodewk/video dev
+
+# Render MP4 video file
+cd apps/video && npx remotion render src/Root.tsx QodewkProductDemo out/qodewk-demo.mp4
+```
+
+---
+
 ## 🌟 What's New: Universal Multi-Platform Footprint Harvester
 
 Unlike single-vendor utilities (like Chit, which only support Claude Code CLI), **Qodewk operates globally across all major AI coding platforms**. It reads your local agent transcripts, matches them with your repository's Git revision graph, and proves what was actually shipped.
