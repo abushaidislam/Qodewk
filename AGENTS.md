@@ -140,3 +140,30 @@ When prompted to build or expand the codebase, execute according to this structu
  - Design Tokens & Specs: [`docs/design-system.md`](file:///c:/Users/ASUS/Desktop/Qodewk/docs/design-system.md)
  - 48-Hour MVP Scope: [`docs/10-mvp-48h.md`](file:///c:/Users/ASUS/Desktop/Qodewk/docs/10-mvp-48h.md)
  - Production Maturity & Roadmap: [`docs/12-production-roadmap.md`](file:///c:/Users/ASUS/Desktop/Qodewk/docs/12-production-roadmap.md)
+
+---
+
+## 7. Testing Mandate & Test Registration Guidelines
+
+> [!IMPORTANT]
+> ### 🚨 MANDATORY TEST REGISTRATION FOR NEW FEATURES & REGRESSION SAFETY
+> All autonomous agents and human contributors adding or modifying features in Qodewk **MUST** write and register corresponding test cases. Under no circumstances should business logic or data contracts be modified without updating or expanding unit/edge-case tests.
+
+### Test Execution & Framework
+- **Test Runner:** `vitest` (configured at monorepo root and executable via `pnpm test` / `npm test`).
+- **Location Rules:**
+  - Place unit and edge-case tests in `test/` or `tests/` directories within the target package (or app).
+  - Test files must follow TypeScript naming conventions (e.g. `*.test.ts`).
+
+### Package Test Requirements
+1. **`packages/protocol` (`packages/protocol/test/protocol.test.ts`):**
+   - Whenever Zod schemas (`ReceiptV1Schema`, `ProviderSessionSchema`, `AttributionModeSchema`) are updated, unit tests MUST verify both happy-path parsing and rejection of invalid payloads (boundary checks, string formats, length constraints, regex patterns).
+2. **`packages/pricing` (`packages/pricing/test/pricing.test.ts`):**
+   - When new model rate cards or provider rate cards are added to `RATE_CARDS`, tests MUST verify exact key lookup, fuzzy matching fallbacks, and mathematical correctness of `computeCost` (including zero tokens and high cache-hit ratios).
+3. **`packages/core` (`packages/core/test/core.test.ts` & `attribution.test.ts`):**
+   - Every harvester (`antigravity`, `claude`, `cursor`, etc.) MUST have tests verifying graceful handling of missing transcripts/databases.
+   - Any modification to scoring heuristics (`scoreFootprint`, `selectPrimaryFootprint`), cost estimation multipliers (`estimateCost`), or Git diff parsing (`computeAiWrittenRatio`, `extractGitMetrics`) MUST include unit and edge-case tests.
+4. **`packages/cli` (`packages/cli/test/cli.test.ts` & `smoke.test.ts`):**
+   - CLI flags, barcode generation (`barcode.ts`), and QR rendering (`qr.ts`) MUST be tested for correct string encoding and output formatting.
+5. **`apps/web` (`apps/web/test/web.test.ts`):**
+   - Edge/Serverless storage adapters and API handlers MUST have unit tests verifying in-memory storage behavior and payload constraint enforcement.
