@@ -50,7 +50,7 @@ function resolveCliVersion(): string {
   } catch {
     // fall through
   }
-  return "0.2.1";
+  return "0.3.0";
 }
 
 function resolveSince(options: HarvestCliOptions): string | undefined {
@@ -186,7 +186,7 @@ program
   .command("audit")
   .description("Audit PR or branch diff against a target base commit")
   .option("-b, --base <base>", "Base git ref or commit SHA (e.g. origin/main)")
-  .option("-h, --head <head>", "Head git ref or commit SHA")
+  .option("-H, --head <head>", "Head git ref or commit SHA")
   .option("-f, --format <format>", "Output format (terminal, json, markdown)", "terminal")
   .option("-o, --out <path>", "Write receipt output to specified file path")
   .option("-p, --provider <provider>", "Specify AI provider")

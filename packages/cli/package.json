@@ -43,8 +43,7 @@
   },
   "dependencies": {
     "commander": "^13.1.0",
-    "picocolors": "^1.1.1",
-    "qrcode": "^1.5.4"
+    "picocolors": "^1.1.1"
   },
   "devDependencies": {
     "@qodewk/core": "workspace:*",

@@ -41,6 +41,16 @@ export const RATE_CARDS: Record<string, ModelRateCard> = {
     cacheWritePerMTok: 3.75,
     contextWindow: 200_000
   },
+  "claude-sonnet-4": {
+    id: "claude-sonnet-4",
+    provider: "anthropic",
+    name: "Claude Sonnet 4",
+    inputPerMTok: 3.0,
+    outputPerMTok: 15.0,
+    cacheReadPerMTok: 0.3,
+    cacheWritePerMTok: 3.75,
+    contextWindow: 200_000
+  },
   "claude-3-7-sonnet": {
     id: "claude-3-7-sonnet",
     provider: "anthropic",
@@ -82,6 +92,26 @@ export const RATE_CARDS: Record<string, ModelRateCard> = {
     cacheReadPerMTok: 1.25,
     cacheWritePerMTok: 2.5,
     contextWindow: 128_000
+  },
+  "gpt-4o-mini": {
+    id: "gpt-4o-mini",
+    provider: "openai",
+    name: "GPT-4o Mini",
+    inputPerMTok: 0.15,
+    outputPerMTok: 0.6,
+    cacheReadPerMTok: 0.075,
+    cacheWritePerMTok: 0.15,
+    contextWindow: 128_000
+  },
+  "o1": {
+    id: "o1",
+    provider: "openai",
+    name: "o1",
+    inputPerMTok: 15.0,
+    outputPerMTok: 60.0,
+    cacheReadPerMTok: 7.5,
+    cacheWritePerMTok: 15.0,
+    contextWindow: 200_000
   },
   "o3-mini": {
     id: "o3-mini",
@@ -177,22 +207,39 @@ export function getRateCard(modelId?: string): ModelRateCard {
   if (RATE_CARDS[key]) return RATE_CARDS[key]!;
 
   if (key.includes("opus")) {
-    return RATE_CARDS["claude-opus-4-6-thinking"] || RATE_CARDS["claude-opus-4"]!;
+    return RATE_CARDS["claude-opus-4-6-thinking"] ?? RATE_CARDS["claude-opus-4"]!;
   }
-  if (key.includes("sonnet") && (key.includes("4-6") || key.includes("thinking"))) {
-    return RATE_CARDS["claude-sonnet-4-6-thinking"]!;
+  if (key.includes("sonnet")) {
+    if (key.includes("4-6") || key.includes("thinking")) {
+      return RATE_CARDS["claude-sonnet-4-6-thinking"]!;
+    }
+    if (key.includes("4") || key.includes("sonnet-4")) {
+      return RATE_CARDS["claude-sonnet-4"] ?? RATE_CARDS["claude-sonnet-4-6-thinking"]!;
+    }
+    if (key.includes("3-7") || key.includes("sonnet-3-7")) {
+      return RATE_CARDS["claude-3-7-sonnet"]!;
+    }
+    if (key.includes("3-5") || key.includes("sonnet-3-5")) {
+      return RATE_CARDS["claude-3-5-sonnet"]!;
+    }
   }
-  if (key.includes("3-7") || key.includes("sonnet-3-7")) {
-    return RATE_CARDS["claude-3-7-sonnet"]!;
+  if (key.includes("o1-mini") || key.includes("o3-mini")) {
+    return RATE_CARDS["o3-mini"]!;
   }
-  if (key.includes("3-5") || key.includes("sonnet-3-5")) {
-    return RATE_CARDS["claude-3-5-sonnet"]!;
+  if (key.includes("o1")) {
+    return RATE_CARDS["o1"]!;
+  }
+  if (key.includes("4o-mini")) {
+    return RATE_CARDS["gpt-4o-mini"]!;
+  }
+  if (key.includes("4o")) {
+    return RATE_CARDS["gpt-4o"]!;
   }
   if (key.includes("gemini") && key.includes("flash")) {
-    return RATE_CARDS["gemini-3-8-flash"] || RATE_CARDS["gemini-2-0-flash"]!;
+    return RATE_CARDS["gemini-3-8-flash"] ?? RATE_CARDS["gemini-2-0-flash"]!;
   }
   if (key.includes("gemini") && (key.includes("pro") || key.includes("2-5"))) {
-    return RATE_CARDS["gemini-2-5-pro"] || RATE_CARDS["gemini-1-5-pro"]!;
+    return RATE_CARDS["gemini-2-5-pro"] ?? RATE_CARDS["gemini-1-5-pro"]!;
   }
 
   return RATE_CARDS["default"]!;
@@ -202,11 +249,13 @@ export function computeCost(
   inputTokens: number,
   outputTokens: number,
   cachedTokens: number,
-  card: ModelRateCard
+  card: ModelRateCard,
+  cacheWriteTokens: number = 0
 ): number {
   const freshInput = Math.max(0, inputTokens - cachedTokens);
   const freshCost = (freshInput / 1_000_000) * card.inputPerMTok;
-  const cacheCost = (cachedTokens / 1_000_000) * card.cacheReadPerMTok;
+  const cacheReadCost = (cachedTokens / 1_000_000) * card.cacheReadPerMTok;
+  const cacheWriteCost = (cacheWriteTokens / 1_000_000) * card.cacheWritePerMTok;
   const outCost = (outputTokens / 1_000_000) * card.outputPerMTok;
-  return Number((freshCost + cacheCost + outCost).toFixed(4));
+  return Number((freshCost + cacheReadCost + cacheWriteCost + outCost).toFixed(4));
 }

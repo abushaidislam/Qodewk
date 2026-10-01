@@ -35,4 +35,11 @@ describe("qodewk CLI smoke", () => {
     // record-event is an alias; commander may show record help
     assert.ok(record.status === 0 || record.status === 1);
   });
+
+  it("audit command exposes -H for head ref without colliding with help", () => {
+    const auditHelp = spawnSync(process.execPath, [cliBin, "audit", "--help"], { encoding: "utf-8" });
+    assert.equal(auditHelp.status, 0);
+    assert.match(auditHelp.stdout, /-H, --head/);
+    assert.match(auditHelp.stdout, /-b, --base/);
+  });
 });
