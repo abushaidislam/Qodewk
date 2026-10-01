@@ -1,0 +1,28 @@
+{
+  "name": "@qodewk/video",
+  "version": "0.3.0",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "dev": "remotion preview src/index.ts"
+  },
+  "dependencies": {
+    "@qodewk/pricing": "workspace:*",
+    "@qodewk/protocol": "workspace:*",
+    "lucide-react": "^1.16.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "remotion": "^4.0.280"
+  },
+  "devDependencies": {
+    "@remotion/cli": "^4.0.280",
+    "@types/node": "^22.13.10",
+    "@types/react": "^19.0.10",
+    "@types/react-dom": "^19.0.4",
+    "typescript": "^5.8.2"
+  }
+}
