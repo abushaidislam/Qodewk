@@ -13,7 +13,7 @@
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit",
-    "test": "node --test test/pricing.test.mjs"
+    "test": "vitest run"
   },
   "devDependencies": {
     "typescript": "^5.8.2"

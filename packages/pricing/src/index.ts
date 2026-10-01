@@ -213,14 +213,14 @@ export function getRateCard(modelId?: string): ModelRateCard {
     if (key.includes("4-6") || key.includes("thinking")) {
       return RATE_CARDS["claude-sonnet-4-6-thinking"]!;
     }
-    if (key.includes("4") || key.includes("sonnet-4")) {
-      return RATE_CARDS["claude-sonnet-4"] ?? RATE_CARDS["claude-sonnet-4-6-thinking"]!;
-    }
     if (key.includes("3-7") || key.includes("sonnet-3-7")) {
       return RATE_CARDS["claude-3-7-sonnet"]!;
     }
     if (key.includes("3-5") || key.includes("sonnet-3-5")) {
       return RATE_CARDS["claude-3-5-sonnet"]!;
+    }
+    if (key.includes("sonnet-4") || key.includes("claude-4") || key.includes("sonnet-v4")) {
+      return RATE_CARDS["claude-sonnet-4"] ?? RATE_CARDS["claude-sonnet-4-6-thinking"]!;
     }
   }
   if (key.includes("o1-mini") || key.includes("o3-mini")) {
