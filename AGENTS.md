@@ -136,6 +136,7 @@ When prompted to build or expand the codebase, execute according to this structu
 - **Node.js Target:** Node.js 22+.
 - **Formatting & Style:** ESLint + Prettier. Clean code without trailing spaces or messy comments.
 - **Reference Files:**
-  - Master Architecture Blueprint: [`docs/blueprint.md`](file:///c:/Users/ASUS/Desktop/Qodewk/docs/blueprint.md)
-  - Design Tokens & Specs: [`docs/design-system.md`](file:///c:/Users/ASUS/Desktop/Qodewk/docs/design-system.md)
-  - 48-Hour MVP Scope: [`docs/10-mvp-48h.md`](file:///c:/Users/ASUS/Desktop/Qodewk/docs/10-mvp-48h.md)
+ - Master Architecture Blueprint: [`docs/blueprint.md`](file:///c:/Users/ASUS/Desktop/Qodewk/docs/blueprint.md)
+ - Design Tokens & Specs: [`docs/design-system.md`](file:///c:/Users/ASUS/Desktop/Qodewk/docs/design-system.md)
+ - 48-Hour MVP Scope: [`docs/10-mvp-48h.md`](file:///c:/Users/ASUS/Desktop/Qodewk/docs/10-mvp-48h.md)
+ - Production Maturity & Roadmap: [`docs/12-production-roadmap.md`](file:///c:/Users/ASUS/Desktop/Qodewk/docs/12-production-roadmap.md)
