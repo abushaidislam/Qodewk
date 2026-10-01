@@ -180,6 +180,47 @@ export class LocalStateDB {
     return JSON.parse(row.payload_json) as ReceiptV1;
   }
 
+  public getRecentReceipts(limit: number = 10): Array<{
+    receipt: ReceiptV1;
+    claimToken?: string;
+    syncStatus: string;
+    createdAt: string;
+  }> {
+    if (!this.db) return [];
+    try {
+      const rows = this.db
+        .prepare("SELECT payload_json, claim_token, sync_status, created_at FROM receipts ORDER BY created_at DESC LIMIT ?")
+        .all(limit) as Array<{
+          payload_json: string;
+          claim_token: string | null;
+          sync_status: string;
+          created_at: string;
+        }>;
+      return rows.map((r) => ({
+        receipt: JSON.parse(r.payload_json) as ReceiptV1,
+        claimToken: r.claim_token || undefined,
+        syncStatus: r.sync_status || "local",
+        createdAt: r.created_at
+      }));
+    } catch {
+      return [];
+    }
+  }
+
+  public getStats(): { totalReceipts: number; totalFootprints: number } {
+    if (!this.db) return { totalReceipts: 0, totalFootprints: 0 };
+    try {
+      const rRow = this.db.prepare("SELECT COUNT(*) as cnt FROM receipts").get() as { cnt: number };
+      const fRow = this.db.prepare("SELECT COUNT(*) as cnt FROM agent_footprints").get() as { cnt: number };
+      return {
+        totalReceipts: rRow?.cnt || 0,
+        totalFootprints: fRow?.cnt || 0
+      };
+    } catch {
+      return { totalReceipts: 0, totalFootprints: 0 };
+    }
+  }
+
   public close() {
     if (this.db) {
       this.db.close();
