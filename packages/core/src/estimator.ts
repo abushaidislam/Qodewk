@@ -43,16 +43,16 @@ export function estimateCost(options: EstimateOptions): CostEstimateResult {
     }
 
     return {
-      provider: primary.provider,
-      model: primary.model || "claude-3-7-sonnet",
+      provider: options.provider || primary.provider,
+      model: options.model || primary.model || "claude-3-7-sonnet",
       tokens: {
         input: totalInput,
         output: totalOutput,
         cached: totalCached
       },
       cost: Number(totalCost.toFixed(4)),
-      mode: primary.mode,
-      confidence: primary.confidence,
+      mode: options.mode || primary.mode,
+      confidence: options.confidence !== undefined ? options.confidence : primary.confidence,
       sessions: options.sessions
     };
   }

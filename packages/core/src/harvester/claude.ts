@@ -3,6 +3,7 @@ import * as path from "node:path";
 import * as os from "node:os";
 import { getRateCard, computeCost } from "@qodewk/pricing";
 import { AgentFootprint } from "./types.js";
+import { normalizeFilePath } from "./scoring.js";
 
 export function harvestClaudeFootprints(repoPath: string, projectAlias: string, sinceDate?: Date): AgentFootprint[] {
   const footprints: AgentFootprint[] = [];
@@ -58,7 +59,7 @@ export function harvestClaudeFootprints(repoPath: string, projectAlias: string, 
 
           if (data.tool_name === "Edit" || data.tool_name === "Write") {
             if (data.tool_input?.file_path) {
-              filesEdited.add(path.relative(repoPath, data.tool_input.file_path).replace(/\\/g, "/"));
+              filesEdited.add(normalizeFilePath(String(data.tool_input.file_path), repoPath));
             }
           }
         } catch {}

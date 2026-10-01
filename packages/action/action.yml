@@ -29,14 +29,31 @@ inputs:
 outputs:
   receipt-id:
     description: "Generated receipt ID"
+    value: ${{ steps.qodewk-run.outputs.receipt-id }}
   receipt-url:
     description: "Public URL of digital receipt"
+    value: ${{ steps.qodewk-run.outputs.receipt-url }}
   cost:
     description: "Estimated AI cost in USD"
+    value: ${{ steps.qodewk-run.outputs.cost }}
   tokens:
     description: "Total token consumption"
+    value: ${{ steps.qodewk-run.outputs.tokens }}
   markdown:
     description: "Formatted Markdown receipt"
+    value: ${{ steps.qodewk-run.outputs.markdown }}
 runs:
-  using: "node20"
-  main: "dist/index.js"
+  using: "composite"
+  steps:
+    - name: Execute Qodewk Telemetry Receipt
+      id: qodewk-run
+      shell: bash
+      env:
+        INPUT_GITHUB_TOKEN: ${{ inputs.github-token }}
+        INPUT_BASE_REF: ${{ inputs.base-ref }}
+        INPUT_HEAD_SHA: ${{ inputs.head-sha }}
+        INPUT_PUBLISH_CLOUD: ${{ inputs.publish-cloud }}
+        INPUT_API_URL: ${{ inputs.api-url }}
+        INPUT_COMMENT_PR: ${{ inputs.comment-pr }}
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+      run: node "${{ github.action_path }}/dist/index.js"

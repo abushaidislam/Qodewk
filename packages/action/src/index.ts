@@ -55,39 +55,43 @@ async function run() {
     const prNumber = context.payload.pull_request?.number;
 
     if (commentPr && prNumber && token) {
-      const octokit = github.getOctokit(token);
-      const owner = context.repo.owner;
-      const repo = context.repo.repo;
+      try {
+        const octokit = github.getOctokit(token);
+        const owner = context.repo.owner;
+        const repo = context.repo.repo;
 
-      core.info(`Checking existing PR comments on #${prNumber}...`);
-      const { data: comments } = await octokit.rest.issues.listComments({
-        owner,
-        repo,
-        issue_number: prNumber
-      });
-
-      const existingComment = comments.find((c) =>
-        c.body?.includes("<!-- QODEWK_RECEIPT_START")
-      );
-
-      if (existingComment) {
-        core.info(`Updating existing sticky PR comment ${existingComment.id}...`);
-        await octokit.rest.issues.updateComment({
+        core.info(`Checking existing PR comments on #${prNumber}...`);
+        const { data: comments } = await octokit.rest.issues.listComments({
           owner,
           repo,
-          comment_id: existingComment.id,
-          body: markdown
+          issue_number: prNumber
         });
-      } else {
-        core.info(`Creating new sticky PR comment on #${prNumber}...`);
-        await octokit.rest.issues.createComment({
-          owner,
-          repo,
-          issue_number: prNumber,
-          body: markdown
-        });
+
+        const existingComment = comments.find((c) =>
+          c.body?.includes("<!-- QODEWK_RECEIPT_START")
+        );
+
+        if (existingComment) {
+          core.info(`Updating existing sticky PR comment ${existingComment.id}...`);
+          await octokit.rest.issues.updateComment({
+            owner,
+            repo,
+            comment_id: existingComment.id,
+            body: markdown
+          });
+        } else {
+          core.info(`Creating new sticky PR comment on #${prNumber}...`);
+          await octokit.rest.issues.createComment({
+            owner,
+            repo,
+            issue_number: prNumber,
+            body: markdown
+          });
+        }
+        core.info("Sticky receipt comment successfully upserted.");
+      } catch (commentErr: any) {
+        core.warning(`Could not post sticky comment to PR #${prNumber}: ${commentErr.message}`);
       }
-      core.info("Sticky receipt comment successfully upserted.");
     }
   } catch (error: any) {
     core.setFailed(`Qodewk Action failed: ${error.message}`);
