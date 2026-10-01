@@ -4,6 +4,7 @@ import * as os from "node:os";
 import { createRequire } from "node:module";
 import { getRateCard, computeCost } from "@qodewk/pricing";
 import { AgentFootprint } from "./types.js";
+import { normalizeFilePath } from "./scoring.js";
 
 function getSqliteDatabase(): any {
   try {
@@ -95,7 +96,7 @@ export function harvestAntigravityFootprints(repoPath: string, sinceDate?: Date)
                     if ((tc.name === "replace_file_content" || tc.name === "write_to_file") && tc.args) {
                       const file = tc.args.TargetFile || tc.args.targetFile;
                       if (file) {
-                        filesEdited.add(path.relative(repoPath, file.replace(/"/g, "")).replace(/\\/g, "/"));
+                        filesEdited.add(normalizeFilePath(String(file), repoPath));
                       }
                     }
                   }

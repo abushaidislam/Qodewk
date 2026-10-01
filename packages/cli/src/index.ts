@@ -511,6 +511,15 @@ function buildTerminalReceipt(receipt: ReceiptV1, publicUrl?: string): string {
   const provString = receipt.ai.provider + " · " + (receipt.ai.model || "Unknown");
   const cleanProv = provString.length > 40 ? provString.slice(0, 39) + "…" : provString;
   printRow(`Provider: ${cleanProv}`);
+  if (receipt.ai.sessions && receipt.ai.sessions.length > 1) {
+    const others = receipt.ai.sessions
+      .slice(1)
+      .map((s) => s.provider)
+      .filter((p, i, arr) => arr.indexOf(p) === i && p !== receipt.ai.provider);
+    if (others.length > 0) {
+      printRow(pc.dim(`Also seen: ${others.join(", ")}`));
+    }
+  }
   if (receipt.ai.aiWrittenRatio !== undefined) {
     const aiPct = Math.round(receipt.ai.aiWrittenRatio * 100);
     printRowSplit("AI Written Code", `${aiPct}% (Human: ${100 - aiPct}%)`);

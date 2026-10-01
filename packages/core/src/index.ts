@@ -67,7 +67,13 @@ export async function generateReceipt(options: GenerateReceiptOptions = {}): Pro
     repoPath,
     projectAlias: metrics.projectAlias,
     since: options.since,
-    platform: options.platform
+    platform: options.platform,
+    gitContext: {
+      headSha: metrics.headSha,
+      commitDate: metrics.commitDate,
+      changedFiles: metrics.changedFiles,
+      branch: metrics.branch
+    }
   });
 
   const primaryFp = harvestResult.primaryFootprint;

@@ -78,15 +78,13 @@ npx qodewk audit --base origin/main --head HEAD --format markdown --out receipt.
 
 Unlike single-vendor utilities (like Chit, which only support Claude Code CLI), **Qodewk operates globally across all major AI coding platforms**. It reads your local agent transcripts, matches them with your repository's Git revision graph, and proves what was actually shipped.
 
-### Supported Platforms & Harvesters
-
-| Platform | Local Data Source / Footprint | Captured Telemetry |
-|---|---|---|
-| **Google Antigravity** | `~/.gemini/antigravity/conversation_summaries.db` & `brain/<id>/.../transcript.jsonl` | Shipped task titles, exact models (`Claude Opus 4.6 Thinking`, `Gemini 3.8 Flash`, etc.), tool calls (`replace_file_content`, `write_to_file`), and multi-turn tokens |
-| **Claude Code CLI** | `~/.claude/projects/<slug>/sessions/*.jsonl` | User prompts, exact input/output/cached token usage, and `Edit`/`Write` file mutations |
-| **Cursor IDE** | `%APPDATA%\Cursor\User\workspaceStorage\*\state.vscdb` (Win) / `Library/Application Support/Cursor/...` (Mac) | Workspace session bubbles, model types (`claude-3-5-sonnet`, `gpt-4o`), and generation timestamps |
-| **Aider** | `.aider.chat.history.md` (Repository root) | Session prompts, model IDs, and code file diffs |
-| **GitHub Copilot** | Git commit revision graph trailers (`Co-authored-by: Copilot`) | Commit-level author attribution |
+| Platform | Local Data Source / Footprint | Captured Telemetry | Status |
+|---|---|---|---|
+| **Google Antigravity** | `~/.gemini/antigravity/conversation_summaries.db` & `brain/<id>/.../transcript.jsonl` | Shipped task titles, exact models (`Claude Opus 4.6 Thinking`, `Gemini 3.8 Flash`, etc.), tool calls (`replace_file_content`, `write_to_file`), and multi-turn tokens | **Tier A (Verified)** |
+| **Claude Code CLI** | `~/.claude/projects/<slug>/sessions/*.jsonl` | User prompts, exact input/output/cached token usage, and `Edit`/`Write` file mutations | **Tier A (Verified)** |
+| **Cursor IDE** | `~/.cursor/projects/<slug>/agent-transcripts/*.jsonl` & `workspaceStorage/*/state.vscdb` | Commit hash binding (`aiCodeTracking.recentCommit`), agent transcripts, tool edits, and token expenditures | **Tier A (Verified / Imported)** |
+| **GitHub Copilot** | Git commit revision trailers (`Co-authored-by: Copilot`) | Commit-level author attribution | **Heuristic (Observed)** |
+| **Aider** | `.aider.chat.history.md` (Repository root) | Session prompts, model IDs, and code file diffs | *Tier B (Experimental Roadmap)* |
 
 ### Key Capabilities
 

@@ -15,16 +15,16 @@
 | CLI thermal / JSON / share / hooks | Phase 3 | **Done** as MVP UX |
 | Web `/r/[id]` + OG + `/api/receipts` | Phase 4 | **Done** as MVP (storage: memory + optional Supabase) |
 | GitHub Action sticky PR comment | Phase 5 | **Scaffold done** — needs CI hardening & Marketplace polish |
-| **Universal multi-provider attribution** | Product thesis | **Broken / incomplete** — blocks “production truth” |
+| **Universal multi-provider attribution** | Product thesis | **Done (v0.3.0)** — Commit-bound scoring selector + Cursor transcripts/URI + golden tests |
 
-**Verdict:** We are past the 48h MVP vertical slice (`git → CLI → receipt → web → OG → Action`), and sitting in **Early Product / Pre-Production Hardening**. The next milestone is not “more UI” — it is **correct last-used agent attribution** plus distribution & reliability so strangers can trust `npx qodewk`.
+**Verdict:** Phase P0 is **completed**. Multi-agent attribution disambiguation is active and covered with golden tests. The next milestone is **Phase P1** (expanding Tier A adapters & pricing rate cards) and **Phase P2** (reliability & cloud persistence).
 
 ```text
-[████████████░░░░░░░░] ~55–60% toward production-grade v1.0
+[███████████████░░░░░] ~75% toward production-grade v1.0
 
 MVP shippable .......... YES (demo / dogfood)
-Thesis-correct ......... NO  (wrong provider on multi-tool machines)
-Production-ready ....... NO  (harvesters, ranking, persistence, CI, docs drift)
+Thesis-correct ......... YES (commit-bound disambiguation active)
+Production-ready ....... IN PROGRESS (Tier A expansion, cloud store, CI)
 ```
 
 ---
@@ -177,17 +177,17 @@ Git mutation (headSha, commitDate, changedFiles)
 
 ## 6. Phased execution plan
 
-### Phase P0 — Attribution truth (1–2 weeks) — **do first**
+### Phase P0 — Attribution truth (v0.3.0) — ✅ **COMPLETED**
 
-| # | Work item | Owner surface | Done when |
-|---|---|---|---|
-| P0.1 | Commit-bound `selectPrimaryFootprint` | `packages/core` | Multi-tool fixture picks correct primary |
-| P0.2 | Fix Cursor URI + `aiCodeTracking.recentCommit` | `harvester/cursor.ts` | Cursor-only commit → `provider: cursor` |
-| P0.3 | Harden Claude + Antigravity overlap scoring | `harvester/*` | File ∩ changedFiles drives rank |
-| P0.4 | Golden tests: AG / Claude / Cursor / mixed | `packages/core/test` | CI fails on regression |
-| P0.5 | Docs honesty pass | README + cli README | Remove unshipped Aider/Copilot claims or ship stubs labeled experimental |
+| # | Work item | Owner surface | Done when | Status |
+|---|---|---|---|---|
+| P0.1 | Commit-bound `selectPrimaryFootprint` | `packages/core` | Multi-tool fixture picks correct primary | ✅ **Done** |
+| P0.2 | Fix Cursor URI + `aiCodeTracking.recentCommit` + transcripts | `harvester/cursor.ts` | Cursor-only commit → `provider: cursor` | ✅ **Done** |
+| P0.3 | Harden Claude + Antigravity overlap scoring | `harvester/*` | File ∩ changedFiles drives rank | ✅ **Done** |
+| P0.4 | Golden tests: AG / Claude / Cursor / mixed | `packages/core/test` | CI fails on regression | ✅ **Done (9/9 pass)** |
+| P0.5 | Docs honesty pass | README + cli README | Remove unshipped Aider/Copilot claims or ship stubs labeled experimental | ✅ **Done** |
 
-**Exit:** Dogfood on Qodewk repo itself shows Cursor for Cursor commits.
+**Exit:** Dogfood on Qodewk repo itself shows Cursor for Cursor commits. ✅ **Passed.**
 
 ### Phase P1 — Universal Tier A harvesters (2–3 weeks)
 

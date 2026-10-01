@@ -1,10 +1,12 @@
 import { harvestAntigravityFootprints } from "./antigravity.js";
 import { harvestClaudeFootprints } from "./claude.js";
 import { harvestCursorFootprints } from "./cursor.js";
+import { selectPrimaryFootprint } from "./scoring.js";
 import { AgentFootprint, HarvestOptions } from "./types.js";
 import { LocalStateDB } from "../db.js";
 
 export * from "./types.js";
+export * from "./scoring.js";
 export * from "./antigravity.js";
 export * from "./claude.js";
 export * from "./cursor.js";
@@ -59,7 +61,7 @@ export interface UniversalHarvestResult {
 }
 
 export async function harvestUniversalFootprints(
-  options: HarvestOptions & { projectAlias?: string }
+  options: HarvestOptions
 ): Promise<UniversalHarvestResult> {
   const sinceDate = parseSinceOption(options.since);
   const alias = options.projectAlias || "";
@@ -83,8 +85,9 @@ export async function harvestUniversalFootprints(
     allFootprints.push(...cursorFootprints);
   }
 
-  // Deduplicate and sort by timestamp descending
-  allFootprints.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  // 4. Score and rank footprints using commit-bound attribution
+  const { primary, rankedFootprints } = selectPrimaryFootprint(allFootprints, options.gitContext);
+  allFootprints = rankedFootprints;
 
   // Save footprints to local state DB
   try {
@@ -95,9 +98,9 @@ export async function harvestUniversalFootprints(
     db.close();
   } catch {}
 
-  const platforms = Array.from(new Set(allFootprints.map(f => f.platform)));
-  const models = Array.from(new Set(allFootprints.map(f => f.model)));
-  const tasks = Array.from(new Set(allFootprints.map(f => f.taskTitle).filter(Boolean)));
+  const platforms = Array.from(new Set(allFootprints.map((f) => f.platform)));
+  const models = Array.from(new Set(allFootprints.map((f) => f.model)));
+  const tasks = Array.from(new Set(allFootprints.map((f) => f.taskTitle).filter(Boolean)));
   const filesSet = new Set<string>();
   for (const fp of allFootprints) {
     for (const f of fp.filesEdited) filesSet.add(f);
@@ -114,8 +117,6 @@ export async function harvestUniversalFootprints(
     totalCached += fp.tokens.cached;
     totalCost += fp.cost;
   }
-
-  const primary = allFootprints[0];
 
   return {
     footprints: allFootprints,

@@ -17,6 +17,7 @@ export interface GitDiffMetrics {
   repoHash: string;
   projectAlias: string;
   commitMessage?: string;
+  commitDate?: string;
   commitsCount?: number;
 }
 
@@ -82,6 +83,7 @@ export async function extractGitMetrics(
   let headSha = options.headSha || "0000000000000000000000000000000000000000";
   let baseSha: string | undefined = options.baseSha;
   let commitMessage: string | undefined = undefined;
+  let commitDate: string | undefined = undefined;
   let commitsCount = 1;
 
   // 1. Time-window aware commit range if 'since' option is specified
@@ -123,6 +125,7 @@ export async function extractGitMetrics(
           headSha = log.latest.hash;
         }
         commitMessage = log.latest.message;
+        commitDate = log.latest.date;
         if (!options.baseSha && log.all.length > 1 && log.all[1]) {
           baseSha = log.all[1].hash;
         }
@@ -223,6 +226,7 @@ export async function extractGitMetrics(
     repoHash,
     projectAlias,
     commitMessage,
+    commitDate,
     commitsCount
   };
 }
