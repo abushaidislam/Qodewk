@@ -335,3 +335,4 @@ Until that is true on real machines, Qodewk is an impressive MVP — **not** yet
 ---
 
 *Document owner: Lead Architect · Living plan — update status table when a phase exits.*
+----------
