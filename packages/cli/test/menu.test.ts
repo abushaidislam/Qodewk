@@ -31,14 +31,16 @@ describe("Qodewk CLI Menu System (`menu.test.ts`)", () => {
   });
 
   describe("buildMenuFrame", () => {
-    it("renders the thermal serrated edges and editorial header", () => {
+    it("renders clean box-drawing borders and editorial header", () => {
       const rendered = buildMenuFrame(0);
       const plain = stripAnsi(rendered);
 
-      expect(plain).toContain("/\\");
-      expect(plain).toContain("\\/");
+      expect(plain).toContain("┌");
+      expect(plain).toContain("┐");
+      expect(plain).toContain("└");
+      expect(plain).toContain("┘");
       expect(plain).toContain("Q O D E W K");
-      expect(plain).toContain("*** TELEMETRY CONTROL PANEL ***");
+      expect(plain).toContain("Telemetry Control Panel");
       expect(plain).toContain("Use ↑ / ↓ to navigate · Enter to select · q to quit");
       expect(plain).toContain("[✓] Source code was never uploaded to Qodewk");
     });

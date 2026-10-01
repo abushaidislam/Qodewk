@@ -69,13 +69,14 @@ export function buildMenuFrame(selectedIndex: number, items: MenuItem[] = MENU_I
   const coral = colors.coral;
   const mutedSoft = colors.mutedSoft;
   const amber = colors.amber;
+  const border = colors.mutedSoft;
 
   const push = (line: string) => lines.push(line);
 
   const printRow = (content: string, width = INNER_WIDTH) => {
     const visLen = visibleWidth(content);
     const pad = Math.max(0, width - visLen);
-    push(`  | ${content}${" ".repeat(pad)} |`);
+    push(`  ${border("│")} ${content}${" ".repeat(pad)} ${border("│")}`);
   };
 
   const printCenteredRow = (content: string, width = INNER_WIDTH) => {
@@ -83,22 +84,20 @@ export function buildMenuFrame(selectedIndex: number, items: MenuItem[] = MENU_I
     const totalPad = Math.max(0, width - visLen);
     const leftPad = Math.floor(totalPad / 2);
     const rightPad = totalPad - leftPad;
-    push(`  | ${" ".repeat(leftPad)}${content}${" ".repeat(rightPad)} |`);
+    push(`  ${border("│")} ${" ".repeat(leftPad)}${content}${" ".repeat(rightPad)} ${border("│")}`);
   };
 
-  const printDivider = (char = "=", width = INNER_WIDTH) => {
-    push(`  |${char.repeat(width + 2)}|`);
+  const printDivider = (width = INNER_WIDTH) => {
+    push(`  ${border("├" + "─".repeat(width + 2) + "┤")}`);
   };
-
-  const teethPairs = Math.floor((INNER_WIDTH + 4) / 2); // 31 pairs = 62 chars
 
   push("");
-  push("  " + pc.bold(coral("/\\".repeat(teethPairs))));
+  push(`  ${border("┌" + "─".repeat(INNER_WIDTH + 2) + "┐")}`);
   printCenteredRow(pc.bold(pc.white("Q O D E W K")));
-  printCenteredRow(coral("*** TELEMETRY CONTROL PANEL ***"));
-  printDivider("=");
+  printCenteredRow(coral("Telemetry Control Panel"));
+  printDivider();
   printCenteredRow(mutedSoft("Use ↑ / ↓ to navigate · Enter to select · q to quit"));
-  printDivider("-");
+  printDivider();
   printRow("");
 
   const mainItems = items.filter((item) => item.id !== "exit");
@@ -130,7 +129,7 @@ export function buildMenuFrame(selectedIndex: number, items: MenuItem[] = MENU_I
   printRow("");
 
   if (exitItem) {
-    printDivider("-");
+    printDivider();
     const exitIndex = items.indexOf(exitItem);
     const isSelected = exitIndex === selectedIndex;
     if (isSelected) {
@@ -147,9 +146,9 @@ export function buildMenuFrame(selectedIndex: number, items: MenuItem[] = MENU_I
     }
   }
 
-  printDivider("-");
+  printDivider();
   printCenteredRow(pc.dim("[✓] Source code was never uploaded to Qodewk"));
-  push("  " + pc.bold(coral("\\/".repeat(teethPairs))));
+  push(`  ${border("└" + "─".repeat(INNER_WIDTH + 2) + "┘")}`);
   push("");
 
   return lines.join("\n");
