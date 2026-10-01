@@ -3,7 +3,8 @@ import pc from "picocolors";
 import {
   generateReceipt,
   LocalStateDB,
-  sanitizeReceiptForShare
+  sanitizeReceiptForShare,
+  detectDefaultBaseBranch
 } from "@qodewk/core";
 import { ReceiptV1 } from "@qodewk/protocol";
 import { colors, visibleWidth, stripAnsi } from "./theme.js";
@@ -247,8 +248,15 @@ export async function runInteractiveMenu(): Promise<void> {
       case "audit": {
         console.log(pc.bold(pc.white("\n  Audit Branch or Revision Diff")));
         console.log(pc.dim("  ──────────────────────────────────────────────────────────"));
+
+        let defaultBase = "origin/main";
+        try {
+          const { simpleGit } = await import("simple-git");
+          defaultBase = await detectDefaultBaseBranch(simpleGit(process.cwd()));
+        } catch {}
+
         const base = await askLine(
-          `  › Base git ref or commit SHA [default: origin/main]: `
+          `  › Base git ref or commit SHA [default: ${defaultBase}]: `
         );
         const head = await askLine(
           `  › Head git ref or commit SHA [default: HEAD]: `
@@ -257,8 +265,8 @@ export async function runInteractiveMenu(): Promise<void> {
         console.log(pc.dim("\n  [·] Auditing git revision range..."));
         try {
           const receipt = await generateReceipt({
-            baseSha: base || "origin/main",
-            headSha: head || undefined,
+            baseSha: base || defaultBase,
+            headSha: head || "HEAD",
             isPublic: false
           });
           const db = new LocalStateDB();
