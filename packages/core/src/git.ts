@@ -151,26 +151,38 @@ export async function extractGitMetrics(
   const repoHash = computeSaltedHash(repoIdentifier);
 
   // Compute Diff
-  let diffSummary;
-  if (baseSha && headSha && baseSha !== headSha) {
-    const status = await git.status();
-    if (status.files.length > 0) {
-      // Include unstaged/working tree modifications on top of base commit
-      diffSummary = await git.diffSummary([baseSha]);
+  let diffSummary: any;
+  try {
+    if (baseSha && headSha && baseSha !== headSha) {
+      const status = await git.status();
+      if (status.files.length > 0) {
+        // Include unstaged/working tree modifications on top of base commit
+        diffSummary = await git.diffSummary([baseSha]);
+      } else {
+        diffSummary = await git.diffSummary([`${baseSha}...${headSha}`]).catch(async () => {
+          return await git.diffSummary([`${baseSha}..${headSha}`]);
+        });
+      }
     } else {
-      diffSummary = await git.diffSummary([`${baseSha}..${headSha}`]);
+      const status = await git.status();
+      if (status.files.length > 0) {
+        // Diff of working tree changes
+        diffSummary = await git.diffSummary(["HEAD"]);
+      } else if (baseSha) {
+        diffSummary = await git.diffSummary([`${baseSha}..${headSha}`]);
+      } else if (headSha !== "0000000000000000000000000000000000000000") {
+        // First commit or single commit
+        diffSummary = await git.diffSummary([`${headSha}~1..${headSha}`]).catch(async () => {
+          return await git.diffSummary([headSha]);
+        });
+      } else {
+        diffSummary = { changed: 0, insertions: 0, deletions: 0, files: [] };
+      }
     }
-  } else {
-    const status = await git.status();
-    if (status.files.length > 0) {
-      // Diff of working tree changes
+  } catch {
+    try {
       diffSummary = await git.diffSummary(["HEAD"]);
-    } else if (baseSha) {
-      diffSummary = await git.diffSummary([`${baseSha}..${headSha}`]);
-    } else if (headSha !== "0000000000000000000000000000000000000000") {
-      // First commit
-      diffSummary = await git.diffSummary([headSha]);
-    } else {
+    } catch {
       diffSummary = { changed: 0, insertions: 0, deletions: 0, files: [] };
     }
   }
