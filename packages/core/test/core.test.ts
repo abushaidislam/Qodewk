@@ -98,6 +98,28 @@ describe("@qodewk/core", () => {
         await expect(extractGitMetrics({ repoPath: emptyDir })).rejects.toThrow(/not a valid Git repository/);
         fs.rmSync(emptyDir, { recursive: true, force: true });
       });
+
+      it("resolves symbolic branch names and short commit SHAs to 40-character SHAs", async () => {
+        const git = simpleGit(tempDir);
+        fs.writeFileSync(path.join(tempDir, "file2.ts"), "export const x = 1;\n");
+        await git.add("file2.ts");
+        const commitRes = await git.commit("Add file2");
+        const shortSha = commitRes.commit.slice(0, 7);
+
+        const branchSummary = await git.branch();
+        const currentBranch = branchSummary.current;
+
+        const metrics = await extractGitMetrics({
+          repoPath: tempDir,
+          baseSha: currentBranch,
+          headSha: shortSha
+        });
+
+        expect(metrics.headSha).toHaveLength(40);
+        expect(metrics.baseSha).toHaveLength(40);
+        expect(metrics.headSha).toMatch(/^[0-9a-f]{40}$/);
+        expect(metrics.baseSha).toMatch(/^[0-9a-f]{40}$/);
+      });
     });
   });
 

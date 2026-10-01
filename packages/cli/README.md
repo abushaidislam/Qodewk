@@ -15,6 +15,11 @@
 Run directly from any Git repository without installing any packages globally:
 
 ```bash
+# Launch interactive terminal control panel (TUI menu)
+npx qodewk menu
+# or shortcut:
+npx qodewk -i
+
 # Generate monospace thermal receipt for latest commit / working tree
 npx qodewk
 
@@ -34,9 +39,52 @@ npx qodewk --json
 # Publish privacy-safe receipt to web and get shareable URL
 npx qodewk share
 
-# Audit a PR branch diff range against base
-npx qodewk audit --base origin/main --head HEAD --format markdown --out receipt.md
+# Audit a PR branch diff range against base (supports branch names, short SHAs, and HEAD)
+npx qodewk audit --base master --head 7076f0a --format markdown --out receipt.md
 ```
+
+---
+
+## 🎛️ Interactive Terminal Control Panel
+
+Run `npx qodewk menu` (or `qodewk -i`) to open the keyboard-navigable interactive terminal control panel:
+
+```text
+  ┌────────────────────────────────────────────────────────────┐
+  │                        Q O D E W K                         │
+  │                  Telemetry Control Panel                   │
+  ├────────────────────────────────────────────────────────────┤
+  │    Use ↑ / ↓ to navigate · Enter to select · q to quit     │
+  ├────────────────────────────────────────────────────────────┤
+  │                                                            │
+  │  › [1] Generate Local Receipt                              │
+  │        Inspect git diff and print digital receipt          │
+  │                                                            │
+  │    [2] Audit Branch or Revision Range                      │
+  │        Compare against base commit or upstream branch      │
+  │                                                            │
+  │    [3] Publish Receipt to Cloud                            │
+  │        Privacy-safe shareable URL & claim token            │
+  │                                                            │
+  │    [4] Configure Git Hooks                                 │
+  │        Non-blocking background telemetry recording         │
+  │                                                            │
+  │    [5] Database & Storage Status                           │
+  │        Inspect local SQLite (~/.qodewk/state.db) records   │
+  │                                                            │
+  ├────────────────────────────────────────────────────────────┤
+  │    [0] Exit                                                │
+  │        Return to shell                                     │
+  ├────────────────────────────────────────────────────────────┤
+  │        [✓] Source code was never uploaded to Qodewk        │
+  └────────────────────────────────────────────────────────────┘
+```
+
+### Purposeful Visual Hierarchy
+- **Control Panel:** Clean, modern developer CLI box (`┌─┐`, `│`, `├─┤`, `└─┘`) following the Claude Warm Editorial design tokens (`#cc785c` coral accents, `#e8a55a` amber highlights, `#8e8b82` muted hairlines) with **zero cheap emojis**.
+- **Tactile Thermal Artifact:** The signature serrated zig-zag edges (`/\/\/\...` and `\/\/\/\...`) and inline Code 128 thermal barcode are preserved **exclusively** for the generated Proof of Shipment digital receipt!
+
+---
 
 ### Verified Thermal ASCII Receipt Preview
 ```text
@@ -65,8 +113,9 @@ npx qodewk audit --base origin/main --head HEAD --format markdown --out receipt.
   | CONFIDENCE: 95%                     [Mode: verified] |
   | ==================================================== |
   |                                                      |
-  |   ||| | ||||| ||| |||| |||||| |||| ||| ||||||| |||   |
-  |   https://qodewk.dev/r/rec_8381ef3792010f9a2cfe52…   |
+  |     █  █ ██ █ ██ █    █ ██   ████    ██  █ █ ███ ██  |
+  |     █  █ ██ █ ██ █    █ ██   ████    ██  █ █ ███ ██  |
+  |           [ LOCAL RECORD — NOT PUBLISHED ]           |
   |                                                      |
   |   [✓] Source code was never uploaded to Qodewk       |
   \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
@@ -74,7 +123,7 @@ npx qodewk audit --base origin/main --head HEAD --format markdown --out receipt.
 
 ---
 
-## 🌟 What's New: Universal Multi-Platform Footprint Harvester
+## 🌟 Universal Multi-Platform Footprint Harvester
 
 Unlike single-vendor utilities (like Chit, which only support Claude Code CLI), **Qodewk operates globally across all major AI coding platforms**. It reads your local agent transcripts, matches them with your repository's Git revision graph, and proves what was actually shipped.
 
@@ -88,16 +137,20 @@ Unlike single-vendor utilities (like Chit, which only support Claude Code CLI), 
 
 ### Key Capabilities
 
-1. **Date-wise & Duration Filtering:**
+1. **Interactive Control Panel (`qodewk menu`):**
+   Full TUI control with keyboard navigation (`↑`/`↓`, `1`–`5`, `0`, `Enter`, `q`), status inspection, and action routing.
+2. **Smart Git Ref & Short SHA Resolution:**
+   Audits accept arbitrary branch names (`master`, `main`), short commit SHAs (`7076f0a`), or relative refs (`HEAD`, `HEAD~1`), automatically resolving them into canonical 40-character SHAs.
+3. **Date-wise & Duration Filtering:**
    Analyze agent output over arbitrary time windows (`--today`, `--since 24h`, `--since 7d`, `--since "2026-09-28"`).
-2. **AI vs. Human Code Attribution:**
+4. **AI vs. Human Code Attribution:**
    Cross-references Git diff hunks against agent tool calls to calculate exact contribution percentages (e.g. `AI Written Code: 88% (Human: 12%)`).
-3. **Shipped Task Recognition:**
+5. **Shipped Task Recognition:**
    Extracts high-level task summaries and user prompts directly from session databases, so your receipt doubles as an instant standup or PR summary.
-4. **Never Fake Precision (Dual-Engine Provenance):**
+6. **Never Fake Precision (Dual-Engine Provenance):**
    - **`verified` (95% Confidence):** Harvested directly from local agent transcripts & SQLite databases.
    - **`estimated` (45–65% Confidence):** Contextual Git diff & AST complexity fallback when operating in closed/uninstrumented environments.
-5. **Modern Frontier Rate Cards:**
+7. **Modern Frontier Rate Cards:**
    Built-in pricing cards with cache read/write rates for `claude-opus-4-6-thinking`, `claude-sonnet-4-6-thinking`, `gemini-3-8-flash`, `gemini-2-5-pro`, `gpt-4o`, `o3-mini`, `deepseek-v3`, and `deepseek-r1`.
 
 ---
@@ -106,6 +159,8 @@ Unlike single-vendor utilities (like Chit, which only support Claude Code CLI), 
 
 | Command / Option | Description | Output / Example |
 |---|---|---|
+| `npx qodewk menu` | Open interactive terminal control panel (TUI menu) | Interactive terminal box |
+| `npx qodewk -i` / `--menu` | Flag shortcut to launch interactive menu | Interactive terminal box |
 | `npx qodewk` | Harvest local agent footprints and inspect Git commit | Monospace thermal receipt |
 | `npx qodewk --today` | Generate receipt for all agent sessions and code written today | Daily shipment receipt |
 | `npx qodewk --since <duration>` | Filter agent work by duration (e.g. `24h`, `7d`, `2026-09-28`) | Time-bounded telemetry receipt |
@@ -114,8 +169,8 @@ Unlike single-vendor utilities (like Chit, which only support Claude Code CLI), 
 | `npx qodewk share` | Publish privacy-safe metadata to Qodewk Cloud and generate short link | `https://qodewk.dev/r/rec_...` |
 | `npx qodewk share --today` | Share today's harvested footprint window | Public URL + claim token |
 | `npx qodewk audit --base <branch>` | Calculate aggregate diff and telemetry across an entire PR branch range | Git revision delta receipt |
-| `npx qodewk hook install` / `hooks install` | Install non-blocking `post-commit` + `post-rewrite` hooks | Local auto-record |
-| `npx qodewk record` / `record-event` | Silent SQLite record (hook entrypoint) | exit 0 always |
+| `npx qodewk hook install` / `hooks install` | Install non-blocking `post-commit` + `post-rewrite` hooks (< 5ms background recorder) | Local auto-record |
+| `npx qodewk hook uninstall` | Remove Qodewk Git hooks non-destructively | Clean uninstallation |
 | `npx qodewk -f markdown -o receipt.md` | Export sticky Markdown receipt directly formatted for GitHub PR comments | File `receipt.md` |
 | `npx qodewk -p <provider> -m <model>` | Override detected provider & frontier model pricing rate card | Custom model cost estimate |
 | `npx qodewk --anon` | Redact sensitive repository and branch identifiers | Privacy-hardened receipt |

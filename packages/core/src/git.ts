@@ -63,6 +63,64 @@ function parseSinceOption(since?: string | Date): Date | undefined {
   return undefined;
 }
 
+export async function resolveGitSha(git: SimpleGit, ref: string): Promise<string> {
+  const trimmed = ref.trim();
+  if (!trimmed) {
+    throw new Error("Git reference cannot be empty.");
+  }
+
+  // 1. Direct rev-parse (handles full SHAs, short SHAs, branch names, tags, HEAD, HEAD~1)
+  try {
+    const full = (await git.raw(["rev-parse", "--verify", trimmed])).trim();
+    if (/^[0-9a-f]{40}$/i.test(full)) {
+      return full.toLowerCase();
+    }
+  } catch {}
+
+  try {
+    const full = (await git.raw(["rev-parse", trimmed])).trim();
+    if (/^[0-9a-f]{40}$/i.test(full)) {
+      return full.toLowerCase();
+    }
+  } catch {}
+
+  // 2. Check origin/<ref> in case user passed a branch name without origin/
+  try {
+    const fullOrigin = (await git.raw(["rev-parse", `origin/${trimmed}`])).trim();
+    if (/^[0-9a-f]{40}$/i.test(fullOrigin)) {
+      return fullOrigin.toLowerCase();
+    }
+  } catch {}
+
+  // 3. Check refs/heads/<ref>
+  try {
+    const fullRef = (await git.raw(["rev-parse", `refs/heads/${trimmed}`])).trim();
+    if (/^[0-9a-f]{40}$/i.test(fullRef)) {
+      return fullRef.toLowerCase();
+    }
+  } catch {}
+
+  // 4. If already looks like a valid 40-char SHA (fallback)
+  if (/^[0-9a-f]{40}$/i.test(trimmed)) {
+    return trimmed.toLowerCase();
+  }
+
+  throw new Error(`Unable to resolve git reference '${ref}' to a valid commit SHA.`);
+}
+
+export async function detectDefaultBaseBranch(git: SimpleGit): Promise<string> {
+  const candidates = ["origin/main", "main", "origin/master", "master"];
+  for (const c of candidates) {
+    try {
+      const sha = (await git.raw(["rev-parse", "--verify", c])).trim();
+      if (/^[0-9a-f]{40}$/i.test(sha)) {
+        return c;
+      }
+    } catch {}
+  }
+  return "main";
+}
+
 export async function extractGitMetrics(
   optionsOrPath: string | ExtractGitMetricsOptions = process.cwd()
 ): Promise<GitDiffMetrics> {
@@ -80,8 +138,22 @@ export async function extractGitMetrics(
   const branchSummary = await git.branch();
   const branch = branchSummary.current || "HEAD";
 
-  let headSha = options.headSha || "0000000000000000000000000000000000000000";
-  let baseSha: string | undefined = options.baseSha;
+  let headSha: string;
+  if (options.headSha) {
+    headSha = await resolveGitSha(git, options.headSha);
+  } else {
+    try {
+      headSha = (await git.raw(["rev-parse", "HEAD"])).trim().toLowerCase();
+    } catch {
+      headSha = "0000000000000000000000000000000000000000";
+    }
+  }
+
+  let baseSha: string | undefined = undefined;
+  if (options.baseSha) {
+    baseSha = await resolveGitSha(git, options.baseSha);
+  }
+
   let commitMessage: string | undefined = undefined;
   let commitDate: string | undefined = undefined;
   let commitsCount = 1;
@@ -133,6 +205,27 @@ export async function extractGitMetrics(
     } catch {
       // Fresh repo with no commits yet
     }
+  }
+
+  // Retrieve commit message for explicitly provided headSha
+  if (!commitMessage && headSha && headSha !== "0000000000000000000000000000000000000000") {
+    try {
+      const headLog = await git.show(["-s", "--format=%B%x00%aI", headSha]);
+      const parts = headLog.split("\0");
+      if (parts[0]) commitMessage = parts[0].trim();
+      if (parts[1]) commitDate = parts[1].trim();
+    } catch {}
+  }
+
+  // Calculate commits count between baseSha and headSha if both are known
+  if (baseSha && headSha && baseSha !== headSha) {
+    try {
+      const countRaw = await git.raw(["rev-list", "--count", `${baseSha}..${headSha}`]);
+      const count = parseInt(countRaw.trim(), 10);
+      if (!isNaN(count) && count > 0) {
+        commitsCount = count;
+      }
+    } catch {}
   }
 
   // Repository Identity Hash
