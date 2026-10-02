@@ -1,8 +1,11 @@
 import { harvestAntigravityFootprints } from "./antigravity.js";
 import { harvestClaudeFootprints } from "./claude.js";
 import { harvestCursorFootprints } from "./cursor.js";
+import { harvestAiderFootprints } from "./aider.js";
+import { harvestWindsurfFootprints } from "./windsurf.js";
 import { selectPrimaryFootprint } from "./scoring.js";
 import { AgentFootprint, HarvestOptions } from "./types.js";
+import { harvestTrailerFootprints } from "../discovery.js";
 import { LocalStateDB } from "../db.js";
 
 export * from "./types.js";
@@ -10,6 +13,8 @@ export * from "./scoring.js";
 export * from "./antigravity.js";
 export * from "./claude.js";
 export * from "./cursor.js";
+export * from "./aider.js";
+export * from "./windsurf.js";
 
 export function parseSinceOption(since?: string | Date): Date | undefined {
   if (!since) return undefined;
@@ -85,7 +90,30 @@ export async function harvestUniversalFootprints(
     allFootprints.push(...cursorFootprints);
   }
 
-  // 4. Score and rank footprints using commit-bound attribution
+  // 4. Harvest Aider CLI
+  if (!options.platform || options.platform === "all" || options.platform === "aider") {
+    const aiderFootprints = harvestAiderFootprints(options.repoPath, sinceDate);
+    allFootprints.push(...aiderFootprints);
+  }
+
+  // 5. Harvest Windsurf IDE
+  if (!options.platform || options.platform === "all" || options.platform === "windsurf") {
+    const windsurfFootprints = harvestWindsurfFootprints(options.repoPath, sinceDate);
+    allFootprints.push(...windsurfFootprints);
+  }
+
+  // 6. Harvest Git Commit Trailers (Copilot, Claude, Cursor, Aider, Windsurf co-authors)
+  if (options.gitContext?.commitMessage) {
+    const trailerFps = harvestTrailerFootprints(
+      options.repoPath,
+      options.gitContext.commitMessage,
+      options.gitContext.headSha,
+      options.gitContext.commitDate
+    );
+    allFootprints.push(...trailerFps);
+  }
+
+  // 7. Score and rank footprints using commit-bound attribution
   const { primary, rankedFootprints } = selectPrimaryFootprint(allFootprints, options.gitContext);
   allFootprints = rankedFootprints;
 

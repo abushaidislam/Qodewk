@@ -11,62 +11,180 @@ export interface ProviderDiscoveryResult {
   mode: "observed" | "estimated" | "imported" | "verified" | "unknown";
 }
 
+import { AgentFootprint } from "./harvester/types.js";
+import { getRateCard, computeCost } from "@qodewk/pricing";
+
+export interface GitTrailerInfo {
+  token: string;
+  value: string;
+  provider: "copilot" | "claude" | "cursor" | "aider" | "windsurf" | "antigravity" | "generic";
+  model: string;
+}
+
+export function parseGitTrailers(commitMessage?: string): GitTrailerInfo[] {
+  if (!commitMessage) return [];
+
+  const trailers: GitTrailerInfo[] = [];
+  const lines = commitMessage.split("\n");
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    // Match trailers like "Co-authored-by: Name <email>" or "Generated-by: Copilot"
+    const match = trimmed.match(/^([A-Za-z\-]+):\s*(.+)$/i);
+    if (!match || !match[1] || !match[2]) continue;
+
+    const token = match[1].toLowerCase();
+    const value = match[2];
+    const valLower = value.toLowerCase();
+
+    if (token === "co-authored-by" || token === "generated-by" || token === "assisted-by" || token === "signed-off-by") {
+      if (valLower.includes("copilot") || valLower.includes("github-actions")) {
+        trailers.push({ token, value, provider: "copilot", model: "gpt-4o" });
+      } else if (valLower.includes("claude") || valLower.includes("anthropic")) {
+        trailers.push({ token, value, provider: "claude", model: "claude-3-7-sonnet" });
+      } else if (valLower.includes("cursor") || valLower.includes("anysphere")) {
+        trailers.push({ token, value, provider: "cursor", model: "claude-3-5-sonnet" });
+      } else if (valLower.includes("aider")) {
+        trailers.push({ token, value, provider: "aider", model: "claude-3-5-sonnet" });
+      } else if (valLower.includes("windsurf") || valLower.includes("codeium")) {
+        trailers.push({ token, value, provider: "windsurf", model: "claude-3-5-sonnet" });
+      } else if (valLower.includes("antigravity") || valLower.includes("gemini")) {
+        trailers.push({ token, value, provider: "antigravity", model: "claude-sonnet-4-6-thinking" });
+      }
+    }
+  }
+
+  return trailers;
+}
+
 export function detectProviderFromCommit(commitMessage?: string): Partial<ProviderDiscoveryResult> | null {
   if (!commitMessage) return null;
 
+  // 1. Try structured Git trailers first (highest fidelity)
+  const trailers = parseGitTrailers(commitMessage);
+  if (trailers.length > 0) {
+    const primary = trailers[0]!;
+    return {
+      provider: primary.provider === "claude" ? "anthropic" : primary.provider,
+      model: primary.model,
+      confidence: 0.90,
+      mode: "observed"
+    };
+  }
+
   const msg = commitMessage.toLowerCase();
 
-  // Check Claude Code trailers
+  // 2. Substring fallbacks
   if (msg.includes("claude") || msg.includes("anthropic")) {
     return {
       provider: "anthropic",
       model: "claude-3-7-sonnet",
-      confidence: 0.85,
+      confidence: 0.80,
       mode: "observed"
     };
   }
 
-  // Check Antigravity trailers
   if (msg.includes("antigravity")) {
     return {
       provider: "antigravity",
       model: "claude-sonnet-4-6-thinking",
-      confidence: 0.85,
+      confidence: 0.80,
       mode: "observed"
     };
   }
 
-  // Check Gemini trailers
   if (msg.includes("gemini")) {
     return {
       provider: "google",
       model: "gemini-3-8-flash",
-      confidence: 0.85,
+      confidence: 0.80,
       mode: "observed"
     };
   }
 
-  // Check Cursor trailers
   if (msg.includes("cursor")) {
     return {
       provider: "cursor",
       model: "claude-3-5-sonnet",
-      confidence: 0.85,
+      confidence: 0.80,
       mode: "observed"
     };
   }
 
-  // Check Copilot trailers
+  if (msg.includes("aider")) {
+    return {
+      provider: "aider",
+      model: "claude-3-5-sonnet",
+      confidence: 0.80,
+      mode: "observed"
+    };
+  }
+
+  if (msg.includes("windsurf")) {
+    return {
+      provider: "windsurf",
+      model: "claude-3-5-sonnet",
+      confidence: 0.80,
+      mode: "observed"
+    };
+  }
+
   if (msg.includes("copilot") || msg.includes("github-actions")) {
     return {
       provider: "copilot",
       model: "gpt-4o",
-      confidence: 0.8,
+      confidence: 0.80,
       mode: "observed"
     };
   }
 
   return null;
+}
+
+export function harvestTrailerFootprints(
+  repoPath: string,
+  commitMessage?: string,
+  headSha?: string,
+  commitDate?: string | Date
+): AgentFootprint[] {
+  if (!commitMessage) return [];
+
+  const trailers = parseGitTrailers(commitMessage);
+  const footprints: AgentFootprint[] = [];
+  const dateIso = commitDate
+    ? (commitDate instanceof Date ? commitDate.toISOString() : new Date(commitDate).toISOString())
+    : new Date().toISOString();
+
+  for (const t of trailers) {
+    const rateCard = getRateCard(t.model);
+    const estInput = 5000;
+    const estCached = 2500;
+    const estOutput = 600;
+    const cost = computeCost(estInput, estOutput, estCached, rateCard);
+
+    footprints.push({
+      id: `trailer_${t.provider}_${(headSha || "head").slice(0, 8)}`,
+      platform: t.provider,
+      sessionId: `commit_trailer_${t.provider}`,
+      repoPath,
+      taskTitle: `Commit Trailer (${t.token}: ${t.value.slice(0, 30)})`,
+      model: t.model,
+      stepsCount: 1,
+      filesEdited: [],
+      timestamp: dateIso,
+      boundCommitSha: headSha,
+      tokens: {
+        input: estInput,
+        output: estOutput,
+        cached: estCached
+      },
+      cost,
+      mode: "observed",
+      confidence: 0.90
+    });
+  }
+
+  return footprints;
 }
 
 export function discoverAntigravityEnvironment(): Partial<ProviderDiscoveryResult> | null {

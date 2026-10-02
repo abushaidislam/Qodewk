@@ -7,7 +7,10 @@ import {
   scoreFootprint,
   selectPrimaryFootprint,
   computeAiWrittenRatio,
-  sanitizeReceiptForShare
+  sanitizeReceiptForShare,
+  parseGitTrailers,
+  harvestTrailerFootprints,
+  harvestAiderFootprints
 } from "../src/index.js";
 import { ReceiptV1 } from "@qodewk/protocol";
 
@@ -195,6 +198,68 @@ describe("attribution legacy test suite", () => {
       const sanitized = sanitizeReceiptForShare(receipt);
       expect(sanitized.privacy.isPublic).toBe(true);
       expect(sanitized.ai.sessions?.[0] && ("filesTouched" in sanitized.ai.sessions[0])).toBe(false);
+    });
+  });
+
+  describe("Phase P1: Git Commit Trailers & Copilot Discovery", () => {
+    it("parses standard Co-authored-by trailers for Copilot, Claude, Cursor, Aider", () => {
+      const msg = `feat: add awesome feature
+
+Co-authored-by: GitHub Copilot <copilot@github.com>
+Co-authored-by: Claude <noreply@anthropic.com>`;
+
+      const trailers = parseGitTrailers(msg);
+      expect(trailers.length).toBe(2);
+      expect(trailers[0]?.provider).toBe("copilot");
+      expect(trailers[0]?.model).toBe("gpt-4o");
+      expect(trailers[1]?.provider).toBe("claude");
+      expect(trailers[1]?.model).toBe("claude-3-7-sonnet");
+    });
+
+    it("harvestTrailerFootprints produces bound footprints with observed mode", () => {
+      const msg = "fix: critical bug\n\nCo-authored-by: GitHub Copilot <copilot@github.com>";
+      const headSha = "1234567890abcdef1234567890abcdef12345678";
+      const fps = harvestTrailerFootprints("/repo", msg, headSha, "2026-09-30T10:00:00.000Z");
+
+      expect(fps.length).toBe(1);
+      const fp = fps[0]!;
+      expect(fp.platform).toBe("copilot");
+      expect(fp.boundCommitSha).toBe(headSha);
+      expect(fp.mode).toBe("observed");
+      expect(fp.confidence).toBe(0.90);
+    });
+  });
+
+  describe("Phase P1: Aider Markdown Harvester", () => {
+    it("parses .aider.chat.history.md sessions, models, files, and commits", () => {
+      const tmpDir = path.join(process.cwd(), "test-tmp-aider");
+      if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
+
+      const mockAiderHistory = `# aider chat started at 2026-09-28 14:00:00
+
+#### fix user login issue
+Model: claude-3-5-sonnet-20241022 with diff edit format
+
+> Applied edit to src/auth.ts
+> Commit 82ace2c feat: fix login logic
+Tokens: 2.5k sent, 350 received. Cost: $0.03 session.
+`;
+
+      fs.writeFileSync(path.join(tmpDir, ".aider.chat.history.md"), mockAiderHistory, "utf-8");
+
+      try {
+        const fps = harvestAiderFootprints(tmpDir);
+        expect(fps.length).toBe(1);
+        const fp = fps[0]!;
+        expect(fp.platform).toBe("aider");
+        expect(fp.model).toBe("claude-3-5-sonnet-20241022");
+        expect(fp.taskTitle).toBe("fix user login issue");
+        expect(fp.boundCommitSha).toBe("82ace2c");
+        expect(fp.filesEdited).toContain("src/auth.ts");
+        expect(fp.cost).toBe(0.03);
+      } finally {
+        fs.rmSync(tmpDir, { recursive: true, force: true });
+      }
     });
   });
 });
