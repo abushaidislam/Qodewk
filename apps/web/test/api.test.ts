@@ -99,6 +99,78 @@ describe("/api/receipts API Route Handlers (`api.test.ts`)", () => {
       expect(json.publicId).toBe(validReceipt.receipt.id);
       expect(json.url).toContain(`/r/${validReceipt.receipt.id}`);
       expect(json.claimToken).toMatch(/^clm_[0-9a-f]{32}$/);
+      expect(res.headers.get("x-ratelimit-limit")).toBe("30");
+    });
+
+    it("enforces rate limits and returns 429 when client exceeds request limit", async () => {
+      const uniqueIp = "192.168.100.42";
+      const payloadStr = JSON.stringify(validReceipt);
+
+      // Consume up to limit (30 requests)
+      for (let i = 0; i < 30; i++) {
+        const req = new NextRequest(new URL("http://localhost:3000/api/receipts"), {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            "content-length": String(payloadStr.length),
+            "x-forwarded-for": uniqueIp
+          },
+          body: payloadStr
+        });
+        const res = await POST(req);
+        expect(res.status).toBe(200);
+      }
+
+      // 31st request should be rejected with 429 Too Many Requests
+      const limitReq = new NextRequest(new URL("http://localhost:3000/api/receipts"), {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "content-length": String(payloadStr.length),
+          "x-forwarded-for": uniqueIp
+        },
+        body: payloadStr
+      });
+      const limitRes = await POST(limitReq);
+      expect(limitRes.status).toBe(429);
+
+      const json = await limitRes.json();
+      expect(json.error).toContain("Too many requests");
+      expect(limitRes.headers.get("retry-after")).toBeDefined();
+    });
+
+    it("returns 503 Service Unavailable in production when durable store is unconfigured", async () => {
+      const prevEnv = process.env.NODE_ENV;
+      const prevSupabaseUrl = process.env.SUPABASE_URL;
+      const prevSupabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+      try {
+        (process.env as any).NODE_ENV = "production";
+        delete process.env.SUPABASE_URL;
+        delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+        delete process.env.SUPABASE_ANON_KEY;
+
+        const payloadStr = JSON.stringify(validReceipt);
+        const req = new NextRequest(new URL("http://localhost:3000/api/receipts"), {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            "content-length": String(payloadStr.length),
+            "x-forwarded-for": "10.0.0.99"
+          },
+          body: payloadStr
+        });
+
+        const res = await POST(req);
+        expect(res.status).toBe(503);
+        const json = await res.json();
+        expect(json.error).toBe("Durable storage failure");
+        expect(json.message).toContain("Durable storage is required in production");
+      } finally {
+        (process.env as any).NODE_ENV = prevEnv;
+        if (prevSupabaseUrl) process.env.SUPABASE_URL = prevSupabaseUrl;
+        if (prevSupabaseKey) process.env.SUPABASE_SERVICE_ROLE_KEY = prevSupabaseKey;
+      }
     });
   });
 

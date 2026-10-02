@@ -1,0 +1,52 @@
+name: "CI Monorepo Quality Pipeline"
+
+on:
+  push:
+    branches:
+      - master
+      - "feat/**"
+      - "fix/**"
+  pull_request:
+    branches:
+      - master
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: "Typecheck, Unit & Integration Tests, CLI Smoke"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js Runtime
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "pnpm"
+
+      - name: Install Monorepo Dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Build All Monorepo Packages
+        run: pnpm build
+
+      - name: Run Monorepo Typecheck
+        run: pnpm typecheck
+
+      - name: Run Comprehensive Test Suite
+        run: pnpm test
+
+      - name: CLI Smoke Test
+        run: |
+          node packages/cli/dist/index.cjs --version
+          node packages/cli/dist/index.cjs --help
+          node packages/cli/dist/index.cjs --json --local

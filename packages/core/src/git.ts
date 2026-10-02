@@ -1,6 +1,7 @@
 import { simpleGit, SimpleGit } from "simple-git";
 import * as crypto from "node:crypto";
 import * as path from "node:path";
+import { ReceiptV1, ReceiptV1Schema } from "@qodewk/protocol";
 
 export interface GitDiffMetrics {
   files: number;
@@ -108,7 +109,8 @@ export async function resolveGitSha(git: SimpleGit, ref: string): Promise<string
   throw new Error(`Unable to resolve git reference '${ref}' to a valid commit SHA.`);
 }
 
-export async function detectDefaultBaseBranch(git: SimpleGit): Promise<string> {
+export async function detectDefaultBaseBranch(repoPathOrGit: string | SimpleGit = process.cwd()): Promise<string> {
+  const git = typeof repoPathOrGit === "string" ? simpleGit(repoPathOrGit) : repoPathOrGit;
   const candidates = ["origin/main", "main", "origin/master", "master"];
   for (const c of candidates) {
     try {
@@ -396,4 +398,89 @@ function mapExtensionToLanguage(ext: string): string | null {
     sh: "Shell"
   };
   return map[ext] || (ext ? ext.toUpperCase() : null);
+}
+
+export const QODEWK_GIT_NOTES_REF = "refs/notes/qodewk";
+
+export interface GitNotesOptions {
+  repoPath?: string;
+}
+
+/**
+ * Persists a ReceiptV1 as a Git Note on the specified commit SHA under refs/notes/qodewk.
+ */
+export async function writeGitReceiptNote(
+  commitSha: string,
+  receipt: ReceiptV1,
+  options: GitNotesOptions & { force?: boolean } = {}
+): Promise<void> {
+  const repoPath = options.repoPath || process.cwd();
+  const git = simpleGit(repoPath);
+
+  const cleanSha = commitSha.trim();
+  const notePayload = JSON.stringify(receipt, null, 2);
+
+  const args = ["notes", `--ref=${QODEWK_GIT_NOTES_REF}`, "add"];
+  if (options.force !== false) {
+    args.push("-f");
+  }
+  args.push("-m", notePayload, cleanSha);
+
+  await git.raw(args);
+}
+
+/**
+ * Retrieves a ReceiptV1 from the Git Note on the specified commit SHA under refs/notes/qodewk.
+ * Returns null if no note exists or if the note is not a valid ReceiptV1.
+ */
+export async function readGitReceiptNote(
+  commitSha: string,
+  options: GitNotesOptions = {}
+): Promise<ReceiptV1 | null> {
+  const repoPath = options.repoPath || process.cwd();
+  const git = simpleGit(repoPath);
+
+  const cleanSha = commitSha.trim();
+
+  try {
+    const rawNote = await git.raw(["notes", `--ref=${QODEWK_GIT_NOTES_REF}`, "show", cleanSha]);
+    if (!rawNote || !rawNote.trim()) return null;
+
+    const parsed = JSON.parse(rawNote.trim());
+    const valid = ReceiptV1Schema.safeParse(parsed);
+    if (valid.success) {
+      return valid.data;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Lists all commit SHAs that have an attached Qodewk Git Note under refs/notes/qodewk.
+ */
+export async function listGitReceiptNotes(
+  options: GitNotesOptions = {}
+): Promise<string[]> {
+  const repoPath = options.repoPath || process.cwd();
+  const git = simpleGit(repoPath);
+
+  try {
+    const output = await git.raw(["notes", `--ref=${QODEWK_GIT_NOTES_REF}`, "list"]);
+    if (!output || !output.trim()) return [];
+
+    // Output lines are in format: "<note_blob_sha> <commit_sha>"
+    const lines = output.trim().split("\n");
+    const commitShas: string[] = [];
+    for (const line of lines) {
+      const parts = line.trim().split(/\s+/);
+      if (parts.length >= 2 && parts[1]) {
+        commitShas.push(parts[1]);
+      }
+    }
+    return commitShas;
+  } catch {
+    return [];
+  }
 }

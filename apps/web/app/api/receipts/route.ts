@@ -2,10 +2,47 @@ import { NextRequest, NextResponse } from "next/server";
 import { ReceiptV1Schema } from "@qodewk/protocol";
 import * as crypto from "node:crypto";
 import { saveReceiptToStore, getReceiptFromStore } from "@/lib/storage";
+import { checkRateLimit } from "@/lib/ratelimit";
+
+function getClientIp(req: NextRequest): string {
+  const cfIp = req.headers.get("cf-connecting-ip");
+  if (cfIp) return cfIp.trim();
+
+  const realIp = req.headers.get("x-real-ip");
+  if (realIp) return realIp.trim();
+
+  const forwarded = req.headers.get("x-forwarded-for");
+  if (forwarded) {
+    const parts = forwarded.split(",");
+    if (parts[0]) return parts[0].trim();
+  }
+
+  return "127.0.0.1";
+}
 
 export async function POST(req: NextRequest) {
   try {
-    // 1. Enforce 50 KB payload cap
+    // 1. Rate limiting & abuse protection (max 30 req/min per IP)
+    const clientIp = getClientIp(req);
+    const rateLimit = checkRateLimit(clientIp);
+
+    if (!rateLimit.allowed) {
+      const retryAfter = Math.max(rateLimit.reset - Math.ceil(Date.now() / 1000), 1);
+      return NextResponse.json(
+        { error: "Too many requests. Please try again later." },
+        {
+          status: 429,
+          headers: {
+            "Retry-After": String(retryAfter),
+            "X-RateLimit-Limit": String(rateLimit.limit),
+            "X-RateLimit-Remaining": "0",
+            "X-RateLimit-Reset": String(rateLimit.reset)
+          }
+        }
+      );
+    }
+
+    // 2. Enforce 50 KB payload cap
     const contentLength = Number(req.headers.get("content-length") || 0);
     if (contentLength > 51200) { // 50 KB in bytes
       return NextResponse.json(
@@ -16,7 +53,7 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
 
-    // 2. Validate against canonical ReceiptV1Schema
+    // 3. Validate against canonical ReceiptV1Schema
     const parsed = ReceiptV1Schema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
@@ -29,17 +66,40 @@ export async function POST(req: NextRequest) {
     const claimToken = `clm_${crypto.randomBytes(16).toString("hex")}`;
     const claimTokenHash = crypto.createHash("sha256").update(claimToken).digest("hex");
 
-    // Store in persistence layer
-    await saveReceiptToStore(receipt, claimTokenHash);
+    // 4. Store in persistence layer
+    try {
+      await saveReceiptToStore(receipt, claimTokenHash);
+    } catch (storageErr: any) {
+      const isProduction = process.env.NODE_ENV === "production" || process.env.VERCEL_ENV === "production";
+      if (isProduction) {
+        return NextResponse.json(
+          {
+            error: "Durable storage failure",
+            message: storageErr.message
+          },
+          { status: 503 }
+        );
+      }
+      throw storageErr;
+    }
 
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.QODEWK_APP_URL || "https://qodewk.flinkeo.online";
     const publicUrl = `${baseUrl}/r/${receipt.receipt.id}`;
 
-    return NextResponse.json({
-      publicId: receipt.receipt.id,
-      url: publicUrl,
-      claimToken
-    });
+    return NextResponse.json(
+      {
+        publicId: receipt.receipt.id,
+        url: publicUrl,
+        claimToken
+      },
+      {
+        headers: {
+          "X-RateLimit-Limit": String(rateLimit.limit),
+          "X-RateLimit-Remaining": String(rateLimit.remaining),
+          "X-RateLimit-Reset": String(rateLimit.reset)
+        }
+      }
+    );
   } catch (err: any) {
     return NextResponse.json(
       { error: "Internal server error", message: err.message },
