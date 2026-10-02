@@ -87,5 +87,16 @@ describe("@qodewk/pricing", () => {
       expect(getRateCard("o1").id).toBe("o1");
       expect(getRateCard("claude-sonnet-4").id).toBe("claude-sonnet-4");
     });
+
+    it("resolves MODEL_ALIASES correctly (deepseek-chat, gemini-3, cursor-fast, chatgpt-4o-latest)", () => {
+      expect(getRateCard("deepseek-chat").id).toBe("deepseek-v3");
+      expect(getRateCard("deepseek/deepseek-chat").id).toBe("deepseek-v3");
+      expect(getRateCard("deepseek-reasoner").id).toBe("deepseek-r1");
+      expect(getRateCard("gemini-3").id).toBe("gemini-3-8-flash");
+      expect(getRateCard("chatgpt-4o-latest").id).toBe("gpt-4o");
+      expect(getRateCard("cursor-fast").id).toBe("claude-3-5-sonnet");
+      expect(getRateCard("cursor-small").id).toBe("claude-3-5-haiku");
+      expect(getRateCard("claude-code").id).toBe("claude-3-7-sonnet");
+    });
   });
 });

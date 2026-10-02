@@ -71,6 +71,7 @@ export async function generateReceipt(options: GenerateReceiptOptions = {}): Pro
     gitContext: {
       headSha: metrics.headSha,
       commitDate: metrics.commitDate,
+      commitMessage: metrics.commitMessage,
       changedFiles: metrics.changedFiles,
       branch: metrics.branch
     }

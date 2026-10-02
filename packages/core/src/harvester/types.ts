@@ -1,8 +1,21 @@
 import { AttributionMode } from "@qodewk/protocol";
 
+export type AgentPlatform =
+  | "antigravity"
+  | "claude"
+  | "cursor"
+  | "aider"
+  | "copilot"
+  | "windsurf"
+  | "opencode"
+  | "cline"
+  | "codex"
+  | "kilo"
+  | "generic";
+
 export interface AgentFootprint {
   id: string;
-  platform: "antigravity" | "claude" | "cursor" | "aider" | "copilot";
+  platform: AgentPlatform;
   sessionId: string;
   repoPath: string;
   taskTitle: string;
@@ -28,6 +41,7 @@ export interface AgentFootprint {
 export interface GitAttributionContext {
   headSha?: string;
   commitDate?: string | Date;
+  commitMessage?: string;
   changedFiles?: string[];
   branch?: string;
 }

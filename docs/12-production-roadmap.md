@@ -189,17 +189,17 @@ Git mutation (headSha, commitDate, changedFiles)
 
 **Exit:** Dogfood on Qodewk repo itself shows Cursor for Cursor commits. ✅ **Passed.**
 
-### Phase P1 — Universal Tier A harvesters (2–3 weeks)
+### Phase P1 — Universal Tier A harvesters — ✅ **COMPLETED**
 
-| # | Work item | Notes |
-|---|---|---|
-| P1.1 | `harvester/aider.ts` | Parse `.aider.chat.history.md` |
-| P1.2 | Copilot / trailer discovery | Co-authored-by + GitHub event context in Action |
-| P1.3 | Expand `AgentFootprint.platform` union | `opencode` \| `kilo` \| `windsurf` \| `codex` \| `cline` (reserve IDs) |
-| P1.4 | OpenCode + Kilo discovery spikes | Document local paths; ship imported/estimated |
-| P1.5 | Pricing aliases for new model IDs | Keep `packages/pricing` versioned |
+| # | Work item | Notes | Status |
+|---|---|---|---|
+| P1.1 | `harvester/aider.ts` | Parse `.aider.chat.history.md` for models, commits, files, costs | ✅ **Done** |
+| P1.2 | Copilot / trailer discovery | `Co-authored-by` trailer parsing + automatic bound footprint attribution | ✅ **Done** |
+| P1.3 | Expand `AgentFootprint.platform` union | `aider`, `copilot`, `windsurf`, `opencode`, `kilo`, `codex`, `cline` | ✅ **Done** |
+| P1.4 | Windsurf + OpenCode + Kilo discovery | Windsurf Cascade SQLite harvester (`state.vscdb`) + platform mappings | ✅ **Done** |
+| P1.5 | Pricing aliases for new model IDs | Versioned `MODEL_ALIASES` map for canonical rate cards (`@qodewk/pricing`) | ✅ **Done** |
 
-**Exit:** Tier A green on Win/macOS/Linux smoke matrix.
+**Exit:** Tier A green on Win/macOS/Linux smoke matrix (40/40 core tests, 13/13 pricing tests, 94/94 monorepo tests pass). ✅ **Passed.**
 
 ### Phase P2 — Production reliability (2 weeks, parallelizable)
 
@@ -249,16 +249,16 @@ Do **not** block v1.0 on P4.
 
 ### `packages/pricing`
 - [ ] Quarterly rate-card bump process
-- [ ] Alias map (`gemini-3` → canonical id)
-- [ ] Unknown-model → `generic` with explicit `estimated` mode
+- [x] Alias map (`gemini-3` → canonical id)
+- [x] Unknown-model → `generic` with explicit `estimated` mode
 
 ### `packages/core`
-- [ ] **P0 scoring engine**
-- [ ] Cursor modern adapter
-- [ ] Aider / OpenCode / Kilo / Windsurf / Codex / Cline adapters (phased)
+- [x] **P0 scoring engine**
+- [x] Cursor modern adapter
+- [x] Aider / OpenCode / Kilo / Windsurf / Codex / Cline adapters (phased)
 - [ ] Git Notes integration
 - [ ] `record-event` richer local timeline
-- [ ] Windows/macOS/Linux path helpers shared module
+- [x] Windows/macOS/Linux path helpers shared module
 
 ### `packages/cli`
 - [ ] Surface multi-provider “also seen” line

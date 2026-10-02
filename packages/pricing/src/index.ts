@@ -201,9 +201,57 @@ export const RATE_CARDS: Record<string, ModelRateCard> = {
   }
 };
 
+export const MODEL_ALIASES: Record<string, string> = {
+  // Anthropic aliases
+  "claude-3-7-sonnet-latest": "claude-3-7-sonnet",
+  "claude-3-7-sonnet-20250219": "claude-3-7-sonnet",
+  "claude-3-5-sonnet-latest": "claude-3-5-sonnet",
+  "claude-3-5-sonnet-20241022": "claude-3-5-sonnet",
+  "claude-3-5-sonnet-20240620": "claude-3-5-sonnet",
+  "claude-3-5-haiku-latest": "claude-3-5-haiku",
+  "claude-3-5-haiku-20241022": "claude-3-5-haiku",
+  "claude-3-opus-20240229": "claude-opus-4",
+  "claude-code": "claude-3-7-sonnet",
+  "cursor-fast": "claude-3-5-sonnet",
+  "cursor-small": "claude-3-5-haiku",
+
+  // OpenAI aliases
+  "chatgpt-4o-latest": "gpt-4o",
+  "gpt-4o-2024-08-06": "gpt-4o",
+  "gpt-4o-2024-11-20": "gpt-4o",
+  "gpt-4o-mini-2024-07-18": "gpt-4o-mini",
+  "o1-preview": "o1",
+  "o1-2024-12-17": "o1",
+  "o3": "o3-mini",
+
+  // Google aliases
+  "gemini-3": "gemini-3-8-flash",
+  "gemini-flash": "gemini-3-8-flash",
+  "gemini-pro": "gemini-2-5-pro",
+  "gemini-2.0-flash": "gemini-2-0-flash",
+  "gemini-1.5-pro": "gemini-1-5-pro",
+  "gemini-1.5-flash": "gemini-2-0-flash",
+
+  // DeepSeek aliases
+  "deepseek-chat": "deepseek-v3",
+  "deepseek-coder": "deepseek-v3",
+  "deepseek/deepseek-chat": "deepseek-v3",
+  "deepseek-reasoner": "deepseek-r1",
+  "deepseek/deepseek-r1": "deepseek-r1"
+};
+
 export function getRateCard(modelId?: string): ModelRateCard {
   if (!modelId) return RATE_CARDS["default"]!;
-  const key = modelId.toLowerCase().replace(/[^a-z0-9-]/g, "-");
+  let key = modelId.toLowerCase().replace(/[^a-z0-9-]/g, "-");
+  
+  // 1. Exact alias match
+  if (MODEL_ALIASES[modelId.toLowerCase()]) {
+    key = MODEL_ALIASES[modelId.toLowerCase()]!;
+  } else if (MODEL_ALIASES[key]) {
+    key = MODEL_ALIASES[key]!;
+  }
+
+  // 2. Exact rate card match
   if (RATE_CARDS[key]) return RATE_CARDS[key]!;
 
   if (key.includes("opus")) {
