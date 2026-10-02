@@ -1,6 +1,9 @@
 name: "Qodewk Digital Receipt"
 description: "Universal telemetry and digital receipt generator for the AI coding agent era"
 author: "Qodewk"
+branding:
+  icon: "file-text"
+  color: "orange"
 inputs:
   github-token:
     description: "GitHub token for commenting on pull requests"

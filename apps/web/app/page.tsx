@@ -77,12 +77,12 @@ const heroSampleReceipt: ReceiptV1 = {
 };
 
 const AGENTS = [
-  "Claude Code",
-  "Cursor",
-  "Windsurf",
-  "Copilot",
-  "Aider",
-  "Continue",
+  { name: "Cursor", demoId: "demo-cursor" },
+  { name: "Claude Code", demoId: "demo-claude" },
+  { name: "Google Antigravity", demoId: "demo-antigravity" },
+  { name: "Aider", demoId: "demo-aider" },
+  { name: "Windsurf", demoId: "demo-cursor" },
+  { name: "GitHub Copilot", demoId: "demo-claude" },
 ] as const;
 
 const FEATURES = [
@@ -253,14 +253,16 @@ export default function HomePage() {
               Works across the multi-agent desk
             </p>
             <div className="flex flex-wrap items-center justify-center gap-3">
-              {AGENTS.map((name, i) => (
-                <span
-                  key={name}
-                  className="agent-chip px-4 py-2 rounded-lg bg-[#faf9f5] border border-[#e6dfd8] text-sm font-medium text-[#252523]"
+              {AGENTS.map((agent, i) => (
+                <Link
+                  key={agent.name}
+                  href={`/r/${agent.demoId}`}
+                  className="agent-chip px-4 py-2 rounded-lg bg-[#faf9f5] hover:bg-[#efe9de] hover:border-[#cc785c] border border-[#e6dfd8] text-sm font-medium text-[#252523] transition-colors duration-150 inline-flex items-center gap-1.5"
                   style={{ animationDelay: `${i * 80}ms` }}
                 >
-                  {name}
-                </span>
+                  <span>{agent.name}</span>
+                  <span className="text-[10px] font-mono text-[#8e8b82] uppercase">receipt →</span>
+                </Link>
               ))}
             </div>
           </Reveal>
