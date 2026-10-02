@@ -240,18 +240,36 @@ export const MODEL_ALIASES: Record<string, string> = {
   "deepseek/deepseek-r1": "deepseek-r1"
 };
 
+let DYNAMIC_RATE_CARDS: Record<string, ModelRateCard> = {};
+let DYNAMIC_ALIASES: Record<string, string> = {};
+
+export function updatePricingRegistry(
+  newCards: Record<string, ModelRateCard>,
+  newAliases?: Record<string, string>
+) {
+  DYNAMIC_RATE_CARDS = { ...DYNAMIC_RATE_CARDS, ...newCards };
+  if (newAliases) {
+    DYNAMIC_ALIASES = { ...DYNAMIC_ALIASES, ...newAliases };
+  }
+}
+
 export function getRateCard(modelId?: string): ModelRateCard {
-  if (!modelId) return RATE_CARDS["default"]!;
+  if (!modelId) return DYNAMIC_RATE_CARDS["default"] ?? RATE_CARDS["default"]!;
   let key = modelId.toLowerCase().replace(/[^a-z0-9-]/g, "-");
   
   // 1. Exact alias match
-  if (MODEL_ALIASES[modelId.toLowerCase()]) {
-    key = MODEL_ALIASES[modelId.toLowerCase()]!;
-  } else if (MODEL_ALIASES[key]) {
-    key = MODEL_ALIASES[key]!;
+  const aliasMatch = DYNAMIC_ALIASES[modelId.toLowerCase()] ?? MODEL_ALIASES[modelId.toLowerCase()];
+  if (aliasMatch) {
+    key = aliasMatch;
+  } else {
+    const fallbackAliasMatch = DYNAMIC_ALIASES[key] ?? MODEL_ALIASES[key];
+    if (fallbackAliasMatch) {
+      key = fallbackAliasMatch;
+    }
   }
 
   // 2. Exact rate card match
+  if (DYNAMIC_RATE_CARDS[key]) return DYNAMIC_RATE_CARDS[key]!;
   if (RATE_CARDS[key]) return RATE_CARDS[key]!;
 
   if (key.includes("opus")) {

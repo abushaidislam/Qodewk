@@ -5,12 +5,15 @@ import { detectProviderFromCommit } from "./discovery.js";
 import { harvestUniversalFootprints } from "./harvester/index.js";
 import { estimateCost } from "./estimator.js";
 
+import { syncDynamicPricing } from "./pricing-sync.js";
+
 export * from "./git.js";
 export * from "./discovery.js";
 export * from "./harvester/index.js";
 export * from "./estimator.js";
 export * from "./db.js";
 export * from "./format.js";
+export * from "./pricing-sync.js";
 
 export interface GenerateReceiptOptions {
   repoPath?: string;
@@ -55,6 +58,9 @@ export function sanitizeReceiptForShare(receipt: ReceiptV1): ReceiptV1 {
 }
 
 export async function generateReceipt(options: GenerateReceiptOptions = {}): Promise<ReceiptV1> {
+  // Gracefully fetch or load cached dynamic pricing before generating receipt
+  await syncDynamicPricing({ timeoutMs: 1500 }); // Fast 1.5s timeout for CLI responsiveness
+
   const metrics: GitDiffMetrics = await extractGitMetrics({
     repoPath: options.repoPath || process.cwd(),
     baseSha: options.baseSha,

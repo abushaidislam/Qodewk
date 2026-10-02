@@ -78,7 +78,7 @@ export function harvestAntigravityFootprints(repoPath: string, sinceDate?: Date)
 
             if (line.includes("Model Selection")) {
               const match = line.match(/Model Selection` from .*?to ([^\.\(\n\r]+)/);
-              if (match && match[1]) {
+              if (match && match[1] && match[1].length < 30) {
                 const rawModel = match[1].trim();
                 if (rawModel.toLowerCase().includes("opus")) detectedModel = "claude-opus-4-6-thinking";
                 else if (rawModel.toLowerCase().includes("sonnet")) detectedModel = "claude-sonnet-4-6-thinking";
@@ -130,8 +130,8 @@ export function harvestAntigravityFootprints(repoPath: string, sinceDate?: Date)
           cached: estimatedCached
         },
         cost,
-        mode: "verified",
-        confidence: 0.95,
+        mode: "estimated",
+        confidence: 0.65,
         rawTranscriptPath: transcriptPath
       });
     }

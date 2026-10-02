@@ -100,7 +100,7 @@ export function buildTerminalReceipt(receipt: ReceiptV1, publicUrl?: string): st
   }
   if (receipt.ai.aiWrittenRatio !== undefined) {
     const aiPct = Math.round(receipt.ai.aiWrittenRatio * 100);
-    printRowSplit("AI Written Code", `${aiPct}% (Human: ${100 - aiPct}%)`);
+    printRowSplit("AI Touched Files", `${aiPct}% (Human: ${100 - aiPct}%)`);
   }
   const tokenDetail = `${inputK} in (${Math.round(receipt.ai.tokens.cached / 1000)}k cached) / ${outputK} out`;
   const cleanTokens = tokenDetail.length > 40 ? tokenDetail.slice(0, 39) + "…" : tokenDetail;

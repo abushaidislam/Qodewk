@@ -3,6 +3,23 @@
 All notable changes to the **Qodewk** monorepo are documented in this file.  
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0] — 2026-10-02
+
+### 🚀 Added
+- **Dynamic Pricing Registry (Offline-first Edge-compatible):**
+  - Implemented advanced 24-hour TTL file-system caching mechanism in `@qodewk/core` (`syncDynamicPricing`).
+  - Added silent airplane-mode network fallback to ensure CLI speeds remain < 100ms.
+  - Allowed fetching live remote rate cards from cloud without triggering NPM updates.
+- **Session Scoping & Penalty Filters:**
+  - Added strict attribution filters (`score >= 0.10`) in `harvester/index.ts` to exclude stale or unrelated historical AI sessions (solving the cross-session cost inflation bug).
+
+### 🛡️ Fixed & Changed
+- Fixed severe Antigravity harvester Regex bug causing massive tool parameters to be parsed as model names, defaulting to expensive rate cards.
+- Fixed Antigravity telemetry outputting false precision (`mode: verified`, `confidence: 95%`) by properly labeling heuristic data as `estimated` at `65%` confidence.
+- Renamed the misleading `AI Written Code` CLI label to `AI Touched Files` for clear separation between terminal-generated codebase changes and explicit AI tool edits.
+
+---
+
 ## [0.8.0] — 2026-10-02
 
 ### 🚀 Added

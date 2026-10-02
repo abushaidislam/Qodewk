@@ -118,9 +118,13 @@ export async function harvestUniversalFootprints(
     allFootprints.push(...trailerFps);
   }
 
-  // 7. Score and rank footprints using commit-bound attribution
+  // 7. Score, rank, and filter footprints using commit-bound attribution
   const { primary, rankedFootprints } = selectPrimaryFootprint(allFootprints, options.gitContext);
-  allFootprints = rankedFootprints;
+  
+  // Filter out irrelevant/stale sessions that received penalties (score < 0.10)
+  allFootprints = rankedFootprints.filter(fp => 
+    fp.attributionScore === undefined || fp.attributionScore >= 0.10
+  );
 
   // Save footprints to local state DB
   try {
