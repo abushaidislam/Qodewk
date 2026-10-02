@@ -31,9 +31,18 @@ export const ansiHex = (hexColor: string) => {
   return (text: string) => `\x1b[38;2;${r};${g};${b}m${text}\x1b[39m`;
 };
 
+export const bgAnsiHex = (hexColor: string) => {
+  const num = parseInt(hexColor.replace("#", ""), 16);
+  const r = (num >> 16) & 255;
+  const g = (num >> 8) & 255;
+  const b = num & 255;
+  return (text: string) => `\x1b[48;2;${r};${g};${b}m${text}\x1b[49m`;
+};
+
 export const colors = {
   coral: ansiHex(THEME.primary),
   coralActive: ansiHex(THEME.primaryActive),
+  ink: ansiHex(THEME.ink),
   muted: ansiHex(THEME.muted),
   mutedSoft: ansiHex(THEME.mutedSoft),
   teal: ansiHex(THEME.teal),
@@ -43,6 +52,22 @@ export const colors = {
   hairline: ansiHex(THEME.hairline),
   canvas: ansiHex(THEME.canvas)
 };
+
+export const bg = {
+  coral: bgAnsiHex(THEME.primary),
+  teal: bgAnsiHex(THEME.teal),
+  dark: bgAnsiHex(THEME.surfaceDark),
+  card: bgAnsiHex(THEME.surfaceCard)
+};
+
+export const bannerGradient = [
+  ansiHex("#e6dfd8"),
+  ansiHex("#b3aca4"),
+  ansiHex("#8e8b82"),
+  ansiHex("#6c6a64"),
+  ansiHex("#454440"),
+  ansiHex("#454440")
+];
 
 export const stripAnsi = (str: string): string => {
   return str.replace(/\x1B\[[0-9;]*[a-zA-Z]/g, "").replace(/\x1B\([B0]/g, "");

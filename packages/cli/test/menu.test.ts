@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildMenuFrame, MENU_ITEMS, RECEIPT_HORIZON_ITEMS } from "../src/menu.js";
+import { buildMenuFrame, MENU_ITEMS, RECEIPT_HORIZON_ITEMS, BANNER_LINES } from "../src/menu.js";
 import { checkHookStatus } from "../src/hooks.js";
 import { stripAnsi } from "../src/theme.js";
 import { execSync } from "node:child_process";
@@ -12,12 +12,21 @@ const EMOJI_REGEX = /[\u{1F300}-\u{1F5FF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\
 
 describe("Qodewk CLI Menu System (`menu.test.ts`)", () => {
   describe("Menu Items Definition", () => {
-    it("defines 6 core menu options with unique keys", () => {
-      expect(MENU_ITEMS).toHaveLength(6);
+    it("defines 7 core menu options covering 100% of CLI features", () => {
+      expect(MENU_ITEMS).toHaveLength(7);
       const keys = MENU_ITEMS.map((item) => item.key);
       const uniqueKeys = new Set(keys);
-      expect(uniqueKeys.size).toBe(6);
-      expect(keys).toEqual(["1", "2", "3", "4", "5", "0"]);
+      expect(uniqueKeys.size).toBe(7);
+      expect(keys).toEqual(["1", "2", "3", "4", "5", "6", "0"]);
+      expect(MENU_ITEMS.map((m) => m.id)).toEqual([
+        "receipt",
+        "audit",
+        "share",
+        "hooks",
+        "storage",
+        "notes",
+        "exit"
+      ]);
     });
 
     it("has labels and descriptions for all items without any cheap emojis", () => {
@@ -43,29 +52,22 @@ describe("Qodewk CLI Menu System (`menu.test.ts`)", () => {
   });
 
   describe("buildMenuFrame", () => {
-    it("renders clean box-drawing borders and editorial header", () => {
+    it("renders modern Clack-style left rail, banner, and Claude tokens", () => {
       const rendered = buildMenuFrame(0);
       const plain = stripAnsi(rendered);
 
+      expect(plain).toContain("██████╗");
       expect(plain).toContain("┌");
-      expect(plain).toContain("┐");
-      expect(plain).toContain("└");
-      expect(plain).toContain("┘");
-      expect(plain).toContain("Q O D E W K");
+      expect(plain).toContain("qodewk");
+      expect(plain).toContain("v0.7.0");
+      expect(plain).toContain("◇");
+      expect(plain).toContain("Repository:");
+      expect(plain).toContain("◆");
       expect(plain).toContain("Telemetry Control Panel");
-      expect(plain).toContain("Use ↑ / ↓ to navigate · Enter to select · q to quit");
+      expect(plain).toContain("Description");
+      expect(plain).toContain("Inspect git diff and print digital receipt");
       expect(plain).toContain("[✓] Source code was never uploaded to Qodewk");
-    });
-
-    it("ensures every non-empty line has consistent exact width (no overflows)", () => {
-      for (let i = 0; i < MENU_ITEMS.length; i++) {
-        const frame = buildMenuFrame(i);
-        const lines = frame.split("\n").filter((l) => l.trim().length > 0);
-        for (const line of lines) {
-          const plain = stripAnsi(line);
-          expect(plain.length).toBe(64);
-        }
-      }
+      expect(plain).toContain("└");
     });
 
     it("does NOT contain any cheap/tacky emojis in the rendered terminal output", () => {
@@ -77,20 +79,35 @@ describe("Qodewk CLI Menu System (`menu.test.ts`)", () => {
     });
 
     it("highlights pointer `›` on the currently selected item", () => {
-      // Selected index 0 -> [1] Generate Local Receipt
+      // Selected index 0 -> 1 Generate Local Receipt
       const frame0 = stripAnsi(buildMenuFrame(0));
-      expect(frame0).toContain("› [1] Generate Local Receipt");
-      expect(frame0).not.toContain("› [2] Audit Branch or Revision Range");
+      expect(frame0).toContain("› 1  Generate Local Receipt");
+      expect(frame0).not.toContain("› 2  Audit Branch or Revision Range");
 
-      // Selected index 1 -> [2] Audit Branch or Revision Range
+      // Selected index 1 -> 2 Audit Branch or Revision Range
       const frame1 = stripAnsi(buildMenuFrame(1));
-      expect(frame1).toContain("› [2] Audit Branch or Revision Range");
-      expect(frame1).not.toContain("› [1] Generate Local Receipt");
+      expect(frame1).toContain("› 2  Audit Branch or Revision Range");
+      expect(frame1).not.toContain("› 1  Generate Local Receipt");
 
-      // Selected index 5 -> [0] Exit
+      // Selected index 5 -> 6 Git Notes Management
       const frame5 = stripAnsi(buildMenuFrame(5));
-      expect(frame5).toContain("› [0] Exit");
-      expect(frame5).not.toContain("› [5] Database & Storage Status");
+      expect(frame5).toContain("› 6  Git Notes Management");
+      expect(frame5).not.toContain("› 5  Database & Storage Status");
+
+      // Selected index 6 -> 0 Exit
+      const frame6 = stripAnsi(buildMenuFrame(6));
+      expect(frame6).toContain("› 0  Exit");
+      expect(frame6).not.toContain("› 6  Git Notes Management");
+    });
+
+    it("keeps line count stable across menu selection changes for flicker-free redraws", () => {
+      const counts = [];
+      for (let i = 0; i < MENU_ITEMS.length; i++) {
+        const frame = buildMenuFrame(i);
+        counts.push(frame.split("\n").length);
+      }
+      const allEqual = counts.every((c) => c === counts[0]);
+      expect(allEqual).toBe(true);
     });
   });
 

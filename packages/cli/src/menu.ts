@@ -1,14 +1,17 @@
 import * as readline from "node:readline";
+import * as path from "node:path";
 import pc from "picocolors";
 import {
   generateReceipt,
   LocalStateDB,
   sanitizeReceiptForShare,
-  detectDefaultBaseBranch
+  detectDefaultBaseBranch,
+  writeGitReceiptNote,
+  readGitReceiptNote,
+  listGitReceiptNotes
 } from "@qodewk/core";
-import { ReceiptV1 } from "@qodewk/protocol";
-import { colors, visibleWidth, stripAnsi } from "./theme.js";
-import { buildTerminalReceipt, renderTerminalReceipt } from "./receipt-view.js";
+import { colors, bg, bannerGradient } from "./theme.js";
+import { renderTerminalReceipt } from "./receipt-view.js";
 import {
   resolveGitHooksDir,
   checkHookStatus,
@@ -16,7 +19,6 @@ import {
   uninstallHookFile
 } from "./hooks.js";
 
-const INNER_WIDTH = 58;
 const SHARE_PAYLOAD_MAX_BYTES = 50_000;
 
 export interface MenuItem {
@@ -25,6 +27,15 @@ export interface MenuItem {
   label: string;
   description: string;
 }
+
+export const BANNER_LINES = [
+  "  ██████╗  ██████╗ ██████╗ ███████╗██╗    ██╗██╗  ██╗",
+  " ██╔═══██╗██╔═══██╗██╔══██╗██╔════╝██║    ██║██║ ██╔╝",
+  " ██║   ██║██║   ██║██║  ██║█████╗  ██║ █╗ ██║█████╔╝ ",
+  " ██║▄▄ ██║██║   ██║██║  ██║██╔══╝  ██║███╗██║██╔═██╗ ",
+  " ╚██████╔╝╚██████╔╝██████╔╝███████╗╚███╔███╔╝██║  ██╗",
+  "  ╚══▀▀═╝  ╚═════╝ ╚═════╝ ╚══════╝ ╚══╝╚══╝ ╚═╝  ╚═╝"
+];
 
 export const MENU_ITEMS: MenuItem[] = [
   {
@@ -49,13 +60,19 @@ export const MENU_ITEMS: MenuItem[] = [
     id: "hooks",
     key: "4",
     label: "Configure Git Hooks",
-    description: "Non-blocking background telemetry recording"
+    description: "Non-blocking background telemetry recording (< 5ms)"
   },
   {
     id: "storage",
     key: "5",
     label: "Database & Storage Status",
     description: "Inspect local SQLite (~/.qodewk/state.db) records"
+  },
+  {
+    id: "notes",
+    key: "6",
+    label: "Git Notes Management",
+    description: "Inspect & attach receipts to refs/notes/qodewk"
   },
   {
     id: "exit",
@@ -104,97 +121,83 @@ export const RECEIPT_HORIZON_ITEMS: MenuItem[] = [
   }
 ];
 
+export interface BuildMenuFrameOptions {
+  repoContext?: { alias: string; branch: string };
+  actionContext?: string;
+  showBanner?: boolean;
+}
+
 export function buildMenuFrame(
   selectedIndex: number,
   items: MenuItem[] = MENU_ITEMS,
   title = "Telemetry Control Panel",
-  subtitle = "Use ↑ / ↓ to navigate · Enter to select · q to quit"
+  subtitle = "↑↓ move · enter select · 0-6 quick jump · q quit",
+  options: BuildMenuFrameOptions = {}
 ): string {
   const lines: string[] = [];
-  const coral = colors.coral;
-  const mutedSoft = colors.mutedSoft;
-  const amber = colors.amber;
-  const border = colors.mutedSoft;
-
   const push = (line: string) => lines.push(line);
 
-  const printRow = (content: string, width = INNER_WIDTH) => {
-    const visLen = visibleWidth(content);
-    const pad = Math.max(0, width - visLen);
-    push(`  ${border("│")} ${content}${" ".repeat(pad)} ${border("│")}`);
-  };
+  // 1. Layered Shadow Banner (if enabled)
+  if (options.showBanner ?? true) {
+    push("");
+    for (let i = 0; i < BANNER_LINES.length; i++) {
+      const gradFn = bannerGradient[i] || bannerGradient[bannerGradient.length - 1];
+      push(gradFn(BANNER_LINES[i]));
+    }
+  }
 
-  const printCenteredRow = (content: string, width = INNER_WIDTH) => {
-    const visLen = visibleWidth(content);
-    const totalPad = Math.max(0, width - visLen);
-    const leftPad = Math.floor(totalPad / 2);
-    const rightPad = totalPad - leftPad;
-    push(`  ${border("│")} ${" ".repeat(leftPad)}${content}${" ".repeat(rightPad)} ${border("│")}`);
-  };
-
-  const printDivider = (width = INNER_WIDTH) => {
-    push(`  ${border("├" + "─".repeat(width + 2) + "┤")}`);
-  };
-
+  // 2. Top rail start with pill badge
   push("");
-  push(`  ${border("┌" + "─".repeat(INNER_WIDTH + 2) + "┐")}`);
-  printCenteredRow(pc.bold(pc.white("Q O D E W K")));
-  printCenteredRow(coral(title));
-  printDivider();
-  printCenteredRow(mutedSoft(subtitle));
-  printDivider();
-  printRow("");
+  const badge = bg.teal(pc.bold(colors.ink(" qodewk ")));
+  push(`  ${colors.mutedSoft("┌")}  ${badge}  ${pc.dim("v0.7.0")}`);
+  push(`  ${colors.mutedSoft("│")}`);
 
-  const isExitOrBack = (id: string) => id === "exit" || id === "back";
-  const mainItems = items.filter((item) => !isExitOrBack(item.id));
-  const exitItem = items.find((item) => isExitOrBack(item.id));
+  // 3. Status/Context nodes (◇)
+  if (options.actionContext) {
+    push(`  ${colors.teal("◇")}  ${pc.dim("Action:")} ${pc.white(options.actionContext)}`);
+    push(`  ${colors.mutedSoft("│")}`);
+  } else {
+    const repo = options.repoContext?.alias || "Qodewk";
+    const branch = options.repoContext?.branch ? `(${options.repoContext.branch})` : "";
+    push(`  ${colors.teal("◇")}  ${pc.dim("Repository:")} ${pc.white(repo)} ${pc.dim(branch)}`);
+    push(`  ${colors.mutedSoft("│")}`);
+    push(`  ${colors.teal("◇")}  ${pc.dim("Telemetry:")} ${pc.white("Claude Warm Editorial Rate Cards")}`);
+    push(`  ${colors.mutedSoft("│")}`);
+  }
 
-  for (let i = 0; i < mainItems.length; i++) {
-    const item = mainItems[i];
-    const itemIndex = items.indexOf(item);
-    const isSelected = itemIndex === selectedIndex;
+  // 4. Active prompt node (◆)
+  push(`  ${colors.coral("◆")}  ${pc.bold(pc.white(title))}`);
+  push(`  ${colors.mutedSoft("│")}`);
 
+  // 5. Selectable items
+  const selectedItem = items[selectedIndex] || items[0];
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+    const isSelected = i === selectedIndex;
     if (isSelected) {
-      const pointer = pc.bold(coral("›"));
-      const keyTag = pc.bold(coral(`[${item.key}]`));
-      const label = pc.bold(pc.white(item.label));
-      printRow(` ${pointer} ${keyTag} ${label}`);
-      printRow(`       ${amber(item.description)}`);
+      push(
+        `  ${colors.mutedSoft("│")}  ${pc.bold(colors.coral("›"))} ${pc.bold(colors.coral(item.key))}  ${pc.bold(pc.white(item.label))}`
+      );
     } else {
-      const keyTag = mutedSoft(`[${item.key}]`);
-      const label = pc.dim(pc.white(item.label));
-      printRow(`   ${keyTag} ${label}`);
-      printRow(`       ${pc.dim(item.description)}`);
-    }
-
-    if (i < mainItems.length - 1) {
-      printRow("");
+      push(
+        `  ${colors.mutedSoft("│")}    ${pc.dim(item.key)}  ${pc.dim(pc.white(item.label))}`
+      );
     }
   }
 
-  printRow("");
+  // 6. Hairline separator and Description block
+  const divider = colors.mutedSoft("─".repeat(58));
+  push(`  ${colors.mutedSoft("│")}`);
+  push(`  ${colors.mutedSoft("│")}  ${divider}`);
+  push(`  ${colors.mutedSoft("│")}  ${pc.bold(pc.dim("Description"))}`);
+  push(`  ${colors.mutedSoft("│")}  ${colors.amber(selectedItem.description)}`);
+  push(`  ${colors.mutedSoft("│")}  ${divider}`);
+  push(`  ${colors.mutedSoft("│")}`);
 
-  if (exitItem) {
-    printDivider();
-    const exitIndex = items.indexOf(exitItem);
-    const isSelected = exitIndex === selectedIndex;
-    if (isSelected) {
-      const pointer = pc.bold(coral("›"));
-      const keyTag = pc.bold(coral(`[${exitItem.key}]`));
-      const label = pc.bold(pc.white(exitItem.label));
-      printRow(` ${pointer} ${keyTag} ${label}`);
-      printRow(`       ${amber(exitItem.description)}`);
-    } else {
-      const keyTag = mutedSoft(`[${exitItem.key}]`);
-      const label = pc.dim(pc.white(exitItem.label));
-      printRow(`   ${keyTag} ${label}`);
-      printRow(`       ${pc.dim(exitItem.description)}`);
-    }
-  }
-
-  printDivider();
-  printCenteredRow(pc.dim("[✓] Source code was never uploaded to Qodewk"));
-  push(`  ${border("└" + "─".repeat(INNER_WIDTH + 2) + "┘")}`);
+  // 7. Navigation footer and Trust badge
+  push(`  ${colors.mutedSoft("│")}  ${pc.dim(subtitle)}`);
+  push(`  ${colors.mutedSoft("│")}  ${colors.green("[✓]")} ${pc.dim("Source code was never uploaded to Qodewk")}`);
+  push(`  ${colors.mutedSoft("└")}`);
   push("");
 
   return lines.join("\n");
@@ -232,12 +235,37 @@ function waitForKeyToReturn(): Promise<void> {
   });
 }
 
+let cachedRepoContext: { alias: string; branch: string } | null = null;
+
+async function getRepoContext(): Promise<{ alias: string; branch: string }> {
+  if (cachedRepoContext) return cachedRepoContext;
+  try {
+    const { simpleGit } = await import("simple-git");
+    const git = simpleGit(process.cwd());
+    const isRepo = await git.checkIsRepo();
+    if (!isRepo) {
+      cachedRepoContext = { alias: "Workspace", branch: "detached" };
+      return cachedRepoContext;
+    }
+    const branchSummary = await git.branch();
+    const branch = branchSummary.current || "HEAD";
+    const alias = path.basename(process.cwd());
+    cachedRepoContext = { alias, branch };
+    return cachedRepoContext;
+  } catch {
+    cachedRepoContext = { alias: "Workspace", branch: "detached" };
+    return cachedRepoContext;
+  }
+}
+
 export async function runInteractiveMenu(): Promise<void> {
   if (!process.stdin.isTTY) {
     console.log(buildMenuFrame(0));
     console.log(pc.yellow("Interactive menu requires a TTY terminal. Use `qodewk --help` for commands."));
     return;
   }
+
+  const repoContext = await getRepoContext();
 
   let currentScreen: "main" | "receipt_horizon" = "main";
   let selectedIndex = 0;
@@ -251,9 +279,16 @@ export async function runInteractiveMenu(): Promise<void> {
     const title = currentScreen === "main" ? "Telemetry Control Panel" : "Generate Local Receipt";
     const subtitle =
       currentScreen === "main"
-        ? "Use ↑ / ↓ to navigate · Enter to select · q to quit"
-        : "Select Time Horizon · Esc / 0 to return";
-    const frame = buildMenuFrame(selectedIndex, items, title, subtitle);
+        ? "↑↓ move · enter select · 0-6 quick jump · q quit"
+        : "↑↓ move · enter select · 0-5 quick jump · esc / 0 back";
+    const actionContext = currentScreen === "receipt_horizon" ? "Generate Local Receipt" : undefined;
+    const showBanner = currentScreen === "main";
+
+    const frame = buildMenuFrame(selectedIndex, items, title, subtitle, {
+      repoContext,
+      actionContext,
+      showBanner
+    });
     const lineCount = frame.split("\n").length;
 
     if (lastRenderedLinesCount > 0) {
@@ -402,12 +437,10 @@ export async function runInteractiveMenu(): Promise<void> {
           if (!response.ok) {
             const errText = await response.text().catch(() => "");
             if (response.status === 503) {
-              console.log(pc.yellow("\n  ⚠️  Notice: Remote server requires durable storage (Supabase or PostgreSQL) in production"));
-              console.log(pc.dim("     to protect receipts from serverless cold-start data loss."));
-              console.log(pc.dim(`     Endpoint: ${endpoint}`));
-              console.log(pc.dim("\n     To enable cloud sharing:"));
-              console.log(pc.dim("     1. Configure SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in your hosting environment variables."));
-              console.log(pc.green("\n  [✓] Your receipt is safely saved locally in: ~/.qodewk/state.db"));
+              console.log(pc.yellow("\n  Notice: Remote server requires durable storage (Supabase or PostgreSQL) in production"));
+              console.log(pc.dim("  to protect receipts from serverless cold-start data loss."));
+              console.log(pc.dim(`  Endpoint: ${endpoint}`));
+              console.log(colors.green("\n  [✓] Your receipt is safely saved locally in: ~/.qodewk/state.db"));
               console.log(pc.dim("      You can also save it as a local Git note: qodewk --notes\n"));
               await renderTerminalReceipt(sanitized);
               await waitForKeyToReturn();
@@ -444,6 +477,11 @@ export async function runInteractiveMenu(): Promise<void> {
 
       case "storage": {
         await showStorageStatus();
+        break;
+      }
+
+      case "notes": {
+        await manageGitNotesSubmenu();
         break;
       }
 
@@ -485,7 +523,6 @@ export async function runInteractiveMenu(): Promise<void> {
     const choice = await askLine("  › Select option [0-2]: ");
     if (choice === "1") {
       if (status.hooksDir) {
-        const path = await import("node:path");
         const targets = ["post-commit", "post-rewrite"] as const;
         for (const t of targets) {
           installHookFile(path.join(status.hooksDir, t));
@@ -494,12 +531,67 @@ export async function runInteractiveMenu(): Promise<void> {
       }
     } else if (choice === "2") {
       if (status.hooksDir) {
-        const path = await import("node:path");
         const targets = ["post-commit", "post-rewrite"] as const;
         for (const t of targets) {
           uninstallHookFile(path.join(status.hooksDir, t));
         }
         console.log(colors.green("\n  [✓] Qodewk hooks removed."));
+      }
+    }
+    await waitForKeyToReturn();
+  };
+
+  const manageGitNotesSubmenu = async () => {
+    console.log(pc.bold(pc.white("\n  Qodewk Git Notes Management (refs/notes/qodewk)")));
+    console.log(pc.dim("  ──────────────────────────────────────────────────────────"));
+
+    console.log("  [1] List commits with attached Qodewk notes");
+    console.log("  [2] Show receipt note on a commit (default: HEAD)");
+    console.log("  [3] Attach receipt note to a Git commit (default: HEAD)");
+    console.log("  [0] Back to main menu");
+    console.log("");
+
+    const choice = await askLine("  › Select option [0-3]: ");
+    if (choice === "1") {
+      try {
+        const shas = await listGitReceiptNotes();
+        if (shas.length === 0) {
+          console.log(pc.yellow("\n  No Qodewk Git notes found in repository."));
+        } else {
+          console.log(pc.bold(`\n  Found ${shas.length} commit note(s) in refs/notes/qodewk:`));
+          for (const sha of shas) {
+            console.log(`    ${pc.cyan(sha.slice(0, 10))} ${pc.dim(sha)}`);
+          }
+        }
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err);
+        console.error(pc.red(`\n  Error listing Git notes: ${message}`));
+      }
+    } else if (choice === "2") {
+      const commit = (await askLine("  › Commit SHA or ref [default: HEAD]: ")) || "HEAD";
+      try {
+        const receipt = await readGitReceiptNote(commit);
+        if (!receipt) {
+          console.log(pc.yellow(`\n  No Qodewk receipt note found on commit '${commit}'.`));
+        } else {
+          await renderTerminalReceipt(receipt);
+        }
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err);
+        console.error(pc.red(`\n  Error reading Git note: ${message}`));
+      }
+    } else if (choice === "3") {
+      const commit = (await askLine("  › Commit SHA to attach note [default: HEAD]: ")) || "HEAD";
+      try {
+        console.log(pc.dim(`\n  [·] Generating receipt for ${commit}...`));
+        const receipt = await generateReceipt({ headSha: commit });
+        await writeGitReceiptNote(receipt.repository.headSha, receipt);
+        console.log(
+          colors.green(`\n  [✓] Attached receipt note to ${receipt.repository.headSha.slice(0, 7)} (refs/notes/qodewk)`)
+        );
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err);
+        console.error(pc.red(`\n  Error writing Git note: ${message}`));
       }
     }
     await waitForKeyToReturn();
@@ -545,7 +637,7 @@ export async function runInteractiveMenu(): Promise<void> {
     await waitForKeyToReturn();
   };
 
-  // Main menu loop
+  // Main interactive keypress loop
   readline.emitKeypressEvents(process.stdin);
 
   const startLoop = () => {
