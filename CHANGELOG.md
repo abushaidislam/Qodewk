@@ -3,6 +3,24 @@
 All notable changes to the **Qodewk** monorepo are documented in this file.  
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.0] — 2026-10-02
+
+### 🚀 Added
+- **Modern Clack / Skills CLI Terminal Menu Architecture:**
+  - Completely redesigned interactive TUI menu replacing dated MS-DOS ASCII cages with a high-end developer experience modeled after `@clack/prompts` and Skills CLI.
+  - Multi-tier left-rail vertical guide (`┌`, `│`, `└`), hollow teal status diamonds (`◇`), and active warm coral diamonds (`◆`).
+  - Layered ANSI shadow banner (`QODEWK`) with top-to-bottom tonal gradient.
+  - High-contrast tinted pill badge (`┌  [ qodewk ] v0.8.0`) with live git repository and branch context detection.
+  - Dedicated jitter-free description panel below a subtle hairline divider.
+- **Default Bare Command Interactive Launch:**
+  - Running bare `qodewk` or `npx qodewk` in an interactive terminal (TTY) now launches the Telemetry Control Panel by default without requiring `qodewk menu` or `-i`.
+  - Headless execution automatically preserved when options/flags (e.g. `--json`, `-f markdown`, `--today`, `--since`, CI environment) are present.
+- **Full Git Notes Management in TUI Menu:**
+  - Added option `[6] Git Notes Management` (`refs/notes/qodewk`) allowing interactive listing of commits with receipts, inspecting receipt notes, and attaching receipt notes.
+- **Test Concurrency & Windows Worker Optimization:**
+  - Expanded unit and integration test suite across the monorepo to 104 passing tests (100% pass rate).
+  - Configured robust Vitest timeouts for high-concurrency Windows test environments.
+
 ---
 
 ## [0.7.0] — 2026-10-02

@@ -167,3 +167,21 @@ When prompted to build or expand the codebase, execute according to this structu
    - CLI flags, barcode generation (`barcode.ts`), and QR rendering (`qr.ts`) MUST be tested for correct string encoding and output formatting.
 5. **`apps/web` (`apps/web/test/web.test.ts`):**
    - Edge/Serverless storage adapters and API handlers MUST have unit tests verifying in-memory storage behavior and payload constraint enforcement.
+
+---
+
+## 8. Versioning & Changelog Mandate (Non-Negotiable)
+
+> [!CRITICAL]
+> ### 🚨 MANDATORY CHANGELOG MAINTENANCE ON EVERY VERSION BUMP
+> Whenever any package version is bumped, features are added, or bug fixes are applied across the Qodewk monorepo, autonomous agents and human contributors **MUST** document all changes in [`CHANGELOG.md`](file:///c:/Users/ASUS/Desktop/Qodewk/CHANGELOG.md) adhering to the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) standard.
+>
+> **Requirements:**
+> 1. **Synchronized Version Bump:** When bumping versions, update all package manifests (`packages/*/package.json`, `apps/*/package.json`, and CLI internal version constants) uniformly.
+> 2. **Changelog Section:** Add a new version header `## [X.Y.Z] — YYYY-MM-DD` at the top of `CHANGELOG.md`.
+> 3. **Structured Categories:** Group entries under standard categories:
+>    - `### 🚀 Added` for new features or capabilities.
+>    - `### 🛡️ Fixed & Changed` for bug fixes, performance improvements, or refactoring.
+>    - `### ⚠️ Breaking Changes` for any breaking protocol or API changes.
+> 4. **No Version Change Without Changelog:** Never push code with a version change or new release without an accompanying `CHANGELOG.md` update.
+
