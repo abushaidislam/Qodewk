@@ -16,6 +16,10 @@ import {
   harvestAntigravityFootprints,
   harvestClaudeFootprints,
   harvestCursorFootprints,
+  writeGitReceiptNote,
+  readGitReceiptNote,
+  listGitReceiptNotes,
+  QODEWK_GIT_NOTES_REF,
   AgentFootprint
 } from "../src/index.js";
 import { ReceiptV1 } from "@qodewk/protocol";
@@ -119,6 +123,94 @@ describe("@qodewk/core", () => {
         expect(metrics.baseSha).toHaveLength(40);
         expect(metrics.headSha).toMatch(/^[0-9a-f]{40}$/);
         expect(metrics.baseSha).toMatch(/^[0-9a-f]{40}$/);
+      });
+    });
+
+    describe("Git Notes (`refs/notes/qodewk`)", () => {
+      let tempDir: string;
+      let commitSha: string;
+      const sampleReceipt: ReceiptV1 = {
+        version: "1.0",
+        receipt: {
+          id: "rec_notes_test_123456789012",
+          createdAt: "2026-10-01T12:00:00.000Z",
+          contentHash: "1".repeat(64)
+        },
+        repository: {
+          repoHash: "2".repeat(64),
+          projectAlias: "notes-test",
+          branch: "main",
+          headSha: "3".repeat(40),
+          commitsCount: 1
+        },
+        mutation: {
+          files: 1,
+          insertions: 10,
+          deletions: 2,
+          netLines: 8,
+          renames: 0
+        },
+        ai: {
+          provider: "anthropic",
+          model: "claude-3-7-sonnet",
+          tokens: { input: 4000, output: 800, cached: 1500 },
+          cost: 0.05,
+          mode: "verified",
+          confidence: 0.95
+        },
+        privacy: {
+          sourceExcluded: true,
+          isPublic: false,
+          anonymizeBranch: false
+        }
+      };
+
+      beforeEach(async () => {
+        tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "qodewk-notes-repo-"));
+        const git = simpleGit(tempDir);
+        await git.init();
+        await git.addConfig("user.name", "Test User");
+        await git.addConfig("user.email", "test@example.com");
+
+        fs.writeFileSync(path.join(tempDir, "sample.txt"), "hello git notes\n");
+        await git.add("sample.txt");
+        const commitResult = await git.commit("Commit for git notes");
+        commitSha = commitResult.commit;
+      });
+
+      afterEach(() => {
+        try {
+          fs.rmSync(tempDir, { recursive: true, force: true });
+        } catch {}
+      });
+
+      it("writes, reads, and lists ReceiptV1 Git Notes under refs/notes/qodewk", async () => {
+        // Initial state: no notes
+        const initialNote = await readGitReceiptNote(commitSha, { repoPath: tempDir });
+        expect(initialNote).toBeNull();
+
+        const initialList = await listGitReceiptNotes({ repoPath: tempDir });
+        expect(initialList).toHaveLength(0);
+
+        // Write note
+        await writeGitReceiptNote(commitSha, sampleReceipt, { repoPath: tempDir });
+
+        // Read note
+        const note = await readGitReceiptNote(commitSha, { repoPath: tempDir });
+        expect(note).not.toBeNull();
+        expect(note?.receipt.id).toBe(sampleReceipt.receipt.id);
+        expect(note?.ai.cost).toBe(0.05);
+        expect(note?.privacy.sourceExcluded).toBe(true);
+
+        // List notes
+        const list = await listGitReceiptNotes({ repoPath: tempDir });
+        expect(list.length).toBeGreaterThanOrEqual(1);
+      });
+
+      it("returns null gracefully when reading non-existent commit or invalid note", async () => {
+        const dummySha = "0000000000000000000000000000000000000000";
+        const note = await readGitReceiptNote(dummySha, { repoPath: tempDir });
+        expect(note).toBeNull();
       });
     });
   });

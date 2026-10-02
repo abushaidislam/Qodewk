@@ -13,7 +13,18 @@ if (!globalThis.__qodewk_receipts_store__) {
 const memoryStore = globalThis.__qodewk_receipts_store__;
 
 /**
+ * Returns true if durable storage credentials (Supabase) are provided in environment.
+ */
+export function isDurableStoreConfigured(): boolean {
+  return Boolean(
+    process.env.SUPABASE_URL &&
+    (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY)
+  );
+}
+
+/**
  * Saves a receipt either to Supabase (if configured) or in-memory store.
+ * In production, durable storage is strictly required to prevent serverless cold-start receipt loss.
  * Uses zero-native fetch to remain 100% compatible with Edge & Serverless runtimes.
  */
 export async function saveReceiptToStore(receipt: ReceiptV1, claimTokenHash: string): Promise<void> {
@@ -24,8 +35,15 @@ export async function saveReceiptToStore(receipt: ReceiptV1, claimTokenHash: str
     createdAt: receipt.receipt.createdAt || new Date().toISOString()
   });
 
+  const isProduction = process.env.NODE_ENV === "production" || process.env.VERCEL_ENV === "production";
   const supabaseUrl = process.env.SUPABASE_URL;
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
+
+  if (isProduction && (!supabaseUrl || !supabaseKey)) {
+    throw new Error(
+      "Durable storage is required in production. Please configure SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY (or SUPABASE_ANON_KEY) to ensure public receipts persist across serverless instances."
+    );
+  }
 
   if (supabaseUrl && supabaseKey) {
     try {
@@ -57,9 +75,17 @@ export async function saveReceiptToStore(receipt: ReceiptV1, claimTokenHash: str
       });
 
       if (!res.ok) {
-        console.warn(`[Qodewk Storage] Supabase insert warning: status ${res.status}`);
+        const errorText = await res.text().catch(() => "");
+        const errMsg = `Supabase insert failed with status ${res.status}: ${errorText}`;
+        if (isProduction) {
+          throw new Error(`Failed to persist receipt to durable storage: ${errMsg}`);
+        }
+        console.warn(`[Qodewk Storage] ${errMsg}`);
       }
     } catch (err: any) {
+      if (isProduction) {
+        throw err;
+      }
       console.warn(`[Qodewk Storage] Supabase sync failed: ${err.message}`);
     }
   }

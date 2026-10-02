@@ -7,7 +7,10 @@ import pc from "picocolors";
 import {
   generateReceipt,
   LocalStateDB,
-  sanitizeReceiptForShare
+  sanitizeReceiptForShare,
+  writeGitReceiptNote,
+  readGitReceiptNote,
+  listGitReceiptNotes
 } from "@qodewk/core";
 import { ReceiptV1 } from "@qodewk/protocol";
 import { outputReceipt, renderTerminalReceipt, OutputOptions } from "./receipt-view.js";
@@ -79,6 +82,7 @@ program
   .option("--anon", "Anonymize branch name in output")
   .option("--local", "Force local-only mode (never open network sockets)")
   .option("--barcode", "Render classic 1D thermal barcode (always on; kept for compatibility)")
+  .option("--notes", "Persist receipt into local Git note (refs/notes/qodewk)")
   .action(async (options) => {
     if (options.interactive || options.menu) {
       await runInteractiveMenu();
@@ -96,6 +100,16 @@ program
       });
 
       persistReceipt(receipt);
+
+      if (options.notes) {
+        try {
+          await writeGitReceiptNote(receipt.repository.headSha, receipt);
+          console.log(pc.green(`✓ Attached receipt note to ${receipt.repository.headSha.slice(0, 7)} (refs/notes/qodewk)`));
+        } catch (noteErr: any) {
+          console.warn(pc.yellow(`Warning: Could not write Git note: ${noteErr.message}`));
+        }
+      }
+
       await outputReceipt(receipt, options);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
@@ -342,6 +356,71 @@ hookCommand
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       console.error(pc.red(`Failed to uninstall hook: ${message}`));
+      process.exit(1);
+    }
+  });
+
+const notesCmd = program
+  .command("notes")
+  .description("Manage local Git notes receipts (refs/notes/qodewk)");
+
+notesCmd
+  .command("show [commit]")
+  .description("Display Qodewk receipt attached to a Git commit note")
+  .option("-j, --json", "Output receipt as JSON")
+  .action(async (commit = "HEAD", opts) => {
+    try {
+      const receipt = await readGitReceiptNote(commit);
+      if (!receipt) {
+        console.log(pc.yellow(`No Qodewk receipt note found on commit '${commit}'.`));
+        return;
+      }
+      if (opts.json) {
+        console.log(JSON.stringify(receipt, null, 2));
+      } else {
+        await outputReceipt(receipt, { format: "terminal" });
+      }
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error(pc.red(`Error reading Git note: ${message}`));
+      process.exit(1);
+    }
+  });
+
+notesCmd
+  .command("write [commit]")
+  .description("Generate and attach receipt to a Git commit note")
+  .action(async (commit = "HEAD") => {
+    try {
+      const receipt = await generateReceipt({ headSha: commit });
+      await writeGitReceiptNote(receipt.repository.headSha, receipt);
+      console.log(
+        pc.green(`✓ Attached receipt note to ${receipt.repository.headSha.slice(0, 7)} (refs/notes/qodewk)`)
+      );
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error(pc.red(`Error writing Git note: ${message}`));
+      process.exit(1);
+    }
+  });
+
+notesCmd
+  .command("list")
+  .description("List all commits with attached Qodewk receipts")
+  .action(async () => {
+    try {
+      const shas = await listGitReceiptNotes();
+      if (shas.length === 0) {
+        console.log(pc.yellow("No Qodewk Git notes found in repository."));
+        return;
+      }
+      console.log(pc.bold(`Found ${shas.length} commit note(s) in refs/notes/qodewk:`));
+      for (const sha of shas) {
+        console.log(`  ${pc.cyan(sha.slice(0, 10))} ${pc.dim(sha)}`);
+      }
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error(pc.red(`Error listing Git notes: ${message}`));
       process.exit(1);
     }
   });
