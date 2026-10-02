@@ -65,7 +65,51 @@ export const MENU_ITEMS: MenuItem[] = [
   }
 ];
 
-export function buildMenuFrame(selectedIndex: number, items: MenuItem[] = MENU_ITEMS): string {
+export const RECEIPT_HORIZON_ITEMS: MenuItem[] = [
+  {
+    id: "latest",
+    key: "1",
+    label: "Latest Changes (Default)",
+    description: "Current git working tree or latest commit"
+  },
+  {
+    id: "today",
+    key: "2",
+    label: "Today's Work Session",
+    description: "Commits & agent activity since midnight (--today)"
+  },
+  {
+    id: "yesterday",
+    key: "3",
+    label: "Yesterday's Work",
+    description: "Activity from yesterday to now (--since yesterday)"
+  },
+  {
+    id: "week",
+    key: "4",
+    label: "Past 7 Days (Sprint)",
+    description: "Weekly sprint telemetry across all agents (--since 7d)"
+  },
+  {
+    id: "custom",
+    key: "5",
+    label: "Custom Duration",
+    description: "Specify hours (e.g. 12h) or days (e.g. 3d, 14d)"
+  },
+  {
+    id: "back",
+    key: "0",
+    label: "Back to Main Menu",
+    description: "Return to previous screen"
+  }
+];
+
+export function buildMenuFrame(
+  selectedIndex: number,
+  items: MenuItem[] = MENU_ITEMS,
+  title = "Telemetry Control Panel",
+  subtitle = "Use ↑ / ↓ to navigate · Enter to select · q to quit"
+): string {
   const lines: string[] = [];
   const coral = colors.coral;
   const mutedSoft = colors.mutedSoft;
@@ -95,14 +139,15 @@ export function buildMenuFrame(selectedIndex: number, items: MenuItem[] = MENU_I
   push("");
   push(`  ${border("┌" + "─".repeat(INNER_WIDTH + 2) + "┐")}`);
   printCenteredRow(pc.bold(pc.white("Q O D E W K")));
-  printCenteredRow(coral("Telemetry Control Panel"));
+  printCenteredRow(coral(title));
   printDivider();
-  printCenteredRow(mutedSoft("Use ↑ / ↓ to navigate · Enter to select · q to quit"));
+  printCenteredRow(mutedSoft(subtitle));
   printDivider();
   printRow("");
 
-  const mainItems = items.filter((item) => item.id !== "exit");
-  const exitItem = items.find((item) => item.id === "exit");
+  const isExitOrBack = (id: string) => id === "exit" || id === "back";
+  const mainItems = items.filter((item) => !isExitOrBack(item.id));
+  const exitItem = items.find((item) => isExitOrBack(item.id));
 
   for (let i = 0; i < mainItems.length; i++) {
     const item = mainItems[i];
@@ -194,12 +239,21 @@ export async function runInteractiveMenu(): Promise<void> {
     return;
   }
 
+  let currentScreen: "main" | "receipt_horizon" = "main";
   let selectedIndex = 0;
   let active = true;
   let lastRenderedLinesCount = 0;
 
+  const getActiveItems = () => (currentScreen === "main" ? MENU_ITEMS : RECEIPT_HORIZON_ITEMS);
+
   const render = () => {
-    const frame = buildMenuFrame(selectedIndex);
+    const items = getActiveItems();
+    const title = currentScreen === "main" ? "Telemetry Control Panel" : "Generate Local Receipt";
+    const subtitle =
+      currentScreen === "main"
+        ? "Use ↑ / ↓ to navigate · Enter to select · q to quit"
+        : "Select Time Horizon · Esc / 0 to return";
+    const frame = buildMenuFrame(selectedIndex, items, title, subtitle);
     const lineCount = frame.split("\n").length;
 
     if (lastRenderedLinesCount > 0) {
@@ -221,6 +275,49 @@ export async function runInteractiveMenu(): Promise<void> {
 
   process.on("exit", cleanup);
 
+  const executeReceiptHorizon = async (item: MenuItem) => {
+    cleanup();
+    console.log("");
+    lastRenderedLinesCount = 0;
+
+    let since: string | undefined = undefined;
+    let label = "latest git diff";
+
+    if (item.id === "today") {
+      since = "today";
+      label = "today's work session (--today)";
+    } else if (item.id === "yesterday") {
+      since = "yesterday";
+      label = "yesterday's work (--since yesterday)";
+    } else if (item.id === "week") {
+      since = "7d";
+      label = "past 7 days weekly sprint (--since 7d)";
+    } else if (item.id === "custom") {
+      console.log(pc.bold(pc.white("  Custom Telemetry Horizon")));
+      console.log(pc.dim("  ──────────────────────────────────────────────────────────"));
+      const input = await askLine("  › Enter duration or date (e.g. 12h, 3d, 2026-10-01): ");
+      if (input) {
+        since = input;
+        label = `custom range: ${input}`;
+      }
+    }
+
+    console.log(pc.dim(`  [·] Generating local receipt for ${label}...`));
+    try {
+      const receipt = await generateReceipt({ since, isPublic: false });
+      const db = new LocalStateDB();
+      db.saveReceipt(receipt);
+      db.close();
+      await renderTerminalReceipt(receipt);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error(pc.red(`\n  Failed to generate receipt: ${message}`));
+    }
+    await waitForKeyToReturn();
+    currentScreen = "main";
+    selectedIndex = 0;
+  };
+
   const executeSelectedAction = async () => {
     cleanup();
     console.log("");
@@ -229,22 +326,6 @@ export async function runInteractiveMenu(): Promise<void> {
     const selectedItem = MENU_ITEMS[selectedIndex];
 
     switch (selectedItem.id) {
-      case "receipt": {
-        console.log(pc.dim("  [·] Generating local receipt from git diff..."));
-        try {
-          const receipt = await generateReceipt({ isPublic: false });
-          const db = new LocalStateDB();
-          db.saveReceipt(receipt);
-          db.close();
-          await renderTerminalReceipt(receipt);
-        } catch (err: unknown) {
-          const message = err instanceof Error ? err.message : String(err);
-          console.error(pc.red(`\n  Failed to generate receipt: ${message}`));
-        }
-        await waitForKeyToReturn();
-        break;
-      }
-
       case "audit": {
         console.log(pc.bold(pc.white("\n  Audit Branch or Revision Diff")));
         console.log(pc.dim("  ──────────────────────────────────────────────────────────"));
@@ -320,6 +401,18 @@ export async function runInteractiveMenu(): Promise<void> {
 
           if (!response.ok) {
             const errText = await response.text().catch(() => "");
+            if (response.status === 503) {
+              console.log(pc.yellow("\n  ⚠️  Notice: Remote server requires durable storage (Supabase or PostgreSQL) in production"));
+              console.log(pc.dim("     to protect receipts from serverless cold-start data loss."));
+              console.log(pc.dim(`     Endpoint: ${endpoint}`));
+              console.log(pc.dim("\n     To enable cloud sharing:"));
+              console.log(pc.dim("     1. Configure SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in your hosting environment variables."));
+              console.log(pc.green("\n  [✓] Your receipt is safely saved locally in: ~/.qodewk/state.db"));
+              console.log(pc.dim("      You can also save it as a local Git note: qodewk --notes\n"));
+              await renderTerminalReceipt(sanitized);
+              await waitForKeyToReturn();
+              break;
+            }
             throw new Error(`API responded with ${response.status}${errText ? `: ${errText.slice(0, 100)}` : ""}`);
           }
 
@@ -464,36 +557,61 @@ export async function runInteractiveMenu(): Promise<void> {
     const onKeypress = async (_str: string, key: readline.Key) => {
       if (!active) return;
 
+      const items = getActiveItems();
+
       if (key.ctrl && key.name === "c") {
         cleanup();
         process.exit(0);
       }
 
       if (key.name === "q" || key.name === "escape") {
+        if (currentScreen !== "main") {
+          currentScreen = "main";
+          selectedIndex = 0;
+          render();
+          return;
+        }
         cleanup();
         console.log(pc.dim("\n  Exited Qodewk.\n"));
         process.exit(0);
       }
 
       if (key.name === "up" || key.name === "k") {
-        selectedIndex = (selectedIndex - 1 + MENU_ITEMS.length) % MENU_ITEMS.length;
+        selectedIndex = (selectedIndex - 1 + items.length) % items.length;
         render();
         return;
       }
 
       if (key.name === "down" || key.name === "j") {
-        selectedIndex = (selectedIndex + 1) % MENU_ITEMS.length;
+        selectedIndex = (selectedIndex + 1) % items.length;
         render();
         return;
       }
 
-      // Direct key mapping for numbers 0-5
-      const itemByKey = MENU_ITEMS.findIndex((item) => item.key === key.name || item.key === _str);
+      // Direct key mapping for numbers
+      const itemByKey = items.findIndex((item) => item.key === key.name || item.key === _str);
       if (itemByKey !== -1) {
         selectedIndex = itemByKey;
         render();
         process.stdin.removeListener("keypress", onKeypress);
-        await executeSelectedAction();
+        const selected = items[selectedIndex];
+        if (currentScreen === "main") {
+          if (selected.id === "receipt") {
+            currentScreen = "receipt_horizon";
+            selectedIndex = 0;
+            if (active) startLoop();
+            return;
+          }
+          await executeSelectedAction();
+        } else {
+          if (selected.id === "back") {
+            currentScreen = "main";
+            selectedIndex = 0;
+            if (active) startLoop();
+            return;
+          }
+          await executeReceiptHorizon(selected);
+        }
         if (active) {
           startLoop();
         }
@@ -502,7 +620,24 @@ export async function runInteractiveMenu(): Promise<void> {
 
       if (key.name === "return" || key.name === "enter") {
         process.stdin.removeListener("keypress", onKeypress);
-        await executeSelectedAction();
+        const selected = items[selectedIndex];
+        if (currentScreen === "main") {
+          if (selected.id === "receipt") {
+            currentScreen = "receipt_horizon";
+            selectedIndex = 0;
+            if (active) startLoop();
+            return;
+          }
+          await executeSelectedAction();
+        } else {
+          if (selected.id === "back") {
+            currentScreen = "main";
+            selectedIndex = 0;
+            if (active) startLoop();
+            return;
+          }
+          await executeReceiptHorizon(selected);
+        }
         if (active) {
           startLoop();
         }

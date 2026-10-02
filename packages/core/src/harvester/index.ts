@@ -28,6 +28,11 @@ export function parseSinceOption(since?: string | Date): Date | undefined {
     return today;
   }
 
+  if (s === "yesterday") {
+    const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+    return yesterday;
+  }
+
   const hoursMatch = s.match(/^(\d+)\s*h(?:ours?)?$/);
   if (hoursMatch && hoursMatch[1]) {
     const hours = parseInt(hoursMatch[1], 10);

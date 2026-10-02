@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildMenuFrame, MENU_ITEMS } from "../src/menu.js";
+import { buildMenuFrame, MENU_ITEMS, RECEIPT_HORIZON_ITEMS } from "../src/menu.js";
 import { checkHookStatus } from "../src/hooks.js";
 import { stripAnsi } from "../src/theme.js";
 import { execSync } from "node:child_process";
@@ -22,6 +22,18 @@ describe("Qodewk CLI Menu System (`menu.test.ts`)", () => {
 
     it("has labels and descriptions for all items without any cheap emojis", () => {
       for (const item of MENU_ITEMS) {
+        expect(item.label.length).toBeGreaterThan(0);
+        expect(item.description.length).toBeGreaterThan(0);
+        expect(EMOJI_REGEX.test(item.label)).toBe(false);
+        expect(EMOJI_REGEX.test(item.description)).toBe(false);
+      }
+    });
+
+    it("defines 6 receipt time-horizon submenu options", () => {
+      expect(RECEIPT_HORIZON_ITEMS).toHaveLength(6);
+      const ids = RECEIPT_HORIZON_ITEMS.map((i) => i.id);
+      expect(ids).toEqual(["latest", "today", "yesterday", "week", "custom", "back"]);
+      for (const item of RECEIPT_HORIZON_ITEMS) {
         expect(item.label.length).toBeGreaterThan(0);
         expect(item.description.length).toBeGreaterThan(0);
         expect(EMOJI_REGEX.test(item.label)).toBe(false);

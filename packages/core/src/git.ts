@@ -44,6 +44,10 @@ function parseSinceOption(since?: string | Date): Date | undefined {
     return new Date(now.getFullYear(), now.getMonth(), now.getDate());
   }
 
+  if (s === "yesterday") {
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+  }
+
   const hoursMatch = s.match(/^(\d+)\s*h(?:ours?)?$/);
   if (hoursMatch && hoursMatch[1]) {
     const hours = parseInt(hoursMatch[1], 10);
