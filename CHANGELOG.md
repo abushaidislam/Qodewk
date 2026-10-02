@@ -5,24 +5,47 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-## [0.4.0] — 2026-10-02
+## [0.7.0] — 2026-10-02
 
 ### 🚀 Added
-- **Commit-Bound Scored Attribution (P0):** Replaced timestamp heuristics with scored primary attribution (`scoreFootprint`, `selectPrimaryFootprint`), verifying exact commit binds (+1.00), path overlap ratios (0–0.40), and temporal proximity.
-- **Universal Tier A Harvesters (P1):**
+- **Distribution & PLG (Phase P3):**
+  - **GitHub Marketplace Action Listing:** Added official `branding` (icon `file-text`, color `orange`) in `packages/action/action.yml` and authored comprehensive `packages/action/README.md`.
+  - **Proof-of-Shipment Seeded Receipts:** Created realistic demo receipts in `apps/web/lib/demo-receipts.ts` for Cursor, Claude Code, Google Antigravity, and Aider.
+  - **Interactive Multi-Agent Homepage Links:** Linked agent chips in `apps/web/app/page.tsx` directly to their respective live receipt demos.
+  - **Canonical Domain & Environment Overrides:** Standardized API endpoints to default to `https://qodewk.flinkeo.online` with `QODEWK_API_URL` overrides.
+  - **Upgrade & Migration Guide:** Published `docs/upgrade-guide.md` with provenance mode breakdowns, CLI command references, and architectural changes.
+
+---
+
+## [0.6.0] — 2026-10-02
+
+### 🚀 Added
+- **Production Reliability & Storage Guard (Phase P2):**
+  - **Serverless Persistence Guard:** Strict enforcement of Supabase/PostgreSQL in production (`NODE_ENV === "production"`), returning HTTP 503 if unconfigured to prevent cold-start receipt loss.
+  - **Sliding-Window Rate Limiter:** Edge-compatible token bucket abuse controls on `/api/receipts` returning HTTP 429 and `Retry-After`.
+  - **Git Notes Engine:** Offline ledger storage under `refs/notes/qodewk` via `writeGitReceiptNote`, `readGitReceiptNote`, and CLI commands (`qodewk notes show`, `qodewk notes write`, `qodewk notes list`).
+  - **Dedicated Privacy Regression Suite:** Strict zero-exfiltration automated tests verifying source code, diff hunks, and secrets never enter `ReceiptV1` payloads (`packages/core/test/privacy.test.ts`).
+  - **Automated CI Quality Pipeline:** Monorepo workflow in `.github/workflows/ci.yml` verifying typecheck, 103+ unit tests, and CLI smoke tests on all PRs.
+  - **Release Automation:** Configured `.github/workflows/release.yml` with OIDC npm provenance.
+
+---
+
+## [0.5.0] — 2026-10-02
+
+### 🚀 Added
+- **Universal Tier A Harvesters (Phase P1):**
   - **Aider:** Local markdown history parser (`.aider.chat.history.md`) extracting auto-committed Git hashes, models, tokens, and file edits.
   - **Windsurf (Cascade):** Local SQLite workspace reader (`state.vscdb`) parsing Cascade chat sessions and model parameters.
   - **Git Commit Trailers:** Structured parser for `Co-authored-by: GitHub Copilot <...>`, Claude, Cursor, Aider, and Windsurf trailers.
   - **Model Rate Card Aliases:** Canonical alias mapping in `@qodewk/pricing` for Anthropic (Claude 3.7/3.5 variants, Claude Code), OpenAI (o1/o3/4o-latest), Google (Gemini 2/3), and DeepSeek (V3/R1).
-- **Production Reliability & Storage Guard (P2):**
-  - **Serverless Persistence Guard:** Strict enforcement of Supabase/PostgreSQL in production (`NODE_ENV === "production"`), returning HTTP 503 if unconfigured to prevent cold-start receipt loss.
-  - **Sliding-Window Rate Limiter:** Edge-compatible token bucket abuse controls on `/api/receipts` returning HTTP 429 and `Retry-After`.
-  - **Git Notes Engine:** Offline ledger storage under `refs/notes/qodewk` via `writeGitReceiptNote`, `readGitReceiptNote`, and CLI commands (`qodewk notes show`, `qodewk notes write`, `qodewk notes list`).
-  - **Dedicated Privacy Regression Suite:** Strict zero-exfiltration automated tests verifying source code, diff hunks, and secrets never enter `ReceiptV1` payloads.
-  - **Automated CI Quality Pipeline:** Monorepo workflow in `.github/workflows/ci.yml` verifying typecheck, 103+ unit tests, and CLI smoke tests on all PRs.
-- **Distribution & PLG (P3):**
-  - GitHub Marketplace Action branding and documentation in `packages/action`.
-  - Seeded public proof-of-shipment demo receipts for Cursor, Claude Code, Antigravity, and Aider.
+  - **Expanded Platform Footprints:** Added typed support for `aider`, `copilot`, `windsurf`, `opencode`, `kilo`, `codex`, and `cline`.
+
+---
+
+## [0.4.0] — 2026-10-02
+
+### 🚀 Added
+- **Commit-Bound Scored Attribution (Phase P0):** Replaced timestamp heuristics with scored primary attribution (`scoreFootprint`, `selectPrimaryFootprint`), verifying exact commit binds (+1.00), path overlap ratios (0–0.40), and temporal proximity.
 
 ### 🛡️ Fixed & Changed
 - Fixed Cursor URI decoding and path normalizations for Windows and POSIX file comparisons.

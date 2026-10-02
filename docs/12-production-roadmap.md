@@ -222,7 +222,7 @@ Git mutation (headSha, commitDate, changedFiles)
 | P3.2 | GitHub Marketplace Action listing | Added `branding` (icon/color) in `action.yml` + comprehensive `packages/action/README.md` | ✅ **Done** |
 | P3.3 | Landing page conversion polish | Editorial Claude design tokens, clear `npx qodewk` CTA, interactive agent receipts | ✅ **Done** |
 | P3.4 | “Proof of shipment” demo receipts | Seeded demo receipts in `apps/web/lib/demo-receipts.ts` for Cursor, Claude, Antigravity, Aider | ✅ **Done** |
-| P3.5 | Changelog + upgrade guide | Root `CHANGELOG.md` (v0.1.0 → v0.4.0) + `docs/upgrade-guide.md` migration guide | ✅ **Done** |
+| P3.5 | Changelog + upgrade guide | Root `CHANGELOG.md` (v0.1.0 → v0.7.0) + `docs/upgrade-guide.md` migration guide | ✅ **Done** |
 
 **Exit:** Stranger can discover → run → share → PR comment without chat support. ✅ **Passed.**
 

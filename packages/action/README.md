@@ -42,7 +42,7 @@ jobs:
           fetch-depth: 0 # Full history needed for diff attribution
 
       - name: Generate Qodewk PR Receipt
-        uses: abushaidislam/Qodewk/packages/action@v0.4.0
+        uses: abushaidislam/Qodewk/packages/action@v0.7.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           base-ref: ${{ github.base_ref }}

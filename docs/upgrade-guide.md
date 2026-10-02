@@ -1,15 +1,15 @@
-# Qodewk Upgrade & Migration Guide (v0.2.x → v0.4.0 / v1.0)
+# Qodewk Upgrade & Migration Guide (v0.2.x → v0.7.0 / v1.0)
 
-> This guide documents architectural improvements, new CLI commands, attribution modes, and migration steps for upgrading to **Qodewk v0.4.0+**.
+> This guide documents architectural improvements, new CLI commands, attribution modes, and migration steps for upgrading to **Qodewk v0.7.0+**.
 
 ---
 
-## 🌟 Highlights of v0.4.0
+## 🌟 Highlights of v0.4.0 — v0.7.0
 
-1. **Commit-Bound Attribution Truth:** No more "newest timestamp wins" heuristic. Qodewk uses a scored primary selector evaluating exact Git commit binds, touched file overlap, and temporal proximity.
-2. **Universal Agent Support (Tier A):** Native local adapters for Cursor, Claude Code, Google Antigravity / Gemini CLI, Aider, Windsurf, and Git commit trailers (`Co-authored-by`).
-3. **Git Notes Offline Ledger:** Persist receipts directly into your local Git graph under `refs/notes/qodewk`. Receipts stay with your repo even without network access.
-4. **Serverless Storage Protection:** Built-in safeguards against cold-start receipt loss when publishing in production.
+1. **Commit-Bound Attribution Truth (v0.4.0):** No more "newest timestamp wins" heuristic. Qodewk uses a scored primary selector evaluating exact Git commit binds, touched file overlap, and temporal proximity.
+2. **Universal Agent Support (v0.5.0):** Native local adapters for Cursor, Claude Code, Google Antigravity, Aider, Windsurf, and Git commit trailers (`Co-authored-by`).
+3. **Production Reliability & Git Notes (v0.6.0):** Offline Git ledger under `refs/notes/qodewk`, sliding-window rate limiting, and zero-data-loss serverless storage protection.
+4. **Distribution & PLG (v0.7.0):** GitHub Marketplace Action integration, seeded demo receipts, and interactive multi-agent showcases.
 
 ---
 
