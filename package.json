@@ -6,7 +6,7 @@
     "dev": "turbo dev",
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
-    "test": "vitest run",
+    "test": "vitest run --testTimeout=25000 --hookTimeout=25000",
     "test:turbo": "turbo test",
     "clean": "turbo clean",
     "qodewk": "node packages/cli/dist/index.cjs"

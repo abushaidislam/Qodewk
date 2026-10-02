@@ -89,6 +89,25 @@ program
       return;
     }
 
+    const hasExplicitOption =
+      options.json ||
+      options.out ||
+      options.provider ||
+      options.model ||
+      options.since ||
+      options.today ||
+      options.platform ||
+      options.anon ||
+      options.local ||
+      options.notes ||
+      (options.format && options.format !== "terminal");
+
+    const isInteractiveTerminal = Boolean(process.stdin.isTTY && !process.env.CI);
+    if (!hasExplicitOption && isInteractiveTerminal) {
+      await runInteractiveMenu();
+      return;
+    }
+
     try {
       const receipt = await generateReceipt({
         provider: options.provider,
