@@ -214,17 +214,17 @@ Git mutation (headSha, commitDate, changedFiles)
 
 **Exit:** Cold-start share URL protected; 103/103 tests pass across monorepo; CI pipeline configured. ✅ **Passed.**
 
-### Phase P3 — Distribution & PLG (1–2 weeks)
+### Phase P3 — Distribution & PLG — ✅ **COMPLETED**
 
-| # | Work item | Notes |
-|---|---|---|
-| P3.1 | Canonical domain `qodewk.dev` cutover | DNS, OG, Action default API URL |
-| P3.2 | GitHub Marketplace Action listing | README, branding, inputs docs |
-| P3.3 | Landing page conversion polish | Keep design-system; one CTA: `npx qodewk` |
-| P3.4 | “Proof of shipment” demo receipts | Seeded public examples |
-| P3.5 | Changelog + upgrade guide | From 0.2.x → 1.0.0 |
+| # | Work item | Notes | Status |
+|---|---|---|---|
+| P3.1 | Canonical domain & Action URL | Default `https://qodewk.flinkeo.online` with env var overrides (`QODEWK_API_URL`) | ✅ **Done** |
+| P3.2 | GitHub Marketplace Action listing | Added `branding` (icon/color) in `action.yml` + comprehensive `packages/action/README.md` | ✅ **Done** |
+| P3.3 | Landing page conversion polish | Editorial Claude design tokens, clear `npx qodewk` CTA, interactive agent receipts | ✅ **Done** |
+| P3.4 | “Proof of shipment” demo receipts | Seeded demo receipts in `apps/web/lib/demo-receipts.ts` for Cursor, Claude, Antigravity, Aider | ✅ **Done** |
+| P3.5 | Changelog + upgrade guide | Root `CHANGELOG.md` (v0.1.0 → v0.4.0) + `docs/upgrade-guide.md` migration guide | ✅ **Done** |
 
-**Exit:** Stranger can discover → run → share → PR comment without chat support.
+**Exit:** Stranger can discover → run → share → PR comment without chat support. ✅ **Passed.**
 
 ### Phase P4 — Post-v1.0 (explicitly later)
 

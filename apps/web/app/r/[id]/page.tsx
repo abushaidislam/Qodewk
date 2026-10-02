@@ -6,79 +6,45 @@ import { ReceiptV1 } from "@qodewk/protocol";
 import { ArrowLeft, GitBranch, GitCommit, Shield } from "lucide-react";
 import Link from "next/link";
 import { getReceiptFromStore } from "@/lib/storage";
+import { DEMO_RECEIPTS } from "@/lib/demo-receipts";
 
 interface PageProps {
   params: Promise<{ id: string }>;
 }
 
-// Built-in demo receipt for showcasing or testing
-const fallbackDemoReceipt: ReceiptV1 = {
-  version: "1.0",
-  receipt: {
-    id: "rec_demo_7f8b2c1e4d3a",
-    createdAt: new Date().toISOString(),
-    contentHash: "b53f0fad4c7eb3669a54111b4590d5b0ad094000242608c8f3a1167f6d179426"
-  },
-  repository: {
-    repoHash: "1aae43678eec89514114cd1c1ccdec3ae6a6dedb5686d487e8afe7a2c28823df",
-    projectAlias: "qodewk-core",
-    branch: "main",
-    headSha: "7f8b2c1e4d3a5f6e7d8c9b0a1f2e3d4c5b6a7f8e",
-    commitsCount: 1
-  },
-  mutation: {
-    files: 14,
-    insertions: 381,
-    deletions: 72,
-    netLines: 309,
-    renames: 1,
-    languages: {
-      "TypeScript": 85,
-      "Markdown": 15
-    }
-  },
-  ai: {
-    provider: "anthropic",
-    model: "claude-3-7-sonnet",
-    tokens: {
-      input: 120000,
-      output: 63000,
-      cached: 72000
-    },
-    cost: 2.41,
-    mode: "estimated",
-    confidence: 0.74,
-    sessions: [
-      {
-        provider: "anthropic",
-        model: "claude-3-7-sonnet",
-        tokens: { input: 120000, output: 63000, cached: 72000 },
-        cost: 2.41,
-        confidence: 0.74,
-        mode: "estimated"
-      }
-    ]
-  },
-  privacy: {
-    sourceExcluded: true,
-    isPublic: true,
-    anonymizeBranch: false
-  }
-};
-
 async function resolveReceipt(id: string): Promise<ReceiptV1 | null> {
-  // 1. If explicit demo ID, return demo receipt
-  if (id === "rec_demo_7f8b2c1e4d3a" || id === "rec_01J8Y29K4Z00ABC123DEF456" || id.startsWith("rec_demo")) {
+  // 1. Check seeded demo receipts
+  if (DEMO_RECEIPTS[id]) {
+    return DEMO_RECEIPTS[id]!;
+  }
+
+  // 2. Check friendly aliases
+  if (id === "rec_01J8Y29K4Z00ABC123DEF456" || id === "demo-cursor" || id === "rec_demo_7f8b2c1e4d3a") {
+    return DEMO_RECEIPTS["rec_demo_cursor"]!;
+  }
+  if (id === "demo-claude") {
+    return DEMO_RECEIPTS["rec_demo_claude"]!;
+  }
+  if (id === "demo-antigravity") {
+    return DEMO_RECEIPTS["rec_demo_antigravity"]!;
+  }
+  if (id === "demo-aider") {
+    return DEMO_RECEIPTS["rec_demo_aider"]!;
+  }
+
+  // 3. Prefix matching for any other rec_demo_*
+  if (id.startsWith("rec_demo")) {
+    const base = DEMO_RECEIPTS["rec_demo_cursor"]!;
     return {
-      ...fallbackDemoReceipt,
+      ...base,
       receipt: {
-        ...fallbackDemoReceipt.receipt,
+        ...base.receipt,
         id
       }
     };
   }
 
-  // 2. Fetch from storage (memory or Supabase)
+  // 4. Fetch from storage (memory or Supabase)
   const stored = await getReceiptFromStore(id);
   if (stored) return stored;
 
