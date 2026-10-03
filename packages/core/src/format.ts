@@ -1,10 +1,11 @@
 import { ReceiptV1 } from "@qodewk/protocol";
+import { resolveAppUrl } from "./env.js";
 
 /**
  * Formats a ReceiptV1 as a GitHub PR-ready Markdown comment.
  */
 export function formatMarkdownReceipt(receipt: ReceiptV1, publicUrl?: string): string {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.QODEWK_APP_URL || "https://qodewk.flinkeo.online";
+  const baseUrl = resolveAppUrl();
   const url = publicUrl || `${baseUrl}/r/${receipt.receipt.id}`;
   const totalTokens = (receipt.ai.tokens.input + receipt.ai.tokens.output).toLocaleString();
   const costPrefix = receipt.ai.mode === "verified" ? "$" : "~$";

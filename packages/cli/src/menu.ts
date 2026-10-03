@@ -8,7 +8,8 @@ import {
   detectDefaultBaseBranch,
   writeGitReceiptNote,
   readGitReceiptNote,
-  listGitReceiptNotes
+  listGitReceiptNotes,
+  resolveApiUrl
 } from "@qodewk/core";
 import { colors, bg, bannerGradient } from "./theme.js";
 import { renderTerminalReceipt } from "./receipt-view.js";
@@ -419,10 +420,7 @@ export async function runInteractiveMenu(): Promise<void> {
             body = JSON.stringify(trimmed);
           }
 
-          const endpoint =
-            process.env.QODEWK_API_URL ||
-            `${process.env.NEXT_PUBLIC_APP_URL || process.env.QODEWK_APP_URL || "https://qodewk.flinkeo.online"}/api/receipts`;
-
+          const endpoint = resolveApiUrl();
           console.log(pc.dim(`  [·] Uploading metadata to ${endpoint}...`));
 
           const response = await fetch(endpoint, {

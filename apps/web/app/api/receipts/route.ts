@@ -83,7 +83,17 @@ export async function POST(req: NextRequest) {
       throw storageErr;
     }
 
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.QODEWK_APP_URL || "https://qodewk.flinkeo.online";
+    const reqHost = req.headers?.get ? (req.headers.get("x-forwarded-host") || req.headers.get("host")) : null;
+    const reqProto = req.headers?.get ? (req.headers.get("x-forwarded-proto") || "https") : "https";
+    const detectedOrigin = reqHost ? `${reqProto}://${reqHost}` : null;
+
+    const baseUrl = (
+      process.env.NEXT_PUBLIC_APP_URL ||
+      process.env.QODEWK_APP_URL ||
+      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
+      detectedOrigin ||
+      "http://localhost:3000"
+    ).replace(/\/$/, "");
     const publicUrl = `${baseUrl}/r/${receipt.receipt.id}`;
 
     return NextResponse.json(

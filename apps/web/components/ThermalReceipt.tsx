@@ -19,8 +19,12 @@ export function ThermalReceipt({ receipt, showActions = true }: ThermalReceiptPr
   const costPrefix = receipt.ai.mode === "verified" ? "$" : "~$";
   const confidencePercent = `${Math.round(receipt.ai.confidence * 100)}%`;
 
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.QODEWK_APP_URL || "https://qodewk.flinkeo.online";
-  const publicUrl = `${baseUrl.replace(/\/$/, "")}/r/${receipt.receipt.id}`;
+  const baseUrl = (
+    process.env.NEXT_PUBLIC_APP_URL ||
+    process.env.QODEWK_APP_URL ||
+    (typeof window !== "undefined" ? window.location.origin : "http://localhost:3000")
+  ).replace(/\/$/, "");
+  const publicUrl = `${baseUrl}/r/${receipt.receipt.id}`;
 
   const copyMarkdown = () => {
     const md = `### 🤖 Qodewk Receipt

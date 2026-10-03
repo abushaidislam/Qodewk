@@ -10,12 +10,18 @@ import {
   sanitizeReceiptForShare,
   writeGitReceiptNote,
   readGitReceiptNote,
-  listGitReceiptNotes
+  listGitReceiptNotes,
+  loadQodewkEnv,
+  resolveApiUrl,
+  resolveAppUrl
 } from "@qodewk/core";
 import { ReceiptV1 } from "@qodewk/protocol";
 import { outputReceipt, renderTerminalReceipt, OutputOptions } from "./receipt-view.js";
 import { resolveGitHooksDir, installHookFile, uninstallHookFile } from "./hooks.js";
 import { runInteractiveMenu } from "./menu.js";
+
+// Automatically load local .env, .env.local, and ~/.qodewk/config.env
+loadQodewkEnv();
 
 const SHARE_PAYLOAD_MAX_BYTES = 50_000;
 
@@ -232,9 +238,7 @@ program
         process.exit(1);
       }
 
-      const endpoint =
-        process.env.QODEWK_API_URL ||
-        `${process.env.NEXT_PUBLIC_APP_URL || process.env.QODEWK_APP_URL || "https://qodewk.flinkeo.online"}/api/receipts`;
+      const endpoint = resolveApiUrl();
       console.log(pc.dim(`Publishing receipt ${sanitized.receipt.id} to ${endpoint}...`));
 
       try {

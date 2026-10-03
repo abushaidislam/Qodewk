@@ -9,6 +9,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - `registry/pricing.json`: the remote rate-card registry that `syncDynamicPricing` fetches (generated from the built-in `RATE_CARDS` / `MODEL_ALIASES`).
 - `sanitizeRateCards` and `resetPricingRegistry` in `@qodewk/pricing`; remote registry entries are validated (finite, non-negative, bounded prices) before use.
 - Aliases for Gemini 3.x ids and family fallbacks for any Sonnet generation and Haiku.
+- **Zero-Dependency Env Loader & Dynamic Domain Resolver:**
+  - Added `loadQodewkEnv`, `resolveAppUrl`, and `resolveApiUrl` in `@qodewk/core`.
+  - CLI and sharing commands now automatically discover `.env`, `.env.local`, and `~/.qodewk/config.env` without requiring manual system environment variables.
+  - Web API dynamically resolves host/origin from incoming HTTP request headers (`x-forwarded-host`, `host`) and `VERCEL_URL` when `NEXT_PUBLIC_APP_URL` is omitted.
+  - Replaced all hardcoded fallback URLs across CLI, formatting, and web routes.
 
 ### 🛡️ Fixed & Changed
 - Cursor commit-tracking footprints derive tokens from line counts, so they are now labeled `estimated` (confidence 0.55) instead of `verified`.

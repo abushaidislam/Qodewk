@@ -14,6 +14,7 @@ export * from "./estimator.js";
 export * from "./db.js";
 export * from "./format.js";
 export * from "./pricing-sync.js";
+export * from "./env.js";
 
 export interface GenerateReceiptOptions {
   repoPath?: string;

@@ -1,7 +1,7 @@
 import * as fs from "node:fs";
 import pc from "picocolors";
 import { ReceiptV1 } from "@qodewk/protocol";
-import { formatMarkdownReceipt } from "@qodewk/core";
+import { formatMarkdownReceipt, resolveAppUrl } from "@qodewk/core";
 import { pickBarcodePayload, renderTerminalBarcode } from "./barcode.js";
 import { colors, visibleWidth, stripAnsi } from "./theme.js";
 
@@ -113,8 +113,7 @@ export function buildTerminalReceipt(receipt: ReceiptV1, publicUrl?: string): st
   printDivider("=");
   printRow("");
 
-  const baseUrl =
-    process.env.NEXT_PUBLIC_APP_URL || process.env.QODEWK_APP_URL || "https://qodewk.flinkeo.online";
+  const baseUrl = resolveAppUrl();
   const isPublished = Boolean(publicUrl);
   const displayHost = baseUrl.replace(/^https?:\/\//, "");
 
