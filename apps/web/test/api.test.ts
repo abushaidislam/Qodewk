@@ -172,6 +172,50 @@ describe("/api/receipts API Route Handlers (`api.test.ts`)", () => {
         if (prevSupabaseKey) process.env.SUPABASE_SERVICE_ROLE_KEY = prevSupabaseKey;
       }
     });
+
+    it("dynamically formats public URL using NEXT_PUBLIC_APP_URL when present", async () => {
+      const prev = process.env.NEXT_PUBLIC_APP_URL;
+      try {
+        process.env.NEXT_PUBLIC_APP_URL = "https://custom.mycompany.com";
+        const req = new NextRequest(new URL("http://localhost:3000/api/receipts"), {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ ...validReceipt, receipt: { ...validReceipt.receipt, id: "rec_url_test_1" } })
+        });
+        const res = await POST(req);
+        expect(res.status).toBe(200);
+        const data = await res.json();
+        expect(data.url).toBe("https://custom.mycompany.com/r/rec_url_test_1");
+      } finally {
+        if (prev) process.env.NEXT_PUBLIC_APP_URL = prev;
+        else delete process.env.NEXT_PUBLIC_APP_URL;
+      }
+    });
+
+    it("dynamically resolves domain from x-forwarded-host header if env is not configured", async () => {
+      const prev = process.env.NEXT_PUBLIC_APP_URL;
+      try {
+        delete process.env.NEXT_PUBLIC_APP_URL;
+        delete process.env.QODEWK_APP_URL;
+        delete process.env.VERCEL_URL;
+
+        const req = new NextRequest(new URL("http://localhost:3000/api/receipts"), {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            "x-forwarded-host": "preview-branch.vercel.app",
+            "x-forwarded-proto": "https"
+          },
+          body: JSON.stringify({ ...validReceipt, receipt: { ...validReceipt.receipt, id: "rec_url_test_2" } })
+        });
+        const res = await POST(req);
+        expect(res.status).toBe(200);
+        const data = await res.json();
+        expect(data.url).toBe("https://preview-branch.vercel.app/r/rec_url_test_2");
+      } finally {
+        if (prev) process.env.NEXT_PUBLIC_APP_URL = prev;
+      }
+    });
   });
 
   describe("GET /api/receipts", () => {
