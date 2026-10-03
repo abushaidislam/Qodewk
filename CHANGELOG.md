@@ -3,6 +3,18 @@
 All notable changes to the **Qodewk** monorepo are documented in this file.  
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.1] — 2026-10-03
+
+### 🚀 Added
+- `registry/pricing.json`: the remote rate-card registry that `syncDynamicPricing` fetches (generated from the built-in `RATE_CARDS` / `MODEL_ALIASES`).
+- `sanitizeRateCards` and `resetPricingRegistry` in `@qodewk/pricing`; remote registry entries are validated (finite, non-negative, bounded prices) before use.
+- Aliases for Gemini 3.x ids and family fallbacks for any Sonnet generation and Haiku.
+
+### 🛡️ Fixed & Changed
+- Cursor commit-tracking footprints derive tokens from line counts, so they are now labeled `estimated` (confidence 0.55) instead of `verified`.
+- Antigravity model detection now normalizes the selected model name and relies on pricing aliases/fallbacks, so newer models no longer resolve to the wrong rate card.
+- Fixed `pricing-sync` tests to use the real `ModelRateCard` shape.
+
 ## [0.9.0] — 2026-10-02
 
 ### 🚀 Added

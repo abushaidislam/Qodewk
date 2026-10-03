@@ -228,6 +228,9 @@ export const MODEL_ALIASES: Record<string, string> = {
   "gemini-3": "gemini-3-8-flash",
   "gemini-flash": "gemini-3-8-flash",
   "gemini-pro": "gemini-2-5-pro",
+  "gemini-3-1-pro": "gemini-2-5-pro",
+  "gemini-3-pro": "gemini-2-5-pro",
+  "gemini-3-1-flash": "gemini-3-8-flash",
   "gemini-2.0-flash": "gemini-2-0-flash",
   "gemini-1.5-pro": "gemini-1-5-pro",
   "gemini-1.5-flash": "gemini-2-0-flash",
@@ -243,14 +246,66 @@ export const MODEL_ALIASES: Record<string, string> = {
 let DYNAMIC_RATE_CARDS: Record<string, ModelRateCard> = {};
 let DYNAMIC_ALIASES: Record<string, string> = {};
 
+const PROVIDERS = new Set(["anthropic", "openai", "google", "deepseek", "generic"]);
+
+function isPrice(v: unknown): v is number {
+  return typeof v === "number" && Number.isFinite(v) && v >= 0 && v <= 1000;
+}
+
+/**
+ * Keeps only well-formed rate cards (finite, non-negative, bounded prices).
+ * Invalid entries are dropped so a bad registry can never poison cost math.
+ */
+export function sanitizeRateCards(raw: unknown): Record<string, ModelRateCard> {
+  const out: Record<string, ModelRateCard> = {};
+  if (!raw || typeof raw !== "object") return out;
+  for (const [key, value] of Object.entries(raw as Record<string, unknown>)) {
+    const c = value as Partial<ModelRateCard> | null;
+    if (!c || typeof c !== "object") continue;
+    if (
+      isPrice(c.inputPerMTok) &&
+      isPrice(c.outputPerMTok) &&
+      isPrice(c.cacheReadPerMTok) &&
+      isPrice(c.cacheWritePerMTok)
+    ) {
+      out[key] = {
+        id: typeof c.id === "string" ? c.id : key,
+        provider: PROVIDERS.has(c.provider as string) ? (c.provider as ModelRateCard["provider"]) : "generic",
+        name: typeof c.name === "string" ? c.name : key,
+        inputPerMTok: c.inputPerMTok,
+        outputPerMTok: c.outputPerMTok,
+        cacheReadPerMTok: c.cacheReadPerMTok,
+        cacheWritePerMTok: c.cacheWritePerMTok,
+        contextWindow:
+          typeof c.contextWindow === "number" && c.contextWindow > 0 ? c.contextWindow : 128_000
+      };
+    }
+  }
+  return out;
+}
+
+function sanitizeAliases(raw: unknown): Record<string, string> {
+  const out: Record<string, string> = {};
+  if (!raw || typeof raw !== "object") return out;
+  for (const [k, v] of Object.entries(raw as Record<string, unknown>)) {
+    if (typeof v === "string" && v.length > 0) out[k.toLowerCase()] = v;
+  }
+  return out;
+}
+
 export function updatePricingRegistry(
   newCards: Record<string, ModelRateCard>,
   newAliases?: Record<string, string>
 ) {
-  DYNAMIC_RATE_CARDS = { ...DYNAMIC_RATE_CARDS, ...newCards };
+  DYNAMIC_RATE_CARDS = { ...DYNAMIC_RATE_CARDS, ...sanitizeRateCards(newCards) };
   if (newAliases) {
-    DYNAMIC_ALIASES = { ...DYNAMIC_ALIASES, ...newAliases };
+    DYNAMIC_ALIASES = { ...DYNAMIC_ALIASES, ...sanitizeAliases(newAliases) };
   }
+}
+
+export function resetPricingRegistry() {
+  DYNAMIC_RATE_CARDS = {};
+  DYNAMIC_ALIASES = {};
 }
 
 export function getRateCard(modelId?: string): ModelRateCard {
@@ -276,18 +331,17 @@ export function getRateCard(modelId?: string): ModelRateCard {
     return RATE_CARDS["claude-opus-4-6-thinking"] ?? RATE_CARDS["claude-opus-4"]!;
   }
   if (key.includes("sonnet")) {
-    if (key.includes("4-6") || key.includes("thinking")) {
-      return RATE_CARDS["claude-sonnet-4-6-thinking"]!;
-    }
     if (key.includes("3-7") || key.includes("sonnet-3-7")) {
       return RATE_CARDS["claude-3-7-sonnet"]!;
     }
     if (key.includes("3-5") || key.includes("sonnet-3-5")) {
       return RATE_CARDS["claude-3-5-sonnet"]!;
     }
-    if (key.includes("sonnet-4") || key.includes("claude-4") || key.includes("sonnet-v4")) {
-      return RATE_CARDS["claude-sonnet-4"] ?? RATE_CARDS["claude-sonnet-4-6-thinking"]!;
-    }
+    // Any other Sonnet generation (4.x, 5.x, thinking variants) -> current Sonnet tier
+    return RATE_CARDS["claude-sonnet-4-6-thinking"]!;
+  }
+  if (key.includes("haiku")) {
+    return RATE_CARDS["claude-3-5-haiku"]!;
   }
   if (key.includes("o1-mini") || key.includes("o3-mini")) {
     return RATE_CARDS["o3-mini"]!;

@@ -149,7 +149,7 @@ export function buildMenuFrame(
   // 2. Top rail start with pill badge
   push("");
   const badge = bg.teal(pc.bold(colors.ink(" qodewk ")));
-  push(`  ${colors.mutedSoft("┌")}  ${badge}  ${pc.dim("v0.9.0")}`);
+  push(`  ${colors.mutedSoft("┌")}  ${badge}  ${pc.dim("v0.9.1")}`);
   push(`  ${colors.mutedSoft("│")}`);
 
   // 3. Status/Context nodes (◇)

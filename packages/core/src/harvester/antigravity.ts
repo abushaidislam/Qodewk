@@ -79,12 +79,12 @@ export function harvestAntigravityFootprints(repoPath: string, sinceDate?: Date)
             if (line.includes("Model Selection")) {
               const match = line.match(/Model Selection` from .*?to ([^\.\(\n\r]+)/);
               if (match && match[1] && match[1].length < 30) {
-                const rawModel = match[1].trim();
-                if (rawModel.toLowerCase().includes("opus")) detectedModel = "claude-opus-4-6-thinking";
-                else if (rawModel.toLowerCase().includes("sonnet")) detectedModel = "claude-sonnet-4-6-thinking";
-                else if (rawModel.toLowerCase().includes("flash")) detectedModel = "gemini-3-8-flash";
-                else if (rawModel.toLowerCase().includes("pro")) detectedModel = "gemini-2-5-pro";
-                else detectedModel = rawModel.toLowerCase().replace(/\s+/g, "-");
+                // e.g. "Gemini 3.1 Pro (High)" -> "gemini-3-1-pro"; getRateCard resolves family fallbacks
+                detectedModel = match[1]
+                  .toLowerCase()
+                  .replace(/\(.*?\)/g, "")
+                  .replace(/[^a-z0-9]+/g, "-")
+                  .replace(/^-+|-+$/g, "");
               }
             }
 

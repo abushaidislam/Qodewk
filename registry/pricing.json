@@ -1,0 +1,220 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-10-03",
+  "rates": {
+    "claude-opus-4": {
+      "id": "claude-opus-4",
+      "provider": "anthropic",
+      "name": "Claude Opus 4",
+      "inputPerMTok": 4,
+      "outputPerMTok": 20,
+      "cacheReadPerMTok": 0.2,
+      "cacheWritePerMTok": 5,
+      "contextWindow": 200000
+    },
+    "claude-opus-4-6-thinking": {
+      "id": "claude-opus-4-6-thinking",
+      "provider": "anthropic",
+      "name": "Claude Opus 4.6 Thinking",
+      "inputPerMTok": 5,
+      "outputPerMTok": 25,
+      "cacheReadPerMTok": 0.25,
+      "cacheWritePerMTok": 6.25,
+      "contextWindow": 200000
+    },
+    "claude-sonnet-4-6-thinking": {
+      "id": "claude-sonnet-4-6-thinking",
+      "provider": "anthropic",
+      "name": "Claude Sonnet 4.6 Thinking",
+      "inputPerMTok": 3,
+      "outputPerMTok": 15,
+      "cacheReadPerMTok": 0.3,
+      "cacheWritePerMTok": 3.75,
+      "contextWindow": 200000
+    },
+    "claude-sonnet-4": {
+      "id": "claude-sonnet-4",
+      "provider": "anthropic",
+      "name": "Claude Sonnet 4",
+      "inputPerMTok": 3,
+      "outputPerMTok": 15,
+      "cacheReadPerMTok": 0.3,
+      "cacheWritePerMTok": 3.75,
+      "contextWindow": 200000
+    },
+    "claude-3-7-sonnet": {
+      "id": "claude-3-7-sonnet",
+      "provider": "anthropic",
+      "name": "Claude 3.7 Sonnet",
+      "inputPerMTok": 3,
+      "outputPerMTok": 15,
+      "cacheReadPerMTok": 0.3,
+      "cacheWritePerMTok": 3.75,
+      "contextWindow": 200000
+    },
+    "claude-3-5-sonnet": {
+      "id": "claude-3-5-sonnet",
+      "provider": "anthropic",
+      "name": "Claude 3.5 Sonnet",
+      "inputPerMTok": 3,
+      "outputPerMTok": 15,
+      "cacheReadPerMTok": 0.3,
+      "cacheWritePerMTok": 3.75,
+      "contextWindow": 200000
+    },
+    "claude-3-5-haiku": {
+      "id": "claude-3-5-haiku",
+      "provider": "anthropic",
+      "name": "Claude 3.5 Haiku",
+      "inputPerMTok": 0.8,
+      "outputPerMTok": 4,
+      "cacheReadPerMTok": 0.08,
+      "cacheWritePerMTok": 1,
+      "contextWindow": 200000
+    },
+    "gpt-4o": {
+      "id": "gpt-4o",
+      "provider": "openai",
+      "name": "GPT-4o",
+      "inputPerMTok": 2.5,
+      "outputPerMTok": 10,
+      "cacheReadPerMTok": 1.25,
+      "cacheWritePerMTok": 2.5,
+      "contextWindow": 128000
+    },
+    "gpt-4o-mini": {
+      "id": "gpt-4o-mini",
+      "provider": "openai",
+      "name": "GPT-4o Mini",
+      "inputPerMTok": 0.15,
+      "outputPerMTok": 0.6,
+      "cacheReadPerMTok": 0.075,
+      "cacheWritePerMTok": 0.15,
+      "contextWindow": 128000
+    },
+    "o1": {
+      "id": "o1",
+      "provider": "openai",
+      "name": "o1",
+      "inputPerMTok": 15,
+      "outputPerMTok": 60,
+      "cacheReadPerMTok": 7.5,
+      "cacheWritePerMTok": 15,
+      "contextWindow": 200000
+    },
+    "o3-mini": {
+      "id": "o3-mini",
+      "provider": "openai",
+      "name": "o3-mini",
+      "inputPerMTok": 1.1,
+      "outputPerMTok": 4.4,
+      "cacheReadPerMTok": 0.55,
+      "cacheWritePerMTok": 1.1,
+      "contextWindow": 200000
+    },
+    "gemini-3-8-flash": {
+      "id": "gemini-3-8-flash",
+      "provider": "google",
+      "name": "Gemini 3.8 Flash",
+      "inputPerMTok": 0.1,
+      "outputPerMTok": 0.4,
+      "cacheReadPerMTok": 0.025,
+      "cacheWritePerMTok": 0.1,
+      "contextWindow": 1000000
+    },
+    "gemini-2-5-pro": {
+      "id": "gemini-2-5-pro",
+      "provider": "google",
+      "name": "Gemini 2.5 Pro",
+      "inputPerMTok": 1.25,
+      "outputPerMTok": 5,
+      "cacheReadPerMTok": 0.3,
+      "cacheWritePerMTok": 1.25,
+      "contextWindow": 2000000
+    },
+    "gemini-2-0-flash": {
+      "id": "gemini-2-0-flash",
+      "provider": "google",
+      "name": "Gemini 2.0 Flash",
+      "inputPerMTok": 0.1,
+      "outputPerMTok": 0.4,
+      "cacheReadPerMTok": 0.025,
+      "cacheWritePerMTok": 0.1,
+      "contextWindow": 1000000
+    },
+    "gemini-1-5-pro": {
+      "id": "gemini-1-5-pro",
+      "provider": "google",
+      "name": "Gemini 1.5 Pro",
+      "inputPerMTok": 1.25,
+      "outputPerMTok": 5,
+      "cacheReadPerMTok": 0.3,
+      "cacheWritePerMTok": 1.25,
+      "contextWindow": 2000000
+    },
+    "deepseek-v3": {
+      "id": "deepseek-v3",
+      "provider": "deepseek",
+      "name": "DeepSeek V3",
+      "inputPerMTok": 0.14,
+      "outputPerMTok": 0.28,
+      "cacheReadPerMTok": 0.014,
+      "cacheWritePerMTok": 0.14,
+      "contextWindow": 64000
+    },
+    "deepseek-r1": {
+      "id": "deepseek-r1",
+      "provider": "deepseek",
+      "name": "DeepSeek R1",
+      "inputPerMTok": 0.55,
+      "outputPerMTok": 2.19,
+      "cacheReadPerMTok": 0.14,
+      "cacheWritePerMTok": 0.55,
+      "contextWindow": 64000
+    },
+    "default": {
+      "id": "default",
+      "provider": "generic",
+      "name": "Standard Frontier Model",
+      "inputPerMTok": 3,
+      "outputPerMTok": 15,
+      "cacheReadPerMTok": 0.3,
+      "cacheWritePerMTok": 3.75,
+      "contextWindow": 128000
+    }
+  },
+  "aliases": {
+    "claude-3-7-sonnet-latest": "claude-3-7-sonnet",
+    "claude-3-7-sonnet-20250219": "claude-3-7-sonnet",
+    "claude-3-5-sonnet-latest": "claude-3-5-sonnet",
+    "claude-3-5-sonnet-20241022": "claude-3-5-sonnet",
+    "claude-3-5-sonnet-20240620": "claude-3-5-sonnet",
+    "claude-3-5-haiku-latest": "claude-3-5-haiku",
+    "claude-3-5-haiku-20241022": "claude-3-5-haiku",
+    "claude-3-opus-20240229": "claude-opus-4",
+    "claude-code": "claude-3-7-sonnet",
+    "cursor-fast": "claude-3-5-sonnet",
+    "cursor-small": "claude-3-5-haiku",
+    "chatgpt-4o-latest": "gpt-4o",
+    "gpt-4o-2024-08-06": "gpt-4o",
+    "gpt-4o-2024-11-20": "gpt-4o",
+    "gpt-4o-mini-2024-07-18": "gpt-4o-mini",
+    "o1-preview": "o1",
+    "o1-2024-12-17": "o1",
+    "o3": "o3-mini",
+    "gemini-3": "gemini-3-8-flash",
+    "gemini-flash": "gemini-3-8-flash",
+    "gemini-pro": "gemini-2-5-pro",
+    "gemini-3-1-pro": "gemini-2-5-pro",
+    "gemini-3-pro": "gemini-2-5-pro",
+    "gemini-3-1-flash": "gemini-3-8-flash",
+    "gemini-2.0-flash": "gemini-2-0-flash",
+    "gemini-1.5-pro": "gemini-1-5-pro",
+    "gemini-1.5-flash": "gemini-2-0-flash",
+    "deepseek-chat": "deepseek-v3",
+    "deepseek-coder": "deepseek-v3",
+    "deepseek/deepseek-chat": "deepseek-v3",
+    "deepseek-reasoner": "deepseek-r1",
+    "deepseek/deepseek-r1": "deepseek-r1"
+  }
+}

@@ -241,8 +241,8 @@ export function harvestCursorFootprints(repoPath: string, sinceDate?: Date): Age
                       cached: estCached
                     },
                     cost,
-                    mode: "verified",
-                    confidence: 0.95,
+                    mode: "estimated",
+                    confidence: 0.55,
                     rawTranscriptPath: dbFile
                   });
                 }

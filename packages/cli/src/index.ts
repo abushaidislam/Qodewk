@@ -46,7 +46,7 @@ function resolveCliVersion(): string {
   } catch {
     // fall through
   }
-  return "0.9.0";
+  return "0.9.1";
 }
 
 function resolveSince(options: HarvestCliOptions): string | undefined {
