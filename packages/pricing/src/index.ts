@@ -212,6 +212,10 @@ export const MODEL_ALIASES: Record<string, string> = {
   "claude-3-5-haiku-20241022": "claude-3-5-haiku",
   "claude-3-opus-20240229": "claude-opus-4",
   "claude-code": "claude-3-7-sonnet",
+  "claude-sonnet-5-5": "claude-sonnet-4-6-thinking",
+  "claude-opus-5-5": "claude-opus-4-6-thinking",
+  "claude-5-5-sonnet": "claude-sonnet-4-6-thinking",
+  "claude-5-5-opus": "claude-opus-4-6-thinking",
   "cursor-fast": "claude-3-5-sonnet",
   "cursor-small": "claude-3-5-haiku",
 

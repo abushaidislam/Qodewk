@@ -77,9 +77,9 @@ export function harvestAntigravityFootprints(repoPath: string, sinceDate?: Date)
             if (!line.trim()) continue;
 
             if (line.includes("Model Selection")) {
-              const match = line.match(/Model Selection` from .*?to ([^\.\(\n\r]+)/);
-              if (match && match[1] && match[1].length < 30) {
-                // e.g. "Gemini 3.1 Pro (High)" -> "gemini-3-1-pro"; getRateCard resolves family fallbacks
+              const match = line.match(/Model Selection` from .*?to (.+?)(?:\s*\([^\)]+\))?\.\s*(?:No need|"|\n|\r|$)/i);
+              if (match && match[1] && match[1].length < 40) {
+                // e.g. "Claude Sonnet 5.5" -> "claude-sonnet-5-5", "Claude Opus 5.5" -> "claude-opus-5-5"
                 detectedModel = match[1]
                   .toLowerCase()
                   .replace(/\(.*?\)/g, "")
