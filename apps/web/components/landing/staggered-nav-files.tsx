@@ -30,8 +30,6 @@ interface NavFileItem {
 const navFiles: NavFileItem[] = [
 	{ name: "readme", href: "/" },
 	{ name: "docs", href: "/docs" },
-	{ name: "receipts", href: "/r/demo-cursor" },
-	{ name: "changelog", href: "/changelog" },
 ];
 
 interface ProductItem {
