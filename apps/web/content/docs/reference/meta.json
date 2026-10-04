@@ -3,13 +3,9 @@
   "icon": "reference",
   "pages": [
     "options",
-    "errors",
-    "contributing",
-    "resources",
     "security",
     "telemetry",
-    "instrumentation",
     "faq",
-    "..."
+    "contributing"
   ]
 }

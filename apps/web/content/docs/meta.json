@@ -8,15 +8,7 @@
     "installation",
     "basic-usage",
     "concepts",
-    "authentication",
-    "adapters",
     "integrations",
-    "infrastructure",
-    "plugins",
-    "guides",
-    "ai-resources",
-    "reference",
-    "...",
-    "!examples"
+    "reference"
   ]
 }

@@ -1,0 +1,26 @@
+---
+icon: Workflow
+sidebarTitle: "Lefthook"
+title: Lefthook Git Hook Integration
+description: Fast, concurrent Git hook execution with Lefthook.
+---
+
+For teams using **Lefthook** as a fast Git hook manager, Qodewk can be configured directly inside your `lefthook.yml`.
+
+## Configuration
+
+Add Qodewk under your `post-commit` commands:
+
+```yaml title="lefthook.yml"
+post-commit:
+  commands:
+    qodewk-telemetry:
+      run: (qodewk record-event --hook post-commit &) > /dev/null 2>&1
+      interactive: false
+```
+
+## Why Detached Background Execution Matters
+
+Lefthook runs hooks quickly in parallel, but synchronous processes can still block terminal return. 
+
+By wrapping the telemetry invocation in `(qodewk record-event &) > /dev/null 2>&1`, the telemetry extraction runs asynchronously in the background, allowing your command prompt to return immediately.

@@ -1,21 +1,34 @@
 ---
 icon: introduction
 title: Introduction
-description: Introduction to Better Auth.
+description: Universal Git telemetry and digital receipts for AI coding agents.
 ---
 
-Better Auth is a framework-agnostic, universal authentication and authorization framework for TypeScript. It provides a comprehensive set of features out of the box and includes a plugin ecosystem that simplifies adding advanced functionalities. Whether you need 2FA, passkey, multi-tenancy, multi-session support, or even enterprise features like SSO, creating your own IDP, it lets you focus on building your application instead of reinventing the wheel.
+**Qodewk** is an open-source, universal telemetry and digital receipt generator built for the AI coding agent era.
+
+The Git revision graph and local filesystem constitute the single source of truth across all coding agents. Qodewk extracts mutations from your repository, harvests provider telemetry (Claude Code, Cursor, Codex, Windsurf, Aider, Antigravity), computes dual-engine token and cost estimations, and generates verifiable digital receipts.
+
+> **Prime Directive:**  
+> *"Git tells Qodewk what changed. Provider telemetry, when available, tells Qodewk what was consumed. Qodewk must never present an inference as exact usage."*
 
 ## Features
 
-Better Auth aims to be the most comprehensive auth library. It provides a wide range of features out of the box and allows you to extend it with plugins. Here are some of the features:
+Qodewk provides a comprehensive telemetry suite designed with cryptographic boundaries and zero code exfiltration:
 
 <Features />
 
-...and much more!
-
 ***
 
-## AI resources
+## Invariant Engineering Principles
 
-Your auth lives in your codebase. Better Auth fits well into agentic workflows. See [AI Resources](/docs/ai-resources) for **Ask AI** in the docs, **[LLMs.txt](https://www.better-auth.com/llms.txt)**, the **[documentation MCP server](/docs/ai-resources/mcp)** (`https://mcp.better-auth.com/mcp`), and **[Skills](/docs/ai-resources/skills)** for coding assistants.
+1. **Never Fake Precision:**
+   All metrics are explicitly labeled by provenance (`observed`, `estimated`, `imported`, `verified`, or `unknown`). Costs always include confidence bounds.
+
+2. **Privacy by Construction:**
+   Raw source code and diff hunks **never** leave your machine. Public receipts transmit only file counts, line mutations, language ratios, token counts, and HMAC-SHA256 salted hashes under a strict **50 KB** payload cap.
+
+3. **Git Hooks Under 5ms:**
+   Hooks (`post-commit`, `post-rewrite`) spawn background processes detached from standard streams and exit immediately, coexisting cleanly with Husky and Lefthook.
+
+4. **100% Offline & Local First:**
+   Generate terminal thermal receipts and persist to SQLite (`~/.qodewk/state.db`) and Git Notes (`refs/notes/qodewk`) without needing internet connectivity or a cloud account.

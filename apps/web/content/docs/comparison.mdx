@@ -1,31 +1,25 @@
 ---
 icon: comparison
 title: Comparison
-description: Comparison of Better Auth versus other auth libraries and services.
+description: Comparison of Qodewk versus traditional Git tools, manual spreadsheets, and cloud APMs.
 ---
 
-> <p className="text-orange-400 dark:text-orange-200">Comparison is the thief of joy.</p>
+> *"Git tells what changed. Provider telemetry tells what was consumed. Qodewk connects the two without compromising privacy."*
 
-Here are some key reasons why you may want to use Better Auth instead of other auth libraries and services.
+### vs Traditional Git Log & Blame
 
-### vs Other Auth Libraries
+* **Agent-Aware:** Standard Git tools (`git log`, `git blame`) only record the human committer signature. Qodewk discovers the underlying AI coding agent (Claude Code, Cursor, Codex, Windsurf, Aider, Antigravity) and attributes proportional contributions.
+* **Token & Cost Metrics:** Git tracks insertions and deletions; Qodewk links code changes directly to input, output, cache-read, and cache-write tokens.
+* **Verifiable Receipts:** Converts commits into durable, shareable digital proof of shipment.
 
-* **Framework agnostic** - Works with any framework, not just specific ones
-* **Advanced features built-in** - 2FA, multi-tenancy, multi-session, rate limiting, and many more
-* **Plugin system** - Extend functionality without forking or complex workarounds
-* **Full control** - Customize auth flows exactly how you want
-* **Flexible deployment** - Run alongside your app or as a standalone self-hosted auth server
+### vs Manual Spreadsheets & Provider Dashboards
 
-### vs Managed Auth Services
+* **Automated Attribution:** Eliminates manually tracking tokens and estimated dollars across provider consoles.
+* **Granular Commit Resolution:** Provider dashboards only show aggregate monthly billing. Qodewk maps token costs directly to specific commits, pull requests, and branches.
+* **Dual-Engine Accuracy:** Automatically correlates deterministic provider session transcripts with AST complexity heuristics.
 
-* **Keep your data** - Users stay in your database, not a third-party service
-* **No per-user costs** - Scale without worrying about auth billing
-* **Single source of truth** - All user data in one place
-* **Self-host anywhere** - Deploy on your own infrastructure with full control
+### vs Invasive Cloud APMs & Trackers
 
-### vs Rolling Your Own
-
-* **Security handled** - Battle-tested auth flows and security practices
-* **Focus on your product** - Spend time on features that matter to your business
-* **Plugin extensibility** - Add custom features without starting from scratch
-* **Production ready** - Works embedded in your app or as a dedicated auth server
+* **Privacy by Construction:** Invasive cloud monitoring tools upload full source trees and ASTs to external servers. Qodewk enforces that raw source code and diff hunks **never** leave your machine.
+* **Strict 50 KB Payload Cap:** Public receipts transmit only mutation counts, language ratios, token figures, and HMAC-SHA256 salted hashes.
+* **100% Offline-First:** Fully operational without network connectivity using embedded SQLite and `refs/notes/qodewk`.

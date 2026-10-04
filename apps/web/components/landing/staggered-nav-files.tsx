@@ -30,6 +30,8 @@ interface NavFileItem {
 const navFiles: NavFileItem[] = [
 	{ name: "readme", href: "/" },
 	{ name: "docs", href: "/docs" },
+	{ name: "receipts", href: "/r/demo-cursor" },
+	{ name: "changelog", href: "/changelog" },
 ];
 
 interface ProductItem {
@@ -843,7 +845,7 @@ export function StaggeredNavFiles() {
 									</div>
 									<div className="grid w-full grid-cols-[repeat(auto-fit,minmax(1.75rem,1fr))] items-center justify-items-center gap-y-0.5 border-t border-foreground/[0.06] px-2 py-2">
 										<a
-											href="https://github.com/better-auth/better-auth"
+											href="https://github.com/abushaidislam/Qodewk"
 											target="_blank"
 											rel="noreferrer"
 											className="flex items-center justify-center p-1 text-foreground/55 dark:text-foreground/40 hover:text-foreground/75 transition-colors"
@@ -862,47 +864,16 @@ export function StaggeredNavFiles() {
 											</svg>
 										</a>
 										<a
-											href="https://discord.gg/better-auth"
+											href="https://github.com/abushaidislam/Qodewk/discussions"
 											target="_blank"
 											rel="noreferrer"
 											className="flex items-center justify-center p-1 text-foreground/55 dark:text-foreground/40 hover:text-foreground/75 transition-colors"
-											aria-label="Discord"
+											aria-label="Community Discussions"
 										>
-											<svg
-												xmlns="http://www.w3.org/2000/svg"
-												width="14"
-												height="14"
-												viewBox="0 0 24 24"
-											>
-												<path
-													fill="currentColor"
-													d="M19.303 5.337A17.3 17.3 0 0 0 14.963 4c-.191.329-.403.775-.552 1.125a16.6 16.6 0 0 0-4.808 0C9.454 4.775 9.23 4.329 9.05 4a17 17 0 0 0-4.342 1.337C1.961 9.391 1.218 13.35 1.59 17.255a17.7 17.7 0 0 0 5.318 2.664a13 13 0 0 0 1.136-1.836c-.627-.234-1.22-.52-1.794-.86c.149-.106.297-.223.435-.34c3.46 1.582 7.207 1.582 10.624 0c.149.117.287.234.435.34c-.573.34-1.167.626-1.793.86a13 13 0 0 0 1.135 1.836a17.6 17.6 0 0 0 5.318-2.664c.457-4.52-.722-8.448-3.1-11.918M8.52 14.846c-1.04 0-1.889-.945-1.889-2.101s.828-2.102 1.89-2.102c1.05 0 1.91.945 1.888 2.102c0 1.156-.838 2.1-1.889 2.1m6.974 0c-1.04 0-1.89-.945-1.89-2.101s.828-2.102 1.89-2.102c1.05 0 1.91.945 1.889 2.102c0 1.156-.828 2.1-1.89 2.1"
-												/>
-											</svg>
+											<CommunityIcon className="size-4" />
 										</a>
 										<a
-											href="https://reddit.com/r/better_auth"
-											target="_blank"
-											rel="noreferrer"
-											className="flex items-center justify-center p-1 text-foreground/55 dark:text-foreground/40 hover:text-foreground/75 transition-colors"
-											aria-label="Reddit"
-										>
-											<svg
-												xmlns="http://www.w3.org/2000/svg"
-												width="14"
-												height="14"
-												viewBox="0 0 256 256"
-											>
-												<circle cx="128" cy="128" r="128" fill="currentColor" />
-												<path
-													fill="currentColor"
-													className="text-background"
-													d="M213.15 129.22c0-10.376-8.391-18.617-18.617-18.617a18.74 18.74 0 0 0-12.97 5.189c-12.818-9.157-30.368-15.107-49.9-15.87l8.544-39.981l27.773 5.95c.307 7.02 6.104 12.667 13.278 12.667c7.324 0 13.275-5.95 13.275-13.278c0-7.324-5.95-13.275-13.275-13.275c-5.188 0-9.768 3.052-11.904 7.478l-30.976-6.562c-.916-.154-1.832 0-2.443.458c-.763.458-1.22 1.22-1.371 2.136l-9.464 44.558c-19.837.612-37.692 6.562-50.662 15.872a18.74 18.74 0 0 0-12.971-5.188c-10.377 0-18.617 8.391-18.617 18.617c0 7.629 4.577 14.037 10.988 16.939a33.6 33.6 0 0 0-.458 5.646c0 28.686 33.42 52.036 74.621 52.036c41.202 0 74.622-23.196 74.622-52.036a35 35 0 0 0-.458-5.646c6.408-2.902 10.985-9.464 10.985-17.093M85.272 142.495c0-7.324 5.95-13.275 13.278-13.275c7.324 0 13.275 5.95 13.275 13.275s-5.95 13.278-13.275 13.278c-7.327.15-13.278-5.953-13.278-13.278m74.317 35.251c-9.156 9.157-26.553 9.768-31.588 9.768c-5.188 0-22.584-.765-31.59-9.768c-1.371-1.373-1.371-3.51 0-4.883c1.374-1.371 3.51-1.371 4.884 0c5.8 5.8 18.008 7.782 26.706 7.782s21.058-1.983 26.704-7.782c1.374-1.371 3.51-1.371 4.884 0c1.22 1.373 1.22 3.51 0 4.883m-2.443-21.822c-7.325 0-13.275-5.95-13.275-13.275s5.95-13.275 13.275-13.275c7.327 0 13.277 5.95 13.277 13.275c0 7.17-5.95 13.275-13.277 13.275"
-												/>
-											</svg>
-										</a>
-										<a
-											href="https://x.com/better_auth"
+											href="https://x.com/qodewk"
 											target="_blank"
 											rel="noreferrer"
 											className="flex items-center justify-center p-1 text-foreground/55 dark:text-foreground/40 hover:text-foreground/75 transition-colors"
@@ -921,7 +892,7 @@ export function StaggeredNavFiles() {
 											</svg>
 										</a>
 										<a
-											href="https://www.npmjs.com/package/better-auth"
+											href="https://www.npmjs.com/package/qodewk"
 											target="_blank"
 											rel="noreferrer"
 											className="flex items-center justify-center p-1 text-foreground/55 dark:text-foreground/40 hover:text-foreground/75 transition-colors"
@@ -941,12 +912,12 @@ export function StaggeredNavFiles() {
 						transition={{ duration: 0.2, delay: 0.2, ease: "easeOut" }}
 						className="flex items-stretch shrink-0"
 					>
-						<a
-							href="https://dash.better-auth.com/sign-in"
+						<Link
+							href="/r/demo-cursor"
 							className="flex items-center cursor-pointer gap-1.5 px-5 py-3 bg-foreground text-background hover:opacity-90 transition-colors duration-150"
 						>
 							<span className="font-mono text-xs uppercase tracking-wider">
-								sign-in
+								demo receipt
 							</span>
 							<svg
 								className="h-2.5 w-2.5 opacity-50"
@@ -959,7 +930,7 @@ export function StaggeredNavFiles() {
 									strokeWidth="1.2"
 								/>
 							</svg>
-						</a>
+						</Link>
 					</motion.div>
 				</motion.div>
 			</div>
@@ -1078,12 +1049,12 @@ export function StaggeredNavFiles() {
 							</div>
 
 							<div className="shrink-0 border-t border-foreground/[0.06] bg-background px-5 py-4">
-								<a
-									href="https://dash.better-auth.com/sign-in"
+								<Link
+									href="/r/demo-cursor"
 									onClick={() => setMobileNavigationView("closed")}
 									className="flex items-center justify-center gap-1.5 w-full py-3 bg-foreground text-background font-mono text-sm uppercase tracking-wider transition-opacity hover:opacity-90"
 								>
-									sign-in
+									demo receipt
 									<svg
 										className="h-2.5 w-2.5 opacity-50"
 										viewBox="0 0 10 10"
@@ -1095,7 +1066,7 @@ export function StaggeredNavFiles() {
 											strokeWidth="1.2"
 										/>
 									</svg>
-								</a>
+								</Link>
 							</div>
 						</div>
 					</motion.div>

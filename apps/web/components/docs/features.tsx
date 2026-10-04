@@ -25,41 +25,40 @@ export function Features() {
 
 const grid = [
 	{
-		title: "Framework Agnostic",
-		description: "Support for most popular frameworks",
+		title: "Universal Agent Telemetry",
+		description: "Harvest session logs from Claude Code, Cursor, Codex, Windsurf, Aider, and Antigravity.",
 	},
 	{
-		title: "Email & Password",
-		description:
-			"Built-in support for secure email and password authentication",
+		title: "Privacy by Construction",
+		description: "Zero raw source code or diff hunks ever leave your local machine.",
 	},
 	{
-		title: "Account & Session Management",
-		description: "Manage user accounts and sessions with ease",
+		title: "Git-Native Telemetry",
+		description: "Non-blocking background Git hooks (<5ms) and local Git Notes (refs/notes/qodewk).",
 	},
 	{
-		title: "Built-In Rate Limiter",
-		description: "Built-in rate limiter with custom rules",
+		title: "Dual-Engine Cost Estimation",
+		description: "Deterministic session token counting with AST-calibrated token density fallback.",
 	},
 	{
-		title: "Automatic Database Management",
-		description: "Automatic database management and migrations",
+		title: "Cryptographic Proof",
+		description: "HMAC-SHA256 salted digital receipts verifying commit, mutations, and agent provenance.",
 	},
 	{
-		title: "Social Sign-on",
-		description: "Multiple social sign-on providers",
+		title: "Thermal Receipts",
+		description: "Retro monospace box-drawing terminal receipts and interactive web cards.",
 	},
 	{
-		title: "Organization & Access Control",
-		description: "Manage organizations and access control",
+		title: "Autonomous CI/CD",
+		description: "Composite GitHub Actions posting sticky pull-request cost and attribution breakdowns.",
 	},
 	{
-		title: "Two Factor Authentication",
-		description: "Secure your users with two factor authentication",
+		title: "Multi-Model Rate Cards",
+		description: "Versioned rate registry tracking input, output, cache-read, and cache-write pricing.",
 	},
 	{
-		title: "Plugin Ecosystem",
-		description: "Even more capabilities with plugins",
+		title: "Offline & Local First",
+		description: "Full terminal receipts and SQLite state without needing cloud connectivity.",
 	},
 ];
 

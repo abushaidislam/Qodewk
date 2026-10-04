@@ -1,0 +1,43 @@
+---
+icon: Terminal
+sidebarTitle: "Husky"
+title: Husky Hook Integration
+description: Non-blocking Git hook coexistence with Husky without slowing down developer commits.
+---
+
+Qodewk integrates seamlessly with **Husky** to record commit telemetry automatically without adding any noticeable latency to developer workflows.
+
+## Automatic Hook Installation
+
+The simplest way to integrate Qodewk with Husky is running the hook installer:
+
+```bash
+qodewk hook install
+```
+
+Qodewk detects `.husky/` and injects boundary-marked blocks into your hooks:
+
+```bash title=".husky/post-commit"
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+# --- BEGIN QODEWK HOOK ---
+if command -v qodewk >/dev/null 2>&1; then
+  (qodewk record-event --hook post-commit &) >/dev/null 2>&1
+fi
+# --- END QODEWK HOOK ---
+```
+
+## Performance & Invariants
+
+<Callout type="warn">
+  **Sub-5ms Execution:** The hook immediately spawns a background subprocess detached from `stdin`/`stdout`/`stderr` and exits with code `0`. Your `git commit` finishes instantaneously.
+</Callout>
+
+### Coexistence Safety
+
+- Qodewk hooks never overwrite existing linter or test scripts managed by Husky.
+- To safely uninstall Qodewk hooks without touching other Husky scripts, run:
+  ```bash
+  qodewk hook uninstall
+  ```

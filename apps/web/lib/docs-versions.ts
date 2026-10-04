@@ -19,8 +19,8 @@ export interface DocsVersionConfig {
 
 export const docsVersions = [
 	{
-		label: "v1.7 (Latest)",
-		releaseLine: "1.7",
+		label: "v1.0 (Latest)",
+		releaseLine: "1.0",
 		id: "latest",
 		badge: null,
 	},

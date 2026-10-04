@@ -1,0 +1,68 @@
+---
+icon: GitPullRequest
+sidebarTitle: "GitHub Actions"
+title: GitHub Actions Integration
+description: Automated PR telemetry receipts and sticky comments using the Qodewk GitHub Action.
+---
+
+Qodewk provides an official composite GitHub Action (`packages/action`) that automatically generates digital telemetry receipts for every pull request and posts a sticky comment with the verification barcode.
+
+## Pull Request Sticky Comment Workflow
+
+Add `.github/workflows/qodewk.yml` to your repository:
+
+```yaml title=".github/workflows/qodewk.yml"
+name: Qodewk Telemetry Receipt
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  receipt:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Full git revision history is required
+
+      - name: Run Qodewk Action
+        uses: abushaidislam/Qodewk/packages/action@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          since: ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}
+```
+
+## How It Works
+
+1. **Diff Extraction:** Qodewk analyzes the exact commit range between PR base and head (`git diff-tree --numstat`).
+2. **Dual-Engine Attribution:** Checks commit timestamps against agent session footprints or falls back to AST multipliers.
+3. **Receipt Sealing:** Generates an HMAC-SHA256 salted receipt hash.
+4. **Sticky PR Comment:** Posts or updates a single sticky markdown thermal receipt comment on the pull request.
+
+<Callout type="info">
+  **Sticky Behavior:** Subsequent commits to the same pull request update the existing comment in-place, preventing notification spam across your team.
+</Callout>
+
+## Example Sticky Comment Output
+
+```text
+┌────────────────────────────────────────────────────────┐
+│  QODEWK DIGITAL RECEIPT                                │
+│  PR #42: feat(auth): add passkey support               │
+│  Commit Range: 3f8a1b..9e2d04                          │
+├────────────────────────────────────────────────────────┤
+│  FILES TOUCHED: 8        LINES: +420 / -112            │
+│  AI RATIO: 82%           CONFIDENCE: 94% (observed)    │
+│  PRIMARY AGENT: Claude Code 3.7 Sonnet                 │
+│  TOTAL TOKENS: 48,290    EST. COST: ~$0.21             │
+├────────────────────────────────────────────────────────┤
+│  [✓] Zero source code exfiltrated                      │
+│  VERIFY: https://qodewk.dev/r/rec_pr42_9e2d04          │
+└────────────────────────────────────────────────────────┘
+```
