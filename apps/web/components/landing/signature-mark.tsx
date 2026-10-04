@@ -7,7 +7,7 @@ export function SignatureMark({ compact = false }: { compact?: boolean }) {
 		<div className="flex items-center justify-between gap-3 text-[11px] font-mono text-foreground/50 select-none">
 			{compact ? (
 				<span className="text-[10px]">
-					© {new Date().getFullYear()} Better Auth Inc.
+					© {new Date().getFullYear()} Qodewk.
 				</span>
 			) : (
 				<div className="flex items-center gap-3">
@@ -35,14 +35,14 @@ export function SignatureMark({ compact = false }: { compact?: boolean }) {
 			)}
 			<div className="flex items-center gap-3">
 				<Link
-					href="https://x.com/better_auth"
+					href="https://x.com/qodewk"
 					aria-label="Twitter/X"
 					className="text-foreground/50 hover:text-foreground/80 transition-colors"
 				>
 					<Icons.XIcon className="h-3.5 w-3.5" />
 				</Link>
 				<Link
-					href="https://github.com/better-auth"
+					href="https://github.com/qodewk/qodewk"
 					aria-label="GitHub"
 					className="text-foreground/50 hover:text-foreground/80 transition-colors"
 				>

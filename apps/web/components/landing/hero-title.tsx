@@ -13,7 +13,7 @@ export function HeroTitle() {
 		>
 			<div>
 				<Link
-					href="/blog/better-auth-joins-vercel"
+					href="/docs"
 					className="relative inline-flex items-center gap-1.5 px-2.5 py-1 pointer-events-auto group/badge rounded-full bg-neutral-200/80 dark:bg-neutral-800/80 hover:bg-neutral-200/70 dark:hover:bg-neutral-700/50 transition-colors"
 				>
 					<svg
@@ -28,7 +28,7 @@ export function HeroTitle() {
 					</svg>
 					<span className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-100 font-light">
 						Announcement{" "}
-						<span className="font-medium">| Better Auth is joining Vercel</span>
+						<span className="font-medium">| Universal Git Telemetry & Digital Receipts</span>
 					</span>
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
@@ -49,19 +49,19 @@ export function HeroTitle() {
 					</svg>
 				</Link>
 				<h1 className="pt-3 sm:pt-4 text-2xl md:text-3xl xl:text-4xl text-neutral-800 dark:text-neutral-200 tracking-tight leading-tight text-balance">
-					The most comprehensive authentication framework
+					The universal git telemetry and digital receipt generator
 				</h1>
 
 				{/* CTA Buttons */}
 				<div className="flex flex-wrap items-center gap-2 sm:gap-3 pt-4 sm:pt-5 pointer-events-auto">
 					<Link
-						href="/docs/installation"
+						href="/docs"
 						className="inline-flex items-center gap-1.5 px-4 sm:px-5 py-2 bg-neutral-900 text-neutral-100 dark:bg-neutral-100 dark:text-neutral-900 text-xs sm:text-sm font-medium hover:opacity-90 transition-colors"
 					>
 						Get Started
 					</Link>
 					<Link
-						href="https://dash.better-auth.com/sign-in"
+						href="/r/demo-cursor"
 						className="relative inline-flex items-center gap-1.5 px-4 sm:px-5 py-2 text-neutral-600 dark:text-neutral-300 text-xs sm:text-sm font-medium transition-colors group"
 					>
 						{/* Diagonal lines background */}
@@ -88,7 +88,7 @@ export function HeroTitle() {
 						<span className="absolute -bottom-[6px] -right-[6px] font-mono text-[8px] text-foreground/40 dark:text-foreground/50 leading-none select-none translate-x-1/2 translate-y-1/2">
 							+
 						</span>
-						<span className="relative">Sign In </span>
+						<span className="relative">View Receipt</span>
 					</Link>
 				</div>
 			</div>

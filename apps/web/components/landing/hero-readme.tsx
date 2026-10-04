@@ -23,34 +23,27 @@ import {
 import { TrustedBy } from "./trusted-by";
 
 const mcpCommands = [
-	{ name: "Cursor", command: "npx auth mcp --cursor" },
-	{ name: "Claude Code", command: "npx auth mcp --claude-code" },
-	{ name: "Open Code", command: "npx auth mcp --open-code" },
-	{ name: "Manual", command: "npx auth mcp --manual" },
+	{ name: "Cursor", command: "npx qodewk record-event --cursor" },
+	{ name: "Claude Code", command: "npx qodewk record-event --claude" },
+	{ name: "Open Code", command: "npx qodewk record-event --opencode" },
+	{ name: "Manual", command: "npx qodewk share" },
 ];
 
-const aiPromptText = `Set up authentication in my project using Better Auth (better-auth npm package).
+const aiPromptText = `Set up Qodewk in my project to track AI coding agent telemetry and generate digital receipts.
 
-1. Install better-auth. If I already have a database configured in this project, use that — don't set up a new one.
+1. Install Qodewk CLI and hook into your local Git repository:
+   npx qodewk hook install
 
-2. Create lib/auth.ts — call betterAuth() with:
-   - My existing database connection (or a new SQLite/Postgres setup if none exists)
-   - emailAndPassword enabled
-   - Any social providers if I have OAuth credentials in my env
+2. Verify attribution and telemetry extraction:
+   npx qodewk --dry-run
 
-3. Create lib/auth-client.ts — use the correct framework import:
-   - React/Next.js: "better-auth/react"
-   - Vue: "better-auth/vue"
-   - Svelte: "better-auth/svelte"
-   - Vanilla: "better-auth/client"
+3. Generate a local terminal thermal receipt:
+   npx qodewk
 
-4. Add the API route handler for my framework (e.g. app/api/auth/[...all]/route.ts for Next.js App Router).
+4. Publish a privacy-preserving receipt (zero code exfiltration):
+   npx qodewk share
 
-5. Add BETTER_AUTH_SECRET to my .env if it doesn't exist (generate a 32+ char secret).
-
-6. Run npx auth migrate to apply database migrations.
-
-Refer to better-auth.com/docs for exact API and plugin syntax.`;
+Refer to qodewk.dev/docs for rate cards, configuration, and CI workflows.`;
 
 function CredentialFields() {
 	const emailText = "user@email.com";
@@ -290,7 +283,7 @@ function InstallBlock() {
 													npx
 												</span>{" "}
 												<span className="text-neutral-700 dark:text-neutral-300">
-													skills add better-auth/skills
+													skills add qodewk
 												</span>
 											</>
 										) : (
@@ -299,7 +292,7 @@ function InstallBlock() {
 													npx
 												</span>{" "}
 												<span className="text-neutral-700 dark:text-neutral-300">
-													auth init
+													qodewk
 												</span>
 											</>
 										)}
@@ -308,7 +301,7 @@ function InstallBlock() {
 										{mode === "skills" ? (
 											<button
 												onClick={() =>
-													copy("npx skills add better-auth/skills")
+													copy("npx skills add qodewk")
 												}
 												className="text-neutral-400 dark:text-neutral-500 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors p-1"
 												aria-label="Copy command"
@@ -339,7 +332,7 @@ function InstallBlock() {
 											</button>
 										) : (
 											<button
-												onClick={() => copy("npx auth init")}
+												onClick={() => copy("npx qodewk")}
 												className="text-neutral-400 dark:text-neutral-500 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors p-1"
 												aria-label="Copy command"
 											>
@@ -380,7 +373,7 @@ function InstallBlock() {
 											npx
 										</span>{" "}
 										<span className="text-neutral-700 dark:text-neutral-300">
-											auth mcp
+											qodewk mcp
 										</span>
 									</code>
 									<div className="relative">
@@ -523,17 +516,16 @@ function InstallBlock() {
 							) : (
 								<div className="bg-neutral-100/50 dark:bg-[#050505] px-5 py-4">
 									<p className="text-[13px] font-medium text-neutral-700 dark:text-neutral-200 leading-relaxed">
-										Set up authentication in my project using Better Auth.
+										Set up git telemetry and receipt generation using Qodewk.
 									</p>
 									<div className="relative mt-1.5">
 										<p className="text-[11px] text-neutral-400 dark:text-neutral-500 leading-relaxed line-clamp-2">
-											Install better-auth. If I already have a database
-											configured, use that. Create lib/auth.ts with{" "}
+											Install Qodewk CLI. Hook into Git repo with{" "}
 											<code className="text-neutral-500 dark:text-neutral-400">
-												betterAuth()
+												qodewk hook install
 											</code>
-											, create auth-client.ts, add the route handler, run
-											migrations...
+											, harvest AI agent footprints, compute dual-engine costs,
+											and generate cryptographic thermal receipts...
 										</p>
 										<div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-neutral-100/50 dark:from-[#050505] to-transparent pointer-events-none" />
 									</div>
@@ -1003,7 +995,7 @@ function ReadmeFooter({ stats }: { stats: CommunityHeroStats }) {
 					)}
 					{stats.githubStars > 0 && (
 						<a
-							href="https://github.com/better-auth/better-auth"
+							href="https://github.com/qodewk/qodewk"
 							target="_blank"
 							rel="noopener noreferrer"
 						>
@@ -1032,13 +1024,13 @@ function ReadmeFooter({ stats }: { stats: CommunityHeroStats }) {
 
 				<div className="flex flex-wrap items-center justify-center gap-4 pt-1">
 					<Link
-						href="/docs/installation"
+						href="/docs"
 						className="inline-flex items-center gap-1.5 px-4 sm:px-5 py-2 bg-neutral-900 text-neutral-100 dark:bg-neutral-100 dark:text-neutral-900 text-xs sm:text-sm font-medium hover:opacity-90 transition-colors"
 					>
 						Get Started
 					</Link>
 					<Link
-						href="https://dash.better-auth.com/sign-in"
+						href="/r/demo-cursor"
 						className="relative inline-flex items-center gap-1.5 px-4 sm:px-5 py-2 text-neutral-600 dark:text-neutral-300 text-xs sm:text-sm font-medium transition-colors group"
 					>
 						<span
@@ -1060,7 +1052,7 @@ function ReadmeFooter({ stats }: { stats: CommunityHeroStats }) {
 						<span className="absolute -bottom-[6px] -right-[6px] font-mono text-[8px] text-foreground/40 dark:text-foreground/50 leading-none select-none translate-x-1/2 translate-y-1/2">
 							+
 						</span>
-						<span className="relative">Sign In </span>
+						<span className="relative">View Receipt</span>
 					</Link>
 				</div>
 			</div>
@@ -1174,16 +1166,16 @@ export function HeroReadMe({
 						</h1>
 
 						<p className="text-sm sm:text-[15px] text-foreground/80 mb-6 sm:mb-8 leading-relaxed">
-							Auth that lives{" "}
+							Telemetry that lives{" "}
 							<span className="font-medium text-foreground/90 dark:text-foreground/80">
-								inside your app
+								in your git graph
 							</span>
-							. Composable, plugin-based, and built to scale — powering from
-							weekend projects to the biggest{" "}
+							. Zero source code exfiltration, dual-engine cost estimation, and cryptographic receipts —
+							verifying code from weekend hacks to{" "}
 							<span className="font-medium text-foreground/90 dark:text-foreground/80">
-								consumer and enterprise apps
+								autonomous multi-agent swarms
 							</span>{" "}
-							on the planet.
+							in production.
 						</p>
 
 						<InstallBlock />
@@ -1207,68 +1199,68 @@ export function HeroReadMe({
 						<div className="relative grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 mb-2 border border-foreground/[0.08] overflow-hidden">
 							{[
 								{
-									label: "Framework Agnostic",
-									headline: "Works with your stack.",
-									desc: "Next.js, Nuxt, SvelteKit, Astro, Hono, and 20+ more.",
+									label: "Multi-Agent Telemetry",
+									headline: "Universal agent support.",
+									desc: "Claude Code, Cursor, Codex, Windsurf, Aider, and Antigravity.",
 									logos: true,
 									href: "/docs",
 								},
 								{
-									label: "Email & Password",
-									headline: "Built-in credential auth.",
-									desc: "Sessions, email verification, and password reset included.",
+									label: "Zero Code Exfiltration",
+									headline: "Privacy by construction.",
+									desc: "Raw source code and diffs never leave your local machine.",
 									credential: true,
 									href: "/docs",
 								},
 								{
-									label: "Social Sign-on",
-									headline: "Social sign-on.",
-									desc: "Google, GitHub, Apple, Discord, and more.",
+									label: "Git Native",
+									headline: "Hooks under 5ms.",
+									desc: "Detached background hooks without blocking your commit pipeline.",
 									social: true,
 									href: "/docs",
 								},
 								{
-									label: "Organizations",
-									headline: "Multi-tenancy built in.",
-									desc: "Teams, roles, invitations, and access control.",
+									label: "Cost Estimation",
+									headline: "Dual-engine pricing.",
+									desc: "Harvests provider sessions or falls back to AST-calibrated rates.",
 									org: true,
 									href: "/docs",
 								},
 								{
-									label: "Enterprise",
-									headline: "Enterprise ready.",
-									desc: "SSO, SAML 2.0, SCIM, and directory sync.",
+									label: "Cryptographic Proof",
+									headline: "Verifiable digital receipts.",
+									desc: "HMAC-SHA256 salted hashes linking commit, tokens, and author.",
 									enterprise: true,
 									href: "/docs",
 								},
 								{
-									label: "Plugins",
-									headline: "50+ and growing.",
-									desc: "Passkeys, magic links, API keys, JWTs, and more.",
+									label: "Thermal Receipts",
+									headline: "Terminal & web cards.",
+									desc: "Serrated-edge monospace thermal receipts and interactive cards.",
 									plugins: true,
 									href: "/docs",
 								},
 								{
-									label: "Agent Auth",
-									headline: "Auth for AI agents.",
-									desc: "MCP auth, token exchange, and agent delegation.",
+									label: "CI/CD & Sticky PRs",
+									headline: "GitHub Actions ready.",
+									desc: "Auto-sync sticky PR receipts with AI token and dollar breakdown.",
 									agent: true,
 									href: "/docs",
 								},
 								{
-									label: "Infrastructure",
-									headline: "Security & observability.",
-									desc: "Bot detection, IP blocking, and email validation.",
+									label: "Strict Rate Cards",
+									headline: "Multi-model rate registry.",
+									desc: "Versioned pricing for Claude 3.5, GPT-4o, o1, o3, DeepSeek, Gemini.",
 									security: true,
-									href: "/pricing",
+									href: "/docs",
 									managed: true,
 								},
 								{
-									label: "Dashboard",
-									headline: "User management.",
-									desc: "Manage users, sessions, and organizations.",
+									label: "Local First",
+									headline: "Local SQLite & Git Notes.",
+									desc: "Full terminal receipts without internet or cloud accounts.",
 									dashboard: true,
-									href: "/pricing",
+									href: "/docs",
 									managed: true,
 								},
 							].map((feature, i) => (
@@ -1842,12 +1834,12 @@ export function HeroReadMe({
 						<div className="my-4">
 							<div className="flex items-center gap-4">
 								<span className="text-lg font-medium text-foreground/90 dark:text-foreground/80 tracking-tight shrink-0">
-									Framework
+									Architecture
 								</span>
 								<div className="flex-1 border-t border-foreground/10"></div>
 							</div>
 							<p className="text-[15px] sm:text-base text-foreground/50 mt-1">
-								The most comprehensive authentication framework for TypeScript.
+								Universal telemetry and cryptographic proof for the AI coding agent era.
 							</p>
 						</div>
 
@@ -1918,13 +1910,13 @@ export function HeroReadMe({
 										<div className="hidden lg:flex flex-1 items-end p-4">
 											<p className="text-[13px] leading-relaxed text-foreground/60 dark:text-foreground/50">
 												{frameworkTab === "declarative" &&
-													"No dashboard clicks. Your auth lives in code — version controlled, type-safe, and reviewable in PRs."}
+													"Zero configuration drift. Telemetry logic and privacy boundaries live in version-controlled TypeScript code."}
 												{frameworkTab === "database" &&
-													"Use any database. Connect with a connection string or your favorite ORM. Your data stays yours."}
+													"Works offline with embedded SQLite or Git Notes (refs/notes/qodewk). Your telemetry never leaves your device."}
 												{frameworkTab === "oauth" &&
-													"40+ preconfigured providers. Add Google, GitHub, Apple, and more in seconds."}
+													"Universal session harvesting. Compatible with Claude Code, Cursor, Codex, Windsurf, Aider, and Antigravity."}
 												{frameworkTab === "integrations" &&
-													"Works with every major framework. First-class support for 20+ integrations."}
+													"Works with every CI/CD pipeline and Git platform. First-class support for GitHub Actions and Git hooks."}
 											</p>
 										</div>
 									</div>
@@ -1980,9 +1972,7 @@ export function HeroReadMe({
 									<div className="flex-1 border-t border-foreground/10" />
 								</div>
 								<p className="text-[15px] sm:text-base text-foreground/75 dark:text-foreground/65 leading-relaxed">
-									Connect to our infrastructure and power your self-hosted
-									Better Auth with a dashboard, audit logs, security detection,
-									enterprise features, and more.
+									Connect your repositories to Qodewk to visualize AI agent token burn, track cost trends across teams, and generate cryptographic receipts.
 								</p>
 							</div>
 
@@ -2004,11 +1994,11 @@ export function HeroReadMe({
 											<span className="size-2 rounded-full bg-foreground/10" />
 										</div>
 										<span className="text-[10px] font-mono text-foreground/30 ml-2">
-											dash.better-auth.com
+											qodewk.dev
 										</span>
 									</div>
 									<div className="flex items-center gap-3">
-										{["Overview", "Users", "Orgs", "Events"].map((tab, i) => (
+										{["Overview", "Tokens", "Receipts", "Audit"].map((tab, i) => (
 											<span
 												key={tab}
 												className={cn(
@@ -2030,30 +2020,30 @@ export function HeroReadMe({
 							<div className="relative z-10 grid grid-cols-1 sm:grid-cols-3 mt-4 -mx-px">
 								{[
 									{
-										title: "Dashboard",
+										title: "Receipts & Proof",
 										features: [
-											"User management",
-											"Session monitoring",
-											"Organization oversight",
-											"User analytics",
+											"Cryptographic signatures",
+											"HMAC-SHA256 salted hashes",
+											"Monospace thermal cards",
+											"Zero source exfiltration",
 										],
 									},
 									{
-										title: "Audit Logs",
+										title: "Token Telemetry",
 										features: [
-											"Auto-captured events",
-											"Filter & search",
-											"Configurable retention",
-											"Log drain to SIEM",
+											"Provider session harvesting",
+											"Cache hit/read breakdown",
+											"Dual-engine cost fallback",
+											"AST complexity scoring",
 										],
 									},
 									{
-										title: "Enterprise",
+										title: "Agent Attribution",
 										features: [
-											"Self-service SSO",
-											"SCIM provisioning",
-											"Directory sync",
-											"RBAC",
+											"Claude Code & Cursor support",
+											"Codex & Windsurf attribution",
+											"Aider & Antigravity sessions",
+											"Sticky PR bot comments",
 										],
 									},
 								].map((group) => (
@@ -2252,25 +2242,25 @@ export function HeroReadMe({
 												<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" />
 											</svg>
 											<h4 className="text-[11px] sm:text-xs font-mono font-semibold uppercase tracking-widest text-foreground/90 dark:text-foreground/75">
-												Sentinel
+												Privacy Sentinel
 											</h4>
 										</div>
 										<p className="text-[13px] sm:text-[14px] text-foreground/60 dark:text-foreground/50 leading-relaxed">
-											Real-time threat detection before it reaches your users.
+											Zero source code exfiltration guaranteed by cryptographic boundaries.
 										</p>
 									</div>
 									<div className="flex-1 flex flex-wrap gap-1.5">
 										{[
-											"Bot Detection",
-											"Brute Force",
-											"Breached Passwords",
-											"Impossible Travel",
-											"Rate Limiting",
-											"Geo Blocking",
-											"Suspicious IPs",
-											"Disposable Emails",
-											"Email Abuse",
-											"Free Trial Abuse",
+											"Zero Exfiltration",
+											"Local Processing",
+											"HMAC-SHA256",
+											"Salted Hashes",
+											"50KB Payload Cap",
+											"Metadata Only",
+											"Non-blocking Hooks",
+											"Offline First",
+											"AST Heuristics",
+											"Audit Trails",
 										].map((tag) => (
 											<span
 												key={tag}
@@ -2287,18 +2277,17 @@ export function HeroReadMe({
 							<div className="relative z-10 flex items-center justify-between mt-4 px-6 py-5 border border-dashed border-foreground/[0.08] bg-foreground/[0.01]">
 								<div className="flex flex-col gap-0.5">
 									<span className="text-[13px] sm:text-[14px] font-medium text-foreground/90 dark:text-foreground/85">
-										Explore plans
+										Universal Telemetry Engine
 									</span>
 									<span className="text-[11px] sm:text-[12px] text-foreground/75 dark:text-foreground/60">
-										Dashboard, audit logs, security detection, transactional
-										comms, and more.
+										Digital receipts, multi-agent attribution, rate cards, and GitHub Action bot comments.
 									</span>
 								</div>
 								<Link
-									href="/pricing"
+									href="/docs"
 									className="inline-flex items-center gap-1.5 shrink-0 ml-4 px-4 py-2.5 bg-foreground text-background hover:opacity-90 transition-all font-mono text-[11px] uppercase tracking-widest group"
 								>
-									View Plans
+									View Docs
 									<svg
 										className="h-2.5 w-2.5 opacity-70 group-hover:translate-x-0.5 transition-transform"
 										viewBox="0 0 10 10"

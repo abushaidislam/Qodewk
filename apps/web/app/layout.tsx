@@ -11,10 +11,11 @@ import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = createMetadata({
 	title: {
-		template: "%s | Better Auth",
-		default: "Better Auth",
+		template: "%s | Qodewk",
+		default: "Qodewk — Universal Git Telemetry & Digital Receipts",
 	},
-	description: "The Most Comprehensive Authentication Framework",
+	description:
+		"Universal Git telemetry and digital receipt generator for the AI coding agent era",
 });
 
 export default function RootLayout({ children }: { children: ReactNode }) {

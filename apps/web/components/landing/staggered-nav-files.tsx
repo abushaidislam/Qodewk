@@ -231,11 +231,11 @@ const VerticalLinesPattern: React.FC<{ className?: string }> = ({
 
 const products: ProductItem[] = [
 	{
-		title: "Framework",
+		title: "Protocol & Engine",
 		tagline: "Open source",
 		description:
-			"The TypeScript auth library. Plugins, adapters, and 20+ social providers.",
-		href: "/docs/introduction",
+			"Universal Git telemetry engine, dual-engine pricing, and monospace thermal receipt generation.",
+		href: "/docs",
 		activatesTab: false,
 		Icon: FrameworkLogoIcon,
 		Pattern: VerticalLinesPattern,
@@ -243,11 +243,11 @@ const products: ProductItem[] = [
 			"absolute inset-0 w-full h-full text-primary/10 pointer-events-none [mask-image:linear-gradient(to_left,black_0%,transparent_40%)]",
 	},
 	{
-		title: "Infrastructure",
-		tagline: "Hosted platform",
+		title: "Receipt Viewer",
+		tagline: "Cryptographic proof",
 		description:
-			"Dashboard, audit logs, security detection, SSO, and abuse protection.",
-		href: "/pricing",
+			"Public receipts, HMAC-SHA256 salted verification, and zero code exfiltration.",
+		href: "/r/demo-cursor",
 		activatesTab: true,
 		Icon: InfraLogoIcon,
 		Pattern: VerticalLinesPattern,
