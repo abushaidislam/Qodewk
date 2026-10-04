@@ -68,11 +68,109 @@ function getContent(content: string) {
 	return newContext.join("\n");
 }
 
+const FALLBACK_RELEASES: GitHubRelease[] = [
+	{
+		id: 91,
+		tag_name: "v0.9.1",
+		name: "v0.9.1 — Remote Pricing Registry & Dynamic Env Resolution",
+		published_at: "2026-10-03T18:00:00Z",
+		prerelease: false,
+		html_url: "https://github.com/abushaidislam/Qodewk/releases/tag/v0.9.1",
+		body: `### 🚀 Added
+- **Remote Rate-Card Registry:** \`syncDynamicPricing\` fetches versioned multi-model rate cards dynamically.
+- **Dynamic Pricing Validation:** \`sanitizeRateCards\` and \`resetPricingRegistry\` in \`@qodewk/pricing\` validate pricing bounds before use.
+- **Extended Model Aliases:** Added alias mappings for Gemini 3.x ids and Sonnet/Haiku generation fallbacks.
+- **Zero-Dependency Env Loader:** \`loadQodewkEnv\`, \`resolveAppUrl\`, and \`resolveApiUrl\` automatically discover \`.env\`, \`.env.local\`, and \`~/.qodewk/config.env\`.
+
+### 🛡️ Fixed & Changed
+- Labeled Cursor line-count footprints as \`estimated\` (confidence 0.55).
+- Normalized Antigravity model detection to prevent fallback mismatches.`,
+	},
+	{
+		id: 90,
+		tag_name: "v0.9.0",
+		name: "v0.9.0 — Dynamic Pricing & Strict Session Attribution",
+		published_at: "2026-10-02T20:00:00Z",
+		prerelease: false,
+		html_url: "https://github.com/abushaidislam/Qodewk/releases/tag/v0.9.0",
+		body: `### 🚀 Added
+- **Dynamic Pricing Registry (Offline-first Edge-compatible):** 24-hour TTL file-system caching mechanism in \`@qodewk/core\`.
+- **Airplane Mode Support:** Silent fallback ensures sub-100ms CLI execution when offline.
+- **Session Scoping & Penalty Filters:** Strict attribution filters (\`score >= 0.10\`) in \`harvester/index.ts\` eliminate cross-session inflation.
+
+### 🛡️ Fixed & Changed
+- Fixed Antigravity tool parameter regex parser bug.
+- Renamed \`AI Written Code\` CLI label to \`AI Touched Files\` for clarity.`,
+	},
+	{
+		id: 80,
+		tag_name: "v0.8.0",
+		name: "v0.8.0 — Clack/Skills Terminal Menu & Git Notes Management",
+		published_at: "2026-10-02T16:00:00Z",
+		prerelease: false,
+		html_url: "https://github.com/abushaidislam/Qodewk/releases/tag/v0.8.0",
+		body: `### 🚀 Added
+- **Modern Clack / Skills CLI Terminal Menu:** Redesigned interactive TUI menu with multi-tier vertical guides, status diamonds, and ANSI shadow banner.
+- **Default Bare Command Interactive Launch:** Bare \`qodewk\` launches the Telemetry Control Panel in interactive TTY sessions.
+- **Full Git Notes Management:** Interactive listing, inspection, and attaching of \`refs/notes/qodewk\` telemetry records.`,
+	},
+	{
+		id: 70,
+		tag_name: "v0.7.0",
+		name: "v0.7.0 — GitHub Marketplace Action & Seeded Demo Receipts",
+		published_at: "2026-10-02T12:00:00Z",
+		prerelease: false,
+		html_url: "https://github.com/abushaidislam/Qodewk/releases/tag/v0.7.0",
+		body: `### 🚀 Added
+- **GitHub Marketplace Action Listing:** Official composite GitHub Action workflow with sticky PR comments and digital thermal receipts.
+- **Proof-of-Shipment Seeded Receipts:** Realistic interactive demo receipts for Cursor, Claude Code, Google Antigravity, and Aider.
+- **Canonical API Endpoints:** Standardized \`QODEWK_API_URL\` overrides and edge verification.`,
+	},
+	{
+		id: 60,
+		tag_name: "v0.6.0",
+		name: "v0.6.0 — Production Reliability & Storage Guard",
+		published_at: "2026-10-02T08:00:00Z",
+		prerelease: false,
+		html_url: "https://github.com/abushaidislam/Qodewk/releases/tag/v0.6.0",
+		body: `### 🚀 Added
+- **Serverless Persistence Guard:** Strict validation for durable PostgreSQL/Supabase storage in production.
+- **Sliding-Window Rate Limiter:** Edge-compatible token bucket abuse controls on \`/api/receipts\`.
+- **Git Notes Engine:** Offline ledger storage under \`refs/notes/qodewk\` (\`qodewk notes show\`, \`qodewk notes write\`).
+- **Privacy Regression Suite:** Strict zero-exfiltration tests verifying source code never enters receipts.`,
+	},
+	{
+		id: 50,
+		tag_name: "v0.5.0",
+		name: "v0.5.0 — Universal Tier A Harvesters",
+		published_at: "2026-10-02T04:00:00Z",
+		prerelease: false,
+		html_url: "https://github.com/abushaidislam/Qodewk/releases/tag/v0.5.0",
+		body: `### 🚀 Added
+- **Aider Harvester:** Markdown history parser (\`.aider.chat.history.md\`) extracting auto-committed Git hashes and tokens.
+- **Windsurf (Cascade) Harvester:** Local SQLite workspace reader (\`state.vscdb\`) parsing chat sessions.
+- **Git Commit Trailers:** Structured parser for \`Co-authored-by\` trailers.
+- **Model Rate Cards:** Alias mappings for Anthropic Claude, OpenAI, Google Gemini, and DeepSeek.`,
+	},
+	{
+		id: 10,
+		tag_name: "v0.1.0",
+		name: "v0.1.0 — Initial Open Source Release",
+		published_at: "2026-09-27T00:00:00Z",
+		prerelease: false,
+		html_url: "https://github.com/abushaidislam/Qodewk/releases/tag/v0.1.0",
+		body: `### 🚀 Added
+- **Initial Open Source Release:** Universal Git telemetry engine and digital receipt generator.
+- **Next.js Web Application:** Monospace thermal receipt cards with serrated cut edges and dynamic OG image generation.
+- **Terminal CLI:** Bare \`qodewk\` command, \`--json\` schema export, and \`qodewk share\` workflow.`,
+	},
+];
+
 export default async function ChangelogPage() {
 	let releases: GitHubRelease[] = [];
 	try {
 		const res = await fetch(
-			"https://api.github.com/repos/better-auth/better-auth/releases",
+			"https://api.github.com/repos/abushaidislam/Qodewk/releases",
 			{
 				next: { revalidate: 3600 },
 				headers: {
@@ -85,11 +183,13 @@ export default async function ChangelogPage() {
 		);
 		if (res.ok) {
 			releases = await res.json();
-		} else {
-			console.error(`Changelog fetch failed: ${res.status}`);
 		}
-	} catch (e) {
-		console.error("Changelog fetch failed:", e);
+	} catch {
+		// Fallback to static releases on error or rate-limit
+	}
+
+	if (!releases || releases.length === 0) {
+		releases = FALLBACK_RELEASES;
 	}
 
 	const EXPANDABLE_LINE_THRESHOLD = 15;
@@ -145,7 +245,7 @@ export default async function ChangelogPage() {
 							All changes, fixes, and updates
 						</h1>
 						<p className="text-sm text-foreground/70 dark:text-foreground/50 leading-relaxed max-w-[240px]">
-							Every release shipped to Better Auth, straight from GitHub.
+							Every release shipped to Qodewk, straight from GitHub.
 						</p>
 					</div>
 
@@ -162,7 +262,7 @@ export default async function ChangelogPage() {
 
 					<div className="flex items-center gap-3 pt-4">
 						<Link
-							href="https://github.com/better-auth/better-auth/releases"
+							href="https://github.com/abushaidislam/Qodewk/releases"
 							target="_blank"
 							rel="noopener noreferrer"
 							className="inline-flex items-center gap-1.5 text-[12px] text-foreground/70 dark:text-foreground/50 hover:text-foreground/80 font-mono uppercase tracking-wider transition-colors"
@@ -209,7 +309,7 @@ export default async function ChangelogPage() {
 							All changes, fixes, and updates
 						</h1>
 						<p className="text-sm text-foreground/70 dark:text-foreground/50 leading-relaxed">
-							Every release shipped to Better Auth, straight from GitHub.
+							Every release shipped to Qodewk, straight from GitHub.
 						</p>
 					</div>
 				</div>
@@ -233,5 +333,5 @@ export default async function ChangelogPage() {
 
 export const metadata = createMetadata({
 	title: "Changelog",
-	description: "Latest changes, fixes, and updates to Better Auth",
+	description: "Latest changes, fixes, and updates to Qodewk",
 });
