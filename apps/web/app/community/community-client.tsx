@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import Footer from "@/components/landing/footer";
 import { HalftoneBackground } from "@/components/landing/halftone-bg";
 import { SignatureMark } from "@/components/landing/signature-mark";
+import { Badge } from "@/components/ui/badge";
 import type { CommunityStats } from "@/lib/community-stats";
 
 // Icons - using text-foreground for theme support
@@ -169,38 +170,52 @@ function AnimatedCounter({
 }
 
 // Community platforms
-const platforms = [
+interface CommunityPlatform {
+	name: string;
+	icon: React.ComponentType<{ className?: string }>;
+	href: string;
+	cta: string;
+	members: string;
+	label: string;
+	status: "active" | "coming_soon";
+}
+
+const platforms: CommunityPlatform[] = [
+	{
+		name: "GitHub Discussions",
+		icon: GitHubIcon,
+		href: "https://github.com/abushaidislam/Qodewk/discussions",
+		cta: "Join Discussions",
+		members: "Active",
+		label: "community",
+		status: "active",
+	},
 	{
 		name: "Discord",
 		icon: DiscordIcon,
-		href: "https://discord.gg/better-auth",
-		cta: "Join Discord",
-		members: "10,000+",
-		label: "members",
-	},
-	{
-		name: "GitHub",
-		icon: GitHubIcon,
-		href: "https://github.com/better-auth/better-auth",
-		cta: "View on GitHub",
-		members: "Open Source",
-		label: "repository",
-	},
-	{
-		name: "Reddit",
-		icon: RedditIcon,
-		href: "https://reddit.com/r/better_auth",
-		cta: "Join Subreddit",
-		members: "1.2K+",
-		label: "members",
+		href: "#",
+		cta: "Coming Soon",
+		members: "Launching soon",
+		label: "server",
+		status: "coming_soon",
 	},
 	{
 		name: "X (Twitter)",
 		icon: XIcon,
-		href: "https://x.com/better_auth",
-		cta: "Follow on X",
-		members: "@better_auth",
-		label: "handle",
+		href: "#",
+		cta: "Coming Soon",
+		members: "Launching soon",
+		label: "updates",
+		status: "coming_soon",
+	},
+	{
+		name: "Reddit",
+		icon: RedditIcon,
+		href: "#",
+		cta: "Coming Soon",
+		members: "Launching soon",
+		label: "community",
+		status: "coming_soon",
 	},
 ];
 
@@ -224,7 +239,7 @@ function CommunityHero({ stats }: { stats: CommunityStats }) {
 						<span className="text-foreground/50">build together.</span>
 					</h1>
 					<p className="text-sm text-foreground/70 dark:text-foreground/50 leading-relaxed max-w-[260px]">
-						Connect with developers building with Better Auth.
+						Connect with developers building with Qodewk.
 					</p>
 				</div>
 
@@ -251,10 +266,10 @@ function CommunityHero({ stats }: { stats: CommunityStats }) {
 					</div>
 					<div className="flex-1 px-3 py-2.5 text-center">
 						<p className="text-[9px] font-mono uppercase tracking-widest text-foreground/50 dark:text-foreground/45 mb-1">
-							Discord
+							Community
 						</p>
 						<p className="text-sm font-light text-foreground/80 tabular-nums">
-							{formatNumber(stats.discordMembers)}
+							Open
 						</p>
 					</div>
 				</div>
@@ -262,9 +277,9 @@ function CommunityHero({ stats }: { stats: CommunityStats }) {
 				{/* Principles list */}
 				<div className="border-t border-foreground/10 pt-4 space-y-0">
 					{[
-						{ label: "Framework", value: "Open source" },
+						{ label: "Architecture", value: "Open Source" },
 						{ label: "Contributors", value: `${stats.contributors}+` },
-						{ label: "License", value: "MIT" },
+						{ label: "Privacy", value: "Zero Exfiltration" },
 					].map((item, i) => (
 						<motion.div
 							key={item.label}
@@ -335,10 +350,11 @@ function PlatformCard({
 	platform,
 	index,
 }: {
-	platform: (typeof platforms)[number];
+	platform: CommunityPlatform;
 	index: number;
 }) {
 	const Icon = platform.icon;
+	const isComingSoon = platform.status === "coming_soon";
 
 	return (
 		<motion.div
@@ -350,12 +366,22 @@ function PlatformCard({
 			<div className="flex flex-col h-full p-5">
 				{/* Header */}
 				<div className="flex flex-col items-center gap-2 mb-3">
-					<div className="bg-muted/20 border border-foreground/[0.06] p-2 rounded-full">
+					<div className="relative bg-muted/20 border border-foreground/[0.06] p-2 rounded-full">
 						<Icon className="size-8 text-foreground/50" />
 					</div>
-					<h3 className="text-base font-mono uppercase tracking-widest text-foreground/40">
-						{platform.name}
-					</h3>
+					<div className="flex items-center gap-2">
+						<h3 className="text-base font-mono uppercase tracking-widest text-foreground/70">
+							{platform.name}
+						</h3>
+						{isComingSoon && (
+							<Badge
+								variant="outline"
+								className="rounded-none border-dashed border-foreground/30 px-1.5 py-0 text-[9px] font-mono uppercase tracking-wider text-foreground/60"
+							>
+								Coming Soon
+							</Badge>
+						)}
+					</div>
 				</div>
 
 				{/* Stats */}
@@ -371,18 +397,26 @@ function PlatformCard({
 				</div>
 
 				{/* CTA */}
-				<Link
-					href={platform.href}
-					target="_blank"
-					rel="noreferrer"
-					className="block"
-				>
-					<div className="w-full py-2.5 text-center border flex items-center justify-center border-dashed border-foreground/20 text-foreground/70 hover:text-foreground/90 hover:border-foreground/30 hover:bg-foreground/5 transition-all cursor-pointer">
+				{isComingSoon ? (
+					<div className="w-full py-2.5 text-center border flex items-center justify-center border-dashed border-foreground/15 text-foreground/40 bg-foreground/[0.01] cursor-not-allowed select-none">
 						<span className="font-mono text-[10px] uppercase tracking-widest">
 							{platform.cta}
 						</span>
 					</div>
-				</Link>
+				) : (
+					<Link
+						href={platform.href}
+						target="_blank"
+						rel="noreferrer"
+						className="block"
+					>
+						<div className="w-full py-2.5 text-center border flex items-center justify-center border-dashed border-foreground/20 text-foreground/70 hover:text-foreground/90 hover:border-foreground/30 hover:bg-foreground/5 transition-all cursor-pointer">
+							<span className="font-mono text-[10px] uppercase tracking-widest">
+								{platform.cta}
+							</span>
+						</div>
+					</Link>
+				)}
 			</div>
 		</motion.div>
 	);
@@ -423,7 +457,7 @@ export function CommunityPageClient({ stats }: { stats: CommunityStats }) {
 										<span className="text-foreground/50">build together.</span>
 									</h1>
 									<p className="text-sm text-foreground/70 dark:text-foreground/50 leading-relaxed">
-										Connect with developers building with Better Auth.
+										Connect with developers building with Qodewk.
 									</p>
 								</div>
 							</div>
@@ -462,14 +496,14 @@ export function CommunityPageClient({ stats }: { stats: CommunityStats }) {
 										icon={UsersIcon}
 										label="Contributors"
 										value={stats.contributors}
-										subtext="people"
+										subtext="engineers"
 										index={2}
 									/>
 									<StatCard
-										icon={DiscordIcon}
-										label="Discord Members"
-										value={stats.discordMembers}
-										subtext="members"
+										icon={GitHubIcon}
+										label="Discussions"
+										value={stats.githubStars}
+										subtext="active repo"
 										index={3}
 									/>
 								</div>
@@ -496,36 +530,22 @@ export function CommunityPageClient({ stats }: { stats: CommunityStats }) {
 								</div>
 							</motion.div>
 
-							{/* Merch */}
+							{/* GitHub Repo Banner */}
 							<motion.div
 								initial={false}
 								animate={{ opacity: 1, y: 0 }}
 								transition={{ duration: 0.3, delay: 0.35 }}
 							>
 								<Link
-									href="https://better-merch.dev"
+									href="https://github.com/abushaidislam/Qodewk"
 									target="_blank"
 									rel="noreferrer"
 									className="flex items-center justify-between w-full px-5 py-4 border border-dashed border-foreground/20 hover:border-foreground/30 hover:bg-foreground/5 transition-all group"
 								>
 									<div className="flex items-center gap-2.5">
-										<svg
-											width="16"
-											height="16"
-											viewBox="0 0 24 24"
-											fill="none"
-											stroke="currentColor"
-											strokeWidth="1.5"
-											strokeLinecap="round"
-											strokeLinejoin="round"
-											className="text-foreground/40 group-hover:text-foreground/60 transition-colors"
-										>
-											<path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
-											<line x1="3" y1="6" x2="21" y2="6" />
-											<path d="M16 10a4 4 0 0 1-8 0" />
-										</svg>
-										<span className="text-xs font-mono uppercase tracking-widest text-foreground/50 group-hover:text-foreground/70 transition-colors">
-											Shop our merch collection
+										<GitHubIcon className="size-4 text-foreground/50 group-hover:text-foreground/80 transition-colors" />
+										<span className="text-xs font-mono uppercase tracking-widest text-foreground/60 group-hover:text-foreground/80 transition-colors">
+											Explore Qodewk on GitHub
 										</span>
 									</div>
 									<svg

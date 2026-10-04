@@ -19,26 +19,24 @@ export function getContributors(): ContributorInfo[] {
 	return staticContributors as ContributorInfo[];
 }
 
-const staticContributorsCount = staticContributors.length;
+const staticContributorsCount = staticContributors.length || 8;
 
 // Fetch NPM download stats for the last week
 async function fetchNpmDownloads(): Promise<number> {
 	try {
 		const response = await fetch(
-			"https://api.npmjs.org/downloads/point/last-week/better-auth",
-			{ next: { revalidate: 3600 } }, // Cache for 1 hour
+			"https://api.npmjs.org/downloads/point/last-week/qodewk",
+			{ next: { revalidate: 3600 } },
 		);
 
 		if (!response.ok) {
-			console.error("Failed to fetch NPM downloads:", response.status);
-			return 2_000_000; // Fallback value
+			return 14500; // Fallback value
 		}
 
 		const data = await response.json();
-		return data.downloads || 2_000_000;
-	} catch (error) {
-		console.error("Error fetching NPM downloads:", error);
-		return 2_000_000; // Fallback value
+		return data.downloads || 14500;
+	} catch {
+		return 14500;
 	}
 }
 
@@ -50,13 +48,13 @@ async function fetchNpmWeeklyHistory(): Promise<number[]> {
 		start.setMonth(start.getMonth() - 6);
 		const fmt = (d: Date) => d.toISOString().slice(0, 10);
 		const response = await fetch(
-			`https://api.npmjs.org/downloads/range/${fmt(start)}:${fmt(end)}/better-auth`,
+			`https://api.npmjs.org/downloads/range/${fmt(start)}:${fmt(end)}/qodewk`,
 			{ next: { revalidate: 3600 } },
 		);
 		if (!response.ok) return [];
 		const data = await response.json();
 		const downloads: { day: string; downloads: number }[] = data.downloads;
-		// Aggregate daily into weekly buckets
+		if (!downloads || downloads.length === 0) return [];
 		const weeks: number[] = [];
 		for (let i = 0; i < downloads.length; i += 7) {
 			const week = downloads.slice(i, i + 7);
@@ -83,12 +81,12 @@ async function fetchGitHubStats(): Promise<{
 }> {
 	try {
 		const [repoResponse, contributorsResponse] = await Promise.all([
-			fetch("https://api.github.com/repos/better-auth/better-auth", {
+			fetch("https://api.github.com/repos/abushaidislam/Qodewk", {
 				next: { revalidate: 3600 },
 				headers: githubHeaders,
 			}),
 			fetch(
-				"https://api.github.com/repos/better-auth/better-auth/contributors?per_page=1&anon=true",
+				"https://api.github.com/repos/abushaidislam/Qodewk/contributors?per_page=1&anon=true",
 				{
 					next: { revalidate: 3600 },
 					headers: githubHeaders,
@@ -96,12 +94,10 @@ async function fetchGitHubStats(): Promise<{
 			),
 		]);
 
-		let stars = 26000;
+		let stars = 128;
 		if (repoResponse.ok) {
 			const data = await repoResponse.json();
-			stars = data.stargazers_count || 26000;
-		} else {
-			console.error("Failed to fetch GitHub repo stats:", repoResponse.status);
+			stars = data.stargazers_count || 128;
 		}
 
 		let contributorsCount = staticContributorsCount;
@@ -113,17 +109,11 @@ async function fetchGitHubStats(): Promise<{
 					contributorsCount = parseInt(match[1], 10);
 				}
 			}
-		} else {
-			console.error(
-				"Failed to fetch contributors:",
-				contributorsResponse.status,
-			);
 		}
 
 		return { stars, contributors: contributorsCount };
-	} catch (error) {
-		console.error("Error fetching GitHub stats:", error);
-		return { stars: 26000, contributors: staticContributorsCount };
+	} catch {
+		return { stars: 128, contributors: staticContributorsCount };
 	}
 }
 
@@ -141,12 +131,12 @@ export const getCommunityStats = unstable_cache(
 			npmWeeklyHistory,
 			githubStars: githubStats.stars,
 			contributors: githubStats.contributors,
-			discordMembers: 10000, // Discord API requires bot token, using static value
+			discordMembers: 0,
 		};
 	},
 	["community-stats"],
 	{
-		revalidate: 3600, // Revalidate every hour
+		revalidate: 3600,
 		tags: ["community-stats"],
 	},
 );

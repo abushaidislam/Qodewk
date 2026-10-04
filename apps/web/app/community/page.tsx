@@ -6,7 +6,7 @@ import { CommunityPageClient } from "./community-client";
 export const metadata: Metadata = createMetadata({
 	title: "Community",
 	description:
-		"Join the Better Auth community — contributors, Discord members, and ecosystem stats.",
+		"Join the Qodewk community — contributors, Git telemetry discussions, and open-source ecosystem stats.",
 });
 
 export const revalidate = 21600; // Revalidate every 6 hours
