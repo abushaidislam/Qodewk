@@ -21,22 +21,22 @@ export default function PricingLayout({
 							<div className="space-y-6">
 								<div className="space-y-2">
 									<h1 className="text-2xl md:text-3xl xl:text-4xl text-neutral-800 dark:text-neutral-200 tracking-tight leading-tight">
-										<span className="underline underline-offset-4 decoration-foreground/40">
-											Infrastructure
+										<span className="underline underline-offset-4 decoration-foreground/40 font-serif">
+											Telemetry & Pricing
 										</span>
 									</h1>
 									<p className="text-sm text-foreground/70 dark:text-foreground/50 leading-relaxed max-w-[260px]">
-										Connect to our infrastructure and power your self-hosted
-										Better Auth with a dashboard, audit logs, security, and
-										more.
+										Qodewk CLI, local Git telemetry, and cryptographic digital receipts are 100% free and open-source. For engineering organizations requiring air-gapped VPC ingestion, team token aggregation, and compliance receipts, explore our enterprise offerings.
 									</p>
 								</div>
 
 								<div className="border-t border-foreground/10 pt-4 space-y-0">
 									{[
-										{ label: "Starter", value: "Free" },
-										{ label: "Pro", value: "$20/month" },
-										{ label: "Enterprise", value: "Custom" },
+										{ label: "Open Source", value: "$0 Forever" },
+										{ label: "Team Sync", value: "$20/month" },
+										{ label: "Enterprise", value: "Custom / VPC" },
+										{ label: "Source Privacy", value: "0 Code Upload" },
+										{ label: "Verification", value: "HMAC-SHA256" },
 									].map((item) => (
 										<div
 											key={item.label}
@@ -63,14 +63,12 @@ export default function PricingLayout({
 								<HalftoneBackground />
 								<div className="relative space-y-2 py-16">
 									<h1 className="text-2xl md:text-3xl xl:text-4xl text-neutral-800 dark:text-neutral-200 tracking-tight leading-tight">
-										<span className="underline underline-offset-4 decoration-foreground/40">
-											Infrastructure
+										<span className="underline underline-offset-4 decoration-foreground/40 font-serif">
+											Telemetry & Pricing
 										</span>
 									</h1>
 									<p className="text-sm text-foreground/70 dark:text-foreground/50 leading-relaxed">
-										Connect to our infrastructure and power your self-hosted
-										Better Auth with a dashboard, audit logs, security, and
-										more.
+										Qodewk CLI, local Git telemetry, and cryptographic digital receipts are 100% free and open-source. For engineering organizations requiring air-gapped VPC ingestion, team token aggregation, and compliance receipts, explore our enterprise offerings.
 									</p>
 								</div>
 							</div>

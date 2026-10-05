@@ -3,9 +3,9 @@ import { createMetadata } from "@/lib/metadata";
 import { PricingContent } from "./_components/pricing-content";
 
 export const metadata: Metadata = createMetadata({
-	title: "Pricing — Better Auth",
+	title: "Pricing — Qodewk",
 	description:
-		"Better Auth pricing — free and open-source framework with optional managed infrastructure for dashboard, audit logs, security detection, and more.",
+		"Qodewk pricing — free and open-source universal Git telemetry engine with optional team sync, air-gapped enterprise VPC self-hosting, and live multi-model rate cards.",
 });
 
 export default function PricingPage() {

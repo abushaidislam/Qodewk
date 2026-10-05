@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [0.9.1] — 2026-10-03
 
 ### 🚀 Added
+- **Dedicated Model Rate Cards Page (`/rate-cards`):**
+  - Standalone developer tool showcasing multi-model rate cards from `@qodewk/pricing` for Claude, OpenAI, Gemini, and DeepSeek.
+  - Interactive Commit Diff Token Cost Simulator with live calculation for input, output, and prompt cached tokens.
+  - Programmatic TypeScript SDK integration examples and provider filter tabs.
+  - Added "Rate Cards" item with CPU icon into the top navigation Resources menu.
+- **Revamped Pricing Page (`/pricing`):**
+  - Rebranded pricing tiers for Qodewk: Open Source ($0 / free forever), Team Sync ($20 / month), and Enterprise (Custom / air-gapped VPC).
+  - Added comprehensive capability matrix comparing telemetry engine, team governance, security, and support.
+  - Integrated dedicated Pricing FAQ accordion clarifying free open-source status, external LLM billing separation, and zero code exfiltration guarantees.
 - `registry/pricing.json`: the remote rate-card registry that `syncDynamicPricing` fetches (generated from the built-in `RATE_CARDS` / `MODEL_ALIASES`).
 - `sanitizeRateCards` and `resetPricingRegistry` in `@qodewk/pricing`; remote registry entries are validated (finite, non-negative, bounded prices) before use.
 - Aliases for Gemini 3.x ids and family fallbacks for any Sonnet generation and Haiku.

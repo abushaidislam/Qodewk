@@ -1,9 +1,19 @@
 "use client";
 
+import { Fragment, useState } from "react";
 import { motion } from "framer-motion";
 import type { LucideIcon } from "lucide-react";
-import { Check, Gauge, Headset, Info, Layers2, Minus } from "lucide-react";
-import { Fragment, useState } from "react";
+import {
+	Check,
+	Gauge,
+	Headset,
+	Info,
+	Layers2,
+	Minus,
+	ShieldCheck,
+	HelpCircle,
+	ArrowRight,
+} from "lucide-react";
 import {
 	Select,
 	SelectContent,
@@ -17,11 +27,13 @@ import {
 	TooltipProvider,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+	Accordion,
+	AccordionContent,
+	AccordionItem,
+	AccordionTrigger,
+} from "@/components/ui/accordion";
 import { cn } from "@/lib/utils";
-
-const proCheckoutHref = `https://dash.better-auth.com/sign-in?callbackUrl=${encodeURIComponent(
-	"/?redirectTo=/settings/billing",
-)}`;
 
 type Tier = {
 	name: string;
@@ -35,40 +47,45 @@ type Tier = {
 
 const tiers: readonly Tier[] = [
 	{
-		name: "Starter",
+		name: "Open Source",
 		price: "$0",
-		priceUnit: "/ month",
-		tagline: "For evaluation and side projects.",
+		priceUnit: "/ forever",
+		tagline: "For individual developers and open-source contributors.",
 		features: [
-			"1 dashboard seat",
-			["10,000 audit logs / month", "1 day retention"],
-			"1,000 security detections / month",
-			"Community support",
+			"Universal CLI (qodewk / npx qodewk)",
+			"Local Git telemetry & SQLite (~/.qodewk)",
+			"Git Notes commit records (refs/notes/qodewk)",
+			["Monospace thermal receipts", "Box-drawing ANSI terminal output"],
+			["Deterministic agent harvesters", "Claude, Cursor, Copilot, Cline"],
+			["Dual-engine cost calculation", "Transcript + AST diff fallback"],
+			"Salted HMAC-SHA256 public receipts",
+			"Zero source code exfiltration guarantee",
+			"Community support via GitHub",
 		],
 		cta: {
-			label: "Get Started",
-			href: "https://dash.better-auth.com/sign-in",
+			label: "Install CLI",
+			href: "/docs",
 		},
 		highlighted: false,
 	},
 	{
-		name: "Pro",
+		name: "Team Sync",
 		price: "$20",
 		priceUnit: "/ month",
-		tagline: "For production teams running auth in the critical path.",
+		tagline: "For engineering teams tracking agent token spend across repositories.",
 		features: [
-			"Unlimited seats",
-			["20,000 audit logs / month", "then $0.0001 per event"],
-			["10,000 security detections / month", "then $0.001 per event"],
-			["Self-service SSO", "1 connection, then $50/month per connection"],
-			["Directory Sync", "1 connection, then $50/month per connection"],
-			["Transactional email & SMS", "$0.001 per email, $0.09 per SMS"],
-			"Email templates & abuse protection",
-			"Email support",
+			"Everything in Open Source",
+			"Private team receipt registry",
+			["Centralized team dashboard", "Per-repo token & dollar breakdown"],
+			["GitHub Actions sticky PR comments", "Automated diff receipts on PRs"],
+			"Team agent attribution & usage benchmarks",
+			"Token spike & cost anomaly alerts",
+			["90-day team audit log retention", "Exportable CSV & JSONL"],
+			"Priority email support (24h SLA)",
 		],
 		cta: {
-			label: "Select Plan",
-			href: proCheckoutHref,
+			label: "Contact Sales",
+			href: "/enterprise",
 		},
 		highlighted: true,
 	},
@@ -76,23 +93,20 @@ const tiers: readonly Tier[] = [
 		name: "Enterprise",
 		price: "Custom",
 		priceUnit: null,
-		tagline: "For organizations with bespoke security or volume needs.",
+		tagline: "For organizations with bespoke VPC, compliance, or volume needs.",
 		features: [
-			["Audit Log", "Custom"],
-			["Security Detection", "Custom"],
-			["Audit log retention", "Custom"],
-			["Transactional email & SMS", "Custom"],
-			"Abuse protection",
-			"Self-service SSO",
-			"Directory Sync",
-			"Log drain",
-			"Custom dashboard domain",
-			"Email support",
-			"Slack support",
-			"Implementation assistance",
+			"Air-gapped VPC & on-premise receipt registry",
+			"Zero-egress telemetry ingestion",
+			["Custom model rate cards", "Azure OpenAI, AWS Bedrock, Private LLMs"],
+			"SAML 2.0 / SSO & SCIM directory sync",
+			"SOC 2 Type II audit-ready receipt proofs",
+			["Automated log drains", "Datadog, AWS S3, Splunk"],
+			"Multi-organization RBAC & departmental billing",
+			"Dedicated Slack channel & migration engineer",
+			"99.9% uptime SLA & custom enterprise terms",
 		],
 		cta: {
-			label: "Contact Us",
+			label: "Contact Enterprise",
 			href: "/enterprise",
 		},
 		highlighted: false,
@@ -119,87 +133,168 @@ type CompareSection = {
 
 const compareSections: readonly CompareSection[] = [
 	{
-		title: "Usage",
+		title: "Telemetry & Core Engine",
 		icon: Gauge,
 		rows: [
-			{ label: "Dashboard seats", values: ["1", "Unlimited", "Unlimited"] },
+			{ label: "Universal CLI (`qodewk`)", values: [true, true, true] },
 			{
-				label: "Audit log",
+				label: "Local SQLite store (`~/.qodewk`)",
+				values: [true, true, true],
+			},
+			{
+				label: "Git Notes commit records",
+				tip: "Writes cryptographic telemetry directly into refs/notes/qodewk without altering Git commit SHAs.",
+				values: [true, true, true],
+			},
+			{
+				label: "Supported agent harvesters",
 				values: [
-					"10,000 / month",
-					["20,000 / month", "then $0.0001 / event"],
-					"Custom",
-				],
-			},
-			{ label: "Audit log retention", values: ["1 day", "7 days", "Custom"] },
-			{
-				label: "Security detection",
-				values: [
-					"1,000 / month",
-					["10,000 / month", "then $0.001 / event"],
-					"Custom",
-				],
-			},
-			{
-				label: "Transactional Email",
-				tip: "Charged only when using the built-in email provider. Free if you bring your own SMTP or provider.",
-				values: [false, "$0.001 / email", "Custom"],
-			},
-			{
-				label: "Transactional SMS",
-				tip: "Charged only when using the built-in SMS provider. Free if you bring your own provider.",
-				values: [false, "$0.09 / SMS", "Custom"],
-			},
-			{
-				label: "Self-service SSO",
-				values: [
-					false,
-					["1 connection", "then $50/month per connection"],
-					"Custom",
+					"Claude, Cursor, Copilot, Cline",
+					"All harvesters + custom hooks",
+					"All + custom proprietary agents",
 				],
 			},
 			{
-				label: "Directory Sync",
-				values: [
-					false,
-					["1 connection", "then $50/month per connection"],
-					"Custom",
-				],
+				label: "Dual-engine cost calculation",
+				tip: "Deterministic harvesting from agent transcripts with AST diff multiplier fallback.",
+				values: [true, true, true],
+			},
+			{
+				label: "Non-blocking Git hooks (<5ms)",
+				tip: "Spawns detached background processes so commits and rebases never lag.",
+				values: [true, true, true],
+			},
+			{
+				label: "Raw source code exfiltration",
+				tip: "Code never leaves developer workstations. Receipts transmit only metadata.",
+				values: ["Never (0 bytes)", "Never (0 bytes)", "Air-gapped VPC"],
 			},
 		],
 	},
 	{
-		title: "Features",
+		title: "Team Governance & Storage",
 		icon: Layers2,
 		rows: [
-			{ label: "User management", values: [true, true, true] },
-			{ label: "Audit log", values: [true, true, true] },
-			{ label: "Security detection", values: [true, true, true] },
-			{ label: "Abuse protection", values: [false, true, true] },
-			{ label: "Transactional Email & SMS", values: [false, true, true] },
-			{ label: "Email templates", values: [false, true, true] },
-			{ label: "Self-service SSO", values: [false, true, true] },
-			{ label: "Directory Sync", values: [false, true, true] },
 			{
-				label: "Custom domain for Dashboard",
+				label: "Receipt storage mode",
+				values: [
+					"Local & Public URL",
+					"Private Team Cloud",
+					"Self-Hosted VPC / On-Prem",
+				],
+			},
+			{ label: "Team spend dashboard", values: [false, true, true] },
+			{ label: "Multi-repository aggregation", values: [false, true, true] },
+			{
+				label: "GitHub Actions sticky PR comments",
+				tip: "Composite GitHub Action that leaves an interactive digital receipt on pull requests.",
+				values: [true, true, true],
+			},
+			{
+				label: "Token spike & anomaly alerts",
+				values: [false, true, true],
+			},
+			{
+				label: "Custom model rate cards",
+				tip: "Override token pricing for private fine-tunes, Azure OpenAI, or AWS Bedrock.",
+				values: [
+					false,
+					{ addon: "Configurable JSON" },
+					"Full Azure / Bedrock / Private proxy",
+				],
+			},
+			{
+				label: "Audit log retention",
+				values: ["Local indefinitely", "90 days", "Custom / Unlimited"],
+			},
+			{
+				label: "Log drains (Datadog, S3, Splunk)",
 				values: [false, { addon: "$25 / month" }, true],
 			},
-			{ label: "Log drain", values: [false, { addon: "$25 / month" }, true] },
 		],
 	},
 	{
-		title: "Support",
+		title: "Security & Compliance",
+		icon: ShieldCheck,
+		rows: [
+			{
+				label: "Salted HMAC-SHA256 verification",
+				tip: "Cryptographic proof that receipt metadata matches Git commit changes.",
+				values: [true, true, true],
+			},
+			{
+				label: "Source privacy guarantee",
+				values: [true, true, true],
+			},
+			{ label: "Role-based access control (RBAC)", values: [false, true, true] },
+			{ label: "SAML 2.0 / Single Sign-On", values: [false, false, true] },
+			{ label: "SCIM directory provisioning", values: [false, false, true] },
+			{
+				label: "SOC 2 Type II compliance proofs",
+				tip: "Digital receipts formatted for regulatory and IP provenance audits.",
+				values: [false, false, true],
+			},
+		],
+	},
+	{
+		title: "Support & Services",
 		icon: Headset,
 		rows: [
-			{ label: "Community", values: [true, true, true] },
-			{ label: "Email", values: [false, true, true] },
-			{ label: "Slack", values: [false, false, true] },
-			{ label: "Implementation assistance", values: [false, false, true] },
+			{ label: "GitHub Issues & Community", values: [true, true, true] },
+			{
+				label: "Email support",
+				values: [false, "Standard (24h)", "Priority (< 4h)"],
+			},
+			{
+				label: "Dedicated Slack / Teams channel",
+				values: [false, false, true],
+			},
+			{
+				label: "Architecture & migration review",
+				values: [false, false, true],
+			},
+			{
+				label: "Uptime SLA",
+				values: [false, false, "99.9% guaranteed"],
+			},
 		],
 	},
 ];
 
-const tierNames = ["Starter", "Pro", "Enterprise"] as const;
+const faqs = [
+	{
+		question: "Is the Qodewk CLI really free forever?",
+		answer:
+			"Yes, 100%. The Qodewk CLI, local SQLite telemetry storage (~/.qodewk), Git Notes engine (refs/notes/qodewk), and terminal monospace receipts are licensed under MIT and will always remain completely free and open source. There are no commit caps, no local repo limitations, and no credit card required.",
+	},
+	{
+		question: "Does Qodewk charge for LLM token usage?",
+		answer:
+			"No. You pay your AI providers (Anthropic, OpenAI, Cursor, Google, etc.) directly. Qodewk is not a model proxy, middleman, or LLM reseller. Qodewk is purely an auditing and telemetry tool that inspects local Git diffs and provider session logs to measure and certify how much work was performed by agents.",
+	},
+	{
+		question: "Does Qodewk ever upload my proprietary source code or diff hunks?",
+		answer:
+			"Never. Qodewk was engineered from day one with Privacy by Construction. Digital receipts contain only metadata: file counts, insertion/deletion line counts, token consumption numbers, and irreversible cryptographic hashes (HMAC-SHA256). Raw code files and diff hunks never leave your local machine or private VPC.",
+	},
+	{
+		question: "When should our organization choose Team Sync vs Enterprise?",
+		answer:
+			"Choose Team Sync ($20/month) if you want a centralized web dashboard to track agent token spend across shared team repositories, automatic GitHub Actions sticky PR comments, and Slack cost anomaly alerts. Choose Enterprise if your organization requires an air-gapped on-premise VPC deployment (zero internet egress), custom internal LLM rate cards, SAML 2.0 / SSO, SCIM directory sync, or SOC 2 Type II legal audit receipts.",
+	},
+	{
+		question: "Can Qodewk run in air-gapped environments or CI without network access?",
+		answer:
+			"Yes. In CI environments (when CI=true or using --local / --no-db flags), Qodewk operates in pure in-memory mode and performs zero outbound network requests. You can generate terminal and markdown receipts in completely isolated build pipelines.",
+	},
+	{
+		question: "Can I cancel or switch plans at any time?",
+		answer:
+			"Yes. Team Sync subscriptions are billed on a flexible monthly basis without lock-in. You can upgrade, downgrade, or switch back to 100% free open-source mode at any time without losing any of your local Git Notes history.",
+	},
+];
+
+const tierNames = ["Open Source", "Team Sync", "Enterprise"] as const;
 type TierName = (typeof tierNames)[number];
 
 function TierCard({ tier, index }: { tier: Tier; index: number }) {
@@ -218,7 +313,14 @@ function TierCard({ tier, index }: { tier: Tier; index: number }) {
 			)}
 		>
 			<div className="flex flex-col flex-1 px-6 pt-6 pb-6">
-				<h3 className="text-base text-foreground mb-1">{tier.name}</h3>
+				<div className="flex items-center justify-between mb-1">
+					<h3 className="text-base text-foreground font-medium">{tier.name}</h3>
+					{highlighted && (
+						<span className="text-[10px] font-mono uppercase tracking-widest px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
+							Recommended
+						</span>
+					)}
+				</div>
 				<p className="text-[13px] text-foreground/60 leading-relaxed mb-5 min-h-[2.5em]">
 					{tier.tagline}
 				</p>
@@ -233,7 +335,7 @@ function TierCard({ tier, index }: { tier: Tier; index: number }) {
 						{tier.price}
 					</span>
 					{tier.priceUnit && (
-						<span className="text-[13px] text-foreground/55">
+						<span className="text-[13px] text-foreground/55 font-mono">
 							{tier.priceUnit}
 						</span>
 					)}
@@ -254,7 +356,9 @@ function TierCard({ tier, index }: { tier: Tier; index: number }) {
 									<span className="text-foreground/85">{primary}</span>
 								</div>
 								{sub && (
-									<span className="ml-[22px] text-foreground/50">{sub}</span>
+									<span className="ml-[22px] text-foreground/50 text-[12px] leading-tight">
+										{sub}
+									</span>
 								)}
 							</li>
 						);
@@ -264,9 +368,9 @@ function TierCard({ tier, index }: { tier: Tier; index: number }) {
 				<a href={tier.cta.href} className="block mt-auto">
 					<div
 						className={cn(
-							"w-full py-2.5 text-center text-[13px] rounded-sm transition-all duration-200",
+							"w-full py-2.5 text-center text-[13px] rounded-sm transition-all duration-200 font-medium",
 							highlighted
-								? "bg-foreground text-background hover:opacity-90"
+								? "bg-foreground text-background hover:opacity-90 shadow-sm"
 								: "border border-foreground/15 text-foreground/85 hover:bg-foreground/5 hover:border-foreground/25",
 						)}
 					>
@@ -307,7 +411,7 @@ function CompareCell({ value }: { value: CellValue }) {
 	return (
 		<span className="flex flex-col">
 			<span className="text-[13px] text-foreground/85">{addon}</span>
-			<span className="text-[12px] text-foreground/50 leading-tight">
+			<span className="text-[12px] text-foreground/50 leading-tight font-mono">
 				add-on
 			</span>
 		</span>
@@ -439,7 +543,7 @@ function CompareTableDesktop() {
 }
 
 function CompareTableMobile() {
-	const [selected, setSelected] = useState<TierName>("Pro");
+	const [selected, setSelected] = useState<TierName>("Team Sync");
 	const planIdx = tierNames.indexOf(selected);
 	const selectedTier = tiers[planIdx];
 
@@ -467,7 +571,7 @@ function CompareTableMobile() {
 
 				<a
 					href={selectedTier.cta.href}
-					className="shrink-0 inline-flex items-center px-4 h-9 text-[13px] bg-foreground text-background rounded-sm hover:opacity-90 transition-all"
+					className="shrink-0 inline-flex items-center px-4 h-9 text-[13px] bg-foreground text-background rounded-sm hover:opacity-90 transition-all font-medium"
 				>
 					{selectedTier.cta.label}
 				</a>
@@ -520,6 +624,45 @@ function CompareTable() {
 	);
 }
 
+/**
+ * Frequently Asked Questions Section for Pricing
+ */
+function PricingFaq() {
+	return (
+		<div className="border border-foreground/10 rounded-sm bg-background p-6 sm:p-8 space-y-6">
+			<div className="space-y-1 border-b border-foreground/10 pb-4">
+				<div className="flex items-center gap-2">
+					<HelpCircle className="w-4 h-4 text-primary" />
+					<h3 className="text-base font-medium text-foreground tracking-tight">
+						Frequently Asked Questions
+					</h3>
+				</div>
+				<p className="text-[13px] text-foreground/60 leading-relaxed">
+					Common questions about Qodewk open-source licensing, privacy boundaries,
+					and enterprise options.
+				</p>
+			</div>
+
+			<Accordion type="single" collapsible className="w-full space-y-2">
+				{faqs.map((faq, index) => (
+					<AccordionItem
+						key={faq.question}
+						value={`item-${index}`}
+						className="border border-foreground/8 rounded-sm px-4 py-1 data-[state=open]:bg-foreground/[0.02]"
+					>
+						<AccordionTrigger className="text-[14px] text-foreground font-medium hover:no-underline hover:text-primary transition-colors py-3">
+							{faq.question}
+						</AccordionTrigger>
+						<AccordionContent className="text-[13px] text-foreground/70 leading-relaxed pb-3 pt-1">
+							{faq.answer}
+						</AccordionContent>
+					</AccordionItem>
+				))}
+			</Accordion>
+		</div>
+	);
+}
+
 export function PricingContent() {
 	return (
 		<div className="px-5 sm:px-6 lg:px-8 pb-20 space-y-14">
@@ -531,13 +674,13 @@ export function PricingContent() {
 				className="flex items-center gap-4 px-5 py-3.5 border border-foreground/10 rounded-sm bg-foreground/2"
 			>
 				<p className="flex-1 text-[13px] text-foreground/75 leading-relaxed">
-					The Better Auth framework is{" "}
-					<span className="text-foreground">free and open source</span>. Pricing
-					below is for our managed infrastructure.
+					The Qodewk CLI and Git telemetry protocol are{" "}
+					<span className="text-foreground font-medium">free and open source (MIT)</span>.
+					Raw source code never leaves your developer workstation.
 				</p>
 				<a
 					href="/docs"
-					className="group shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 text-[12px] text-foreground/85 border border-foreground/15 rounded-sm hover:border-foreground/30 hover:bg-foreground/5 transition-all"
+					className="group shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 text-[12px] text-foreground/85 border border-foreground/15 rounded-sm hover:border-foreground/30 hover:bg-foreground/5 transition-all font-medium"
 				>
 					Docs
 					<svg
@@ -558,7 +701,7 @@ export function PricingContent() {
 			</motion.div>
 
 			{/* Tier cards — connected panel */}
-			<section>
+			<section aria-label="Pricing tiers">
 				<div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-0">
 					{tiers.map((tier, index) => (
 						<TierCard key={tier.name} tier={tier} index={index} />
@@ -571,10 +714,50 @@ export function PricingContent() {
 				aria-label="Plan comparison"
 				initial={{ opacity: 0, y: 6 }}
 				animate={{ opacity: 1, y: 0 }}
-				transition={{ duration: 0.3, delay: 0.3 }}
+				transition={{ duration: 0.3, delay: 0.2 }}
 			>
+				<div className="mb-4">
+					<h3 className="text-sm font-mono uppercase tracking-wider text-foreground/70">
+						Detailed Capability Matrix
+					</h3>
+				</div>
 				<CompareTable />
 			</motion.section>
+
+			{/* Pricing FAQ Section */}
+			<motion.section
+				aria-label="Pricing FAQ"
+				initial={{ opacity: 0, y: 6 }}
+				animate={{ opacity: 1, y: 0 }}
+				transition={{ duration: 0.3, delay: 0.25 }}
+			>
+				<PricingFaq />
+			</motion.section>
+
+			{/* Enterprise CTA Footer Banner */}
+			<motion.div
+				initial={{ opacity: 0, y: 6 }}
+				animate={{ opacity: 1, y: 0 }}
+				transition={{ duration: 0.3, delay: 0.3 }}
+				className="p-6 sm:p-8 rounded-sm border border-foreground/10 bg-foreground/2 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+			>
+				<div className="space-y-1">
+					<h4 className="text-base font-medium text-foreground">
+						Deploying across 50+ engineers?
+					</h4>
+					<p className="text-[13px] text-foreground/60 max-w-xl">
+						Talk to us about air-gapped VPC ingestion, custom AWS Bedrock / Azure
+						rate cards, and automated compliance receipts for your organization.
+					</p>
+				</div>
+				<a
+					href="/enterprise"
+					className="shrink-0 inline-flex items-center gap-2 px-5 py-2.5 bg-foreground text-background text-sm font-medium rounded-sm hover:opacity-90 transition-opacity"
+				>
+					Contact Enterprise
+					<ArrowRight className="w-4 h-4" />
+				</a>
+			</motion.div>
 		</div>
 	);
 }

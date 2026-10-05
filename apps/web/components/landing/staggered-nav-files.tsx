@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { History, Palette, PencilLine, Scale, Search } from "lucide-react";
+import { Cpu, History, Palette, PencilLine, Scale, Search } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -286,6 +286,7 @@ interface LinkResource {
 }
 
 const linkResources: LinkResource[] = [
+	{ title: "Rate Cards", href: "/rate-cards", Icon: Cpu },
 	{ title: "Community", href: "/community", Icon: CommunityIcon },
 	{ title: "Brand", href: "/brand", Icon: Palette },
 	{ title: "Legal", href: "/legal", Icon: Scale },
