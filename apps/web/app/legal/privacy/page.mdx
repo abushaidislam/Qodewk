@@ -4,228 +4,78 @@ title: Privacy Policy
 
 # Privacy Policy
 
-<small>*Last updated: March 21st, 2026.*</small>
+<small>*Last updated: October 2026*</small>
 
-Better Auth, Inc. (“Company,” “we,” “us,” or “our”) provides authentication, identity, authorization, and related services (the “Services”). This Privacy Policy explains how we collect, use, disclose, and protect personal information when you:
+**Qodewk** (“we,” “us,” or “our”) is an open-source universal telemetry and digital receipt generator for the AI coding agent era. We are committed to a fundamental architectural invariant: **Privacy by Construction**.
 
-* Visit our website;
-* Create an account;
-* Use our Services;
-* Interact with us for sales, marketing, or support; or
-* Are an end user authenticated through our platform (“End Users”).
+This Privacy Policy explains how Qodewk handles information across the CLI tool (`qodewk`), our open-source packages, our GitHub Action, and our public receipt viewing service.
 
-This Privacy Policy does not apply to personal information processed by our customers through their applications. In those cases, we act as a data processor and process information on behalf of the customer in accordance with our Data Processing Addendum (“DPA”).
+---
 
-## 1. Information We Collect
+## 1. Zero Source Code Exfiltration Guarantee
 
-### 1.1 Information You Provide Directly
+> **The Core Invariant:**  
+> Raw source code, private git commit diff hunks, commit messages, agent prompt text, and codebase secrets **never leave your local development machine**.
 
-We may collect:
+Qodewk is engineered so that telemetry extraction, AST complexity heuristics, and session matching happen **entirely locally** on your workstation:
+- **Local Git Tree Inspection:** Git diff analysis (`git diff-tree --numstat`) runs locally via your native `git` binary.
+- **Local Agent Transcripts:** Transcripts and databases from Claude Code, Cursor, Windsurf, Aider, and Antigravity are parsed in local memory.
+- **No Diff Transmission:** Under no circumstances are file contents or code patch bodies serialized or transmitted to external servers.
 
-* Name, email address, company name, and job title
-* Account credentials
-* Billing information
-* Communications you send to us
-* Demo or event registration information
+---
 
-### 1.2 Information Collected Through the Services
+## 2. Information Processed When Publishing a Receipt
 
-When customers use our authentication platform, we may process:
+When you explicitly publish a digital receipt (via `qodewk share` or the Qodewk GitHub Action), only aggregated mathematical metadata is transmitted to the public receipt API (`/api/receipts`):
 
-* User identifiers (e.g., email, username, user ID)
-* Authentication credentials (e.g., hashed passwords, OAuth tokens, MFA factors)
-* Login and activity logs
-* IP address and device information
-* Metadata related to authentication events
+### 2.1 Aggregated Metrics
+* **File Metrics:** Count of files touched, line additions, and line deletions.
+* **Language Ratios:** Distribution percentages of programming languages (e.g., 65% TypeScript, 35% Python).
+* **Token Estimations:** Total tokens consumed (input, output, cache-read, cache-write) broken down by model.
+* **Attribution Provenance:** Provenance classification (`observed`, `estimated`, `imported`, `verified`) and numeric confidence score (`0.0–1.0`).
+* **Cryptographic Hashes:** Salted HMAC-SHA256 digests of commit SHAs and repository aliases.
 
-This information is processed on behalf of our customers.
+### 2.2 Hard 50 KB Request Ceiling
+The `/api/receipts` ingestion endpoint enforces a strict request body ceiling of **50 KB**. This technical constraint mathematically prevents source code or large data payloads from being transmitted.
 
-### 1.3 Automatically Collected Information
+---
 
-When you visit our website, we may collect:
+## 3. Local Storage & Offline Operation
 
-* IP address
-* Browser type and device information
-* Pages visited and referring URLs
-* Usage data through cookies and similar technologies
+Qodewk is designed to function completely offline without network connectivity:
+* **Local SQLite Store:** Stored in `~/.qodewk/state.db` on your local filesystem with user-only permissions (`0600`).
+* **Git Notes:** Telemetry receipts are permanently recorded within your local Git revision graph under `refs/notes/qodewk`. Git Notes do not modify commit SHAs or push unless explicitly instructed.
+* **Ephemeral CI Mode:** In CI/CD environments (`CI=true` or `--no-db`), Qodewk operates purely in-memory (`:memory:`) without leaving any persistent state on runner disks.
 
-## 2. How We Use Information
+---
 
-We use personal information to:
+## 4. Author Claim Tokens & Receipt Control
 
-* Provide, operate, and maintain the Services
-* Authenticate users and secure accounts
-* Prevent fraud, abuse, and unauthorized access
-* Improve and develop new features
-* Respond to inquiries and provide support
-* Process payments
-* Comply with legal obligations
+When you share a receipt, an author claim token is generated and stored locally in `~/.qodewk/tokens.json`.
+* Only the possessor of this cryptographic claim token can edit metadata, add annotations, or delete the public receipt from the registry.
+* Receipts do not contain personal identifiers (such as developer names or emails) unless explicitly configured by the author.
 
-We do not sell personal information.
+---
 
-We do not use authentication data for advertising profiling.
+## 5. Website & API Analytics
 
-## 3. Legal Bases for Processing (EEA/UK)
+When accessing `qodewk.dev` or the receipt viewer:
+* We collect minimal, privacy-preserving server request logs (IP address, user agent, HTTP method, response time) solely for DDoS mitigation, rate limiting, and performance monitoring.
+* We do not sell personal data, do not use invasive tracking pixels, and do not profile users across third-party websites.
 
-If you are located in the European Economic Area (EEA) or United Kingdom, we process personal data under the following legal bases:
+---
 
-* Performance of a contract
-* Legitimate interests (e.g., security, fraud prevention, product improvement)
-* Compliance with legal obligations
-* Consent, where required
+## 6. Open Source Transparency
 
-## 4. How We Share Information
+Because Qodewk is 100% open-source, you can independently audit the telemetry extraction and network sanitization logic in our GitHub repository:
+- Git diff extractor: [`packages/core/src/git.ts`](https://github.com/abushaidislam/Qodewk)
+- Network sanitization: [`packages/core/src/share.ts`](https://github.com/abushaidislam/Qodewk)
+- Protocol Zod contracts: [`packages/protocol/src/receipt.ts`](https://github.com/abushaidislam/Qodewk)
 
-We may share personal information with:
+---
 
-### 4.1 Service Providers (Subprocessors)
+## 7. Contact & Questions
 
-We use trusted third parties to support our Services, such as:
-
-* Cloud hosting providers
-* Analytics providers
-* Email and SMS delivery providers
-* Payment processors
-
-We require these providers to protect personal information and process it only for authorized purposes.
-
-### 4.2 Legal Requirements
-
-We may disclose information if required by law or in response to valid legal processes.
-
-### 4.3 Business Transfers
-
-If we are involved in a merger, acquisition, or sale of assets, personal information may be transferred as part of that transaction.
-
-## 5. Data Retention
-
-We retain personal information for as long as necessary to:
-
-* Provide the Services
-* Maintain security and audit logs
-* Comply with legal obligations
-* Resolve disputes and enforce agreements
-
-Retention periods may vary depending on the type of data and customer configuration.
-
-## 6. Security
-
-We implement administrative, technical, and physical safeguards designed to protect personal information, including:
-
-* Encryption in transit
-* Access controls
-* Monitoring and logging
-* Secure development practices
-
-However, no system is completely secure, and we cannot guarantee absolute security.
-
-## 7. International Data Transfers
-
-We may transfer personal information to countries outside of your jurisdiction, including the United States. Where required by law, we rely on appropriate safeguards such as Standard Contractual Clauses.
-
-## 8. Your Rights
-
-Depending on your jurisdiction, you may have rights to:
-
-* Access personal information
-* Correct inaccurate data
-* Delete personal information
-* Restrict or object to processing
-* Data portability
-* Withdraw consent
-
-If we process your data on behalf of a customer, please contact the relevant customer directly. We will assist customers in responding to lawful requests.
-
-To exercise your rights, contact us at [support@better-auth.com](mailto:support@better-auth.com).
-
-## 9. Cookies and Tracking Technologies
-
-We use cookies and similar technologies to:
-
-* Operate the website
-* Analyze usage
-* Improve performance
-
-You may control cookies through your browser settings. Some features may not function properly if cookies are disabled.
-
-## 10. Google User Data
-
-Our Services may allow users to authenticate using Google Sign-In (OAuth 2.0). This section describes how we handle data received from Google APIs, in accordance with the [Google API Services User Data Policy](https://developers.google.com/terms/api-services-user-data-policy).
-
-### 10.1 Data Accessed
-
-When you sign in with Google, we may access the following information from your Google account:
-
-* Email address
-* Display name
-* Profile picture URL
-* Unique Google account identifier
-
-We only request the minimum scopes necessary for authentication. We do not request access to your Google Drive, Gmail, Calendar, or any other Google services beyond basic profile information.
-
-### 10.2 How We Use Google User Data
-
-Google user data is used exclusively to:
-
-* Create and maintain your account
-* Authenticate your identity when you sign in
-* Display your name and profile picture within the application
-
-We do not use Google user data for advertising, analytics profiling, or any purpose unrelated to authentication and account management.
-
-### 10.3 Sharing of Google User Data
-
-We do not sell, rent, or trade Google user data with any third parties.
-
-Google user data may only be shared with:
-
-* **Cloud infrastructure providers** that host the Services, solely for the purpose of operating and delivering the Services
-* **Law enforcement or legal authorities**, only when required by applicable law or valid legal process
-
-We do not share Google user data with advertising networks, data brokers, or any other third parties.
-
-### 10.4 Storage and Protection
-
-Google user data is stored using the same security measures described in Section 6 of this policy, including:
-
-* Encryption in transit (TLS)
-* Access controls limiting data access to authorized personnel
-* Monitoring and audit logging
-* Secure development practices
-
-OAuth tokens are stored securely and are never exposed to client-side code or logged in plaintext.
-
-### 10.5 Retention and Deletion
-
-Google user data is retained for as long as your account remains active. Upon account deletion, all associated Google user data is permanently deleted within 30 days.
-
-You may request deletion of your Google user data at any time by:
-
-* Deleting your account through the application's account settings, or
-* Contacting us at [support@better-auth.com](mailto:support@better-auth.com)
-
-We will process deletion requests within 30 days and confirm completion via email. You may also revoke our access to your Google account at any time through your [Google Account Permissions](https://myaccount.google.com/permissions).
-
-## 11. Children's Privacy
-
-The Services are not directed to children under 13 (or equivalent minimum age in your jurisdiction). We do not knowingly collect personal information from children.
-
-## 12. California Privacy Rights
-
-If you are a California resident, you may have rights under the California Consumer Privacy Act (CCPA/CPRA), including rights to access, delete, and correct personal information. We do not sell personal information as defined under California law.
-
-To submit a request, contact [support@better-auth.com](mailto:support@better-auth.com).
-
-## 13. Changes to This Policy
-
-We may update this Privacy Policy from time to time. We will post the updated version with a revised “Last Updated” date.
-
-## 14. Contact Us
-
-If you have questions about this Privacy Policy, contact:
-
-Better Auth, Inc.
-
-Address: 49 Powell St, 2nd Floor, San Francisco, CA, 94102
-
-Email: [support@better-auth.com](mailto:support@better-auth.com)
+If you have questions regarding privacy, security, or data handling in Qodewk:
+* **GitHub Issues & Discussions:** [github.com/abushaidislam/Qodewk](https://github.com/abushaidislam/Qodewk)
+* **Security Advisories:** Report any vulnerabilities directly via GitHub Security Advisories.

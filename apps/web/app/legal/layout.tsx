@@ -24,8 +24,7 @@ export default function LegalLayout({ children }: { children: ReactNode }) {
 										</span>
 									</h1>
 									<p className="text-sm text-foreground/70 dark:text-foreground/50 leading-relaxed max-w-[260px]">
-										Our privacy policy and terms of service. Reach out with any
-										questions.
+										Privacy by construction, open-source terms of service, and telemetry data processing guarantees.
 									</p>
 								</div>
 
