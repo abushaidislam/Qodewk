@@ -46,7 +46,7 @@ export default async function HomePage() {
 								<Image
 									src="/left-3d-logo-light.webp"
 									alt=""
-									width={309}
+									width={311}
 									height={400}
 									className="h-auto max-h-[200px] object-contain z-10 animate-logo-snap-left transition-transform duration-300 ease-out group-hover:-translate-x-3 group-hover:-rotate-5"
 									unoptimized
@@ -55,7 +55,7 @@ export default async function HomePage() {
 								<Image
 									src="/right-3d-logo-light.webp"
 									alt=""
-									width={302}
+									width={321}
 									height={400}
 									className="h-auto object-contain -ml-28 -mt-3 max-h-[200px] animate-logo-snap-right transition-transform duration-300 ease-out group-hover:translate-x-3 group-hover:rotate-5"
 									unoptimized
