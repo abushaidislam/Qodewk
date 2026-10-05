@@ -139,7 +139,7 @@ function SideRail() {
 							</span>
 						</h1>
 						<p className="text-sm text-foreground/70 dark:text-foreground/50 leading-relaxed max-w-[280px]">
-							The tokens, components, and motifs that make up the Better Auth
+							The tokens, components, and motifs that make up the Qodewk
 							visual language. Everything here is pulled live from the same
 							variables used across product and docs.
 						</p>
@@ -190,7 +190,7 @@ function MobileHeader() {
 					</span>
 				</h1>
 				<p className="text-sm text-foreground/70 dark:text-foreground/50 leading-relaxed">
-					The tokens, components, and motifs that make up Better Auth.
+					The tokens, components, and motifs that make up Qodewk.
 				</p>
 			</div>
 		</div>
@@ -397,14 +397,14 @@ function TypographyBlock() {
 					meta="text-4xl tracking-tight"
 					className="text-4xl tracking-tight"
 				>
-					Authentication, better.
+					Every commit, itemized.
 				</TypeRow>
 				<TypeRow
 					label="Geist Sans · H2"
 					meta="text-xl tracking-tight"
 					className="text-xl tracking-tight"
 				>
-					Drop-in, framework-agnostic.
+					Works with every coding agent.
 				</TypeRow>
 				<TypeRow
 					label="Geist Sans · Body"
@@ -418,14 +418,14 @@ function TypographyBlock() {
 					meta="text-[11px] font-mono uppercase tracking-wider"
 					className="text-[11px] font-mono uppercase tracking-wider text-foreground/70"
 				>
-					api / better-auth / v1.4.0
+					receipt / qodewk / observed
 				</TypeRow>
 				<TypeRow
 					label="Geist Mono · Code"
 					meta="font-mono text-sm"
 					className="font-mono text-sm text-foreground/80"
 				>
-					{"const auth = betterAuth({ secret, baseURL });"}
+					{"$ npx qodewk share --json"}
 				</TypeRow>
 			</div>
 		</Subsection>
@@ -589,15 +589,15 @@ function FormBlock() {
 			<div className="border border-foreground/10 p-4 grid sm:grid-cols-2 gap-3">
 				<label className="flex flex-col gap-1.5">
 					<span className="text-[11px] font-mono uppercase tracking-wider text-foreground/50">
-						Email
+						Commit
 					</span>
-					<Input type="email" placeholder="you@better-auth.com" />
+					<Input type="text" placeholder="HEAD" />
 				</label>
 				<label className="flex flex-col gap-1.5">
 					<span className="text-[11px] font-mono uppercase tracking-wider text-foreground/50">
-						Password
+						Model
 					</span>
-					<Input type="password" placeholder="••••••••" />
+					<Input type="text" placeholder="claude-sonnet" />
 				</label>
 			</div>
 		</Subsection>
@@ -613,37 +613,37 @@ function CardsBlock() {
 			<div className="grid sm:grid-cols-2 gap-3">
 				<Card>
 					<CardHeader>
-						<CardTitle>Session</CardTitle>
+						<CardTitle>Receipt</CardTitle>
 						<CardDescription>
-							The canonical unit of auth state on every request.
+							The canonical unit of AI work, one per commit.
 						</CardDescription>
 					</CardHeader>
 					<CardContent>
 						<p className="text-sm text-foreground/70">
-							Cookies, JWTs, or both — configured per deployment.
+							Files, lines, languages, tokens, and cost — never code.
 						</p>
 					</CardContent>
 					<CardFooter>
 						<span className="text-[11px] font-mono text-foreground/50">
-							v1.4.0
+							ReceiptV1
 						</span>
 					</CardFooter>
 				</Card>
 				<Card>
 					<CardHeader>
-						<CardTitle>Plugin</CardTitle>
+						<CardTitle>Harvester</CardTitle>
 						<CardDescription>
-							Opt-in capability — organizations, 2FA, magic links.
+							Reads agent transcripts locally to observe real usage.
 						</CardDescription>
 					</CardHeader>
 					<CardContent>
 						<p className="text-sm text-foreground/70">
-							Each plugin ships its own schema, routes, and client helpers.
+							Claude Code, Cursor, Windsurf, Aider, and Antigravity.
 						</p>
 					</CardContent>
 					<CardFooter>
 						<span className="text-[11px] font-mono text-foreground/50">
-							30+ plugins
+							5 agents
 						</span>
 					</CardFooter>
 				</Card>
@@ -659,14 +659,14 @@ function CalloutsBlock() {
 				<Callout type="info" title="Heads up">
 					Callouts use a dashed left stripe sized to the accent type.
 				</Callout>
-				<Callout type="warn" title="Careful">
-					This action rotates signing keys and invalidates every active session.
+				<Callout type="warn" title="Estimated">
+					~$1.84 is a heuristic. Only provider telemetry makes a number exact.
 				</Callout>
 				<Callout type="error" title="Broken">
-					The database adapter returned an unexpected shape.
+					No git repository found at the given path.
 				</Callout>
-				<Callout type="success" title="Nice">
-					Your provider connected and synced successfully.
+				<Callout type="success" title="Verified">
+					Source code was never uploaded to Qodewk.
 				</Callout>
 			</div>
 		</Subsection>
@@ -679,23 +679,23 @@ function TabsBlock() {
 			<div className="border border-foreground/10 p-4">
 				<Tabs defaultValue="ts" className="w-full">
 					<TabsList>
-						<TabsTrigger value="ts">TypeScript</TabsTrigger>
-						<TabsTrigger value="js">JavaScript</TabsTrigger>
-						<TabsTrigger value="sh">Shell</TabsTrigger>
+						<TabsTrigger value="ts">pnpm</TabsTrigger>
+						<TabsTrigger value="js">npx</TabsTrigger>
+						<TabsTrigger value="sh">Git hook</TabsTrigger>
 					</TabsList>
 					<TabsContent value="ts">
 						<pre className="mt-3 font-mono text-xs p-3 bg-foreground/[0.03] border border-foreground/10 overflow-x-auto">
-							<code>{`import { betterAuth } from "better-auth";\n\nexport const auth = betterAuth({ secret: process.env.AUTH_SECRET });`}</code>
+							<code>{`pnpm add -g qodewk\nqodewk`}</code>
 						</pre>
 					</TabsContent>
 					<TabsContent value="js">
 						<pre className="mt-3 font-mono text-xs p-3 bg-foreground/[0.03] border border-foreground/10 overflow-x-auto">
-							<code>{`const { betterAuth } = require("better-auth");\n\nmodule.exports.auth = betterAuth({ secret: process.env.AUTH_SECRET });`}</code>
+							<code>{`npx qodewk\nnpx qodewk share`}</code>
 						</pre>
 					</TabsContent>
 					<TabsContent value="sh">
 						<pre className="mt-3 font-mono text-xs p-3 bg-foreground/[0.03] border border-foreground/10 overflow-x-auto">
-							<code>pnpm add better-auth</code>
+							<code>qodewk hooks install</code>
 						</pre>
 					</TabsContent>
 				</Tabs>
@@ -722,15 +722,15 @@ function AlertsBlock() {
 		<Subsection title="Alerts">
 			<div className="space-y-3">
 				<Alert>
-					<AlertTitle>Auth secret updated</AlertTitle>
+					<AlertTitle>Receipt recorded</AlertTitle>
 					<AlertDescription>
-						Existing sessions remain valid until their next refresh.
+						Saved locally to ~/.qodewk and refs/notes/qodewk. Nothing was uploaded.
 					</AlertDescription>
 				</Alert>
 				<Alert variant="destructive">
-					<AlertTitle>Sign-in failed</AlertTitle>
+					<AlertTitle>Share failed</AlertTitle>
 					<AlertDescription>
-						The provider returned an invalid ID token.
+						The payload exceeded the 50 KB receipt ceiling.
 					</AlertDescription>
 				</Alert>
 			</div>
@@ -742,7 +742,7 @@ function LogoBlock() {
 	return (
 		<Subsection
 			title="Logo"
-			description="Use the mark at 24px minimum. Prefer the wordmark when the brand needs to read at a distance."
+			description="The Q is a commit node with a serrated receipt tail. Use the mark at 24px minimum; prefer the wordmark when the brand needs to read at a distance. Keep clear space equal to the ring thickness."
 		>
 			<div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
 				{brandLogoPreviews.map((l) => (
@@ -779,26 +779,26 @@ function LogoBlock() {
 function VoiceBlock() {
 	const principles = [
 		{
-			title: "Clear over clever",
-			body: "We name things what they are. Session, key, secret — not SessionManagerV2Provider.",
+			title: "Never fake precision",
+			body: "Every number carries its provenance — observed, estimated, imported, or verified. An estimate always wears a ~.",
 		},
 		{
 			title: "Terse, but warm",
-			body: "Short sentences. No marketing fluff. Sound like a thoughtful engineer, not a billboard.",
+			body: "Short sentences. No marketing fluff. Sound like a thoughtful engineer reading a receipt, not a billboard.",
 		},
 		{
-			title: "Show the code",
-			body: "A well-named snippet does more than a paragraph. Prose sets context; code proves it.",
+			title: "Show the receipt",
+			body: "A real receipt does more than a paragraph. Prose sets context; telemetry proves it.",
 		},
 		{
-			title: "Sharp, not loud",
-			body: "Minimal radii, dashed dividers, mono for metadata. The design should feel precise, never decorative.",
+			title: "Private by construction",
+			body: "Say what leaves the machine, and say it plainly. Source code never does.",
 		},
 	];
 	return (
 		<Subsection
 			title="Voice"
-			description="How Better Auth communicates — across docs, product copy, and marketing."
+			description="How Qodewk communicates — across docs, product copy, and receipts."
 		>
 			<div className="grid sm:grid-cols-2 gap-3">
 				{principles.map((p) => (

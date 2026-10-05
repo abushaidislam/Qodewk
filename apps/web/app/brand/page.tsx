@@ -5,7 +5,7 @@ import { BrandClient } from "./brand-client";
 export const metadata: Metadata = createMetadata({
 	title: "Brand",
 	description:
-		"The Better Auth design system — tokens, components, and motifs used across our product and docs.",
+		"The Qodewk brand — logo, tokens, components, and voice used across our product and docs.",
 });
 
 export default function BrandPage() {

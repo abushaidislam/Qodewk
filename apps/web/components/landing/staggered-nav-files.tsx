@@ -446,7 +446,7 @@ export function StaggeredNavFiles() {
 					>
 						<div className="flex flex-col gap-2 w-full">
 							<LogoContextMenu
-								logo={<Icons.betterAuthWordmark className="w-35 h-auto" />}
+								logo={<Icons.qodewkWordmark className="w-35 h-auto" />}
 							/>
 						</div>
 					</Link>
@@ -463,7 +463,7 @@ export function StaggeredNavFiles() {
 						href="/"
 						className="flex h-full items-center gap-1 px-4 transition-colors duration-150"
 					>
-						<Icons.betterAuthWordmark className="w-35 h-auto" />
+						<Icons.qodewkWordmark className="w-35 h-auto" />
 					</Link>
 					<div className="flex items-center gap-1 pr-2">
 						{isDocs && (
@@ -547,7 +547,7 @@ export function StaggeredNavFiles() {
 							className={`flex h-full items-center gap-1 shrink-0 px-4 lg:px-7 py-3 border-r ${tabDividerClass} transition-colors duration-150`}
 						>
 							<LogoContextMenu
-								logo={<Icons.betterAuthWordmark className="w-35 h-auto" />}
+								logo={<Icons.qodewkWordmark className="w-35 h-auto" />}
 							/>
 						</Link>
 					)}
