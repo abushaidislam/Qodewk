@@ -1,0 +1,107 @@
+---
+title: "Generating Dynamic Receipt Cards at the Edge in 35ms"
+description: "How we leveraged Satori and resvg-js on Next.js Serverless to produce instant social preview cards without headless Chromium."
+date: 2026-10-05
+author:
+  name: "Abushaid Islam"
+  avatar: "https://github.com/abushaidislam.png"
+  twitter: "qodewk"
+tags: ["nextjs", "edge", "satori", "performance", "opengraph"]
+---
+
+<TLDR>
+When developers share a Qodewk receipt on X, LinkedIn, or Slack, we want the thermal receipt card to preview instantly in high resolution. Running headless Puppeteer takes 1,800ms and eats 300MB of RAM. Satori and resvg-js render crisp PNGs in 35 milliseconds.
+</TLDR>
+
+## The Challenge of Social Cards for Dynamic Receipts
+
+Open Graph (OG) social cards are critical for viral distribution. When a developer runs:
+
+```bash
+$ qodewk share
+=> Receipt published: https://qodewk.dev/r/rec_89b21f90
+```
+
+They paste the URL into a tweet or Slack channel. Social crawlers (`Twitterbot`, `Slackbot`) hit the URL's `<meta property="og:image">` tag immediately.
+
+If that image generation takes more than 2 to 3 seconds, Twitter and Slack timeout, displaying either a blank gray square or a generic fallback image.
+
+---
+
+## Why Headless Browsers Don't Work at Scale
+
+The standard approach in many SaaS applications is running Puppeteer or Playwright:
+1. Spin up a headless Chromium container.
+2. Navigate to `http://localhost:3000/cards/rec_89b21f90`.
+3. Wait for web fonts and network idle.
+4. Call `page.screenshot()`.
+
+**The downsides are catastrophic:**
+- Cold boot latency: 1.5 to 3.5 seconds.
+- Memory footprint: 350MB+ per instance.
+- High serverless cost and concurrency throttling.
+
+---
+
+## The 35ms Architecture: Satori + @resvg/resvg-js
+
+Qodewk's dynamic OG image endpoint (`apps/web/app/api/og/[id]/route.tsx`) completely skips Chromium. It combines two lightweight libraries:
+
+1. **Satori (Vercel):** Converts JSX/HTML into SVG paths using a pure WebAssembly layout engine (Yoga).
+2. **resvg-js:** An ultra-fast Rust-based SVG-to-PNG rasterizer compiled to native binaries and WebAssembly.
+
+```text
+  GET /api/og/rec_89b21f90
+            │
+            ▼
+  Fetch Receipt Metadata (JSON, < 1ms)
+            │
+            ▼
+  JSX Component (Thermal Receipt Card with jagged edges)
+            │
+            ▼
+  Satori (Converts JSX to SVG in ~14ms)
+            │
+            ▼
+  resvg-js (Renders SVG to PNG in ~18ms)
+            │
+            ▼
+  HTTP 200 image/png (Total: ~32-35ms)
+```
+
+---
+
+## Solving Layout Pitfalls in Satori
+
+Satori is extraordinarily fast, but it does not support every CSS property. During development, we encountered several edge cases:
+
+### 1. Explicit Flexbox Display
+In standard web browsers, `<div>` elements default to `display: block`. In Satori, **all layout must be explicit flexbox**. Omitting `display: "flex"` and `flexDirection: "column"` can cause container collapses and 500 runtime crashes.
+
+### 2. Tabular Numbers and Fonts
+Thermal receipt columns require numeric tabular alignment. We load custom TTF subsets of `JetBrains Mono` and `Inter` directly into memory at serverless initialization:
+
+```typescript
+const jetbrainsMono = await fetch(
+  new URL("@/assets/fonts/JetBrainsMono-Bold.ttf", import.meta.url)
+).then((res) => res.arrayBuffer());
+
+const svg = await satori(receiptJsx, {
+  width: 1200,
+  height: 630,
+  fonts: [
+    {
+      name: "JetBrains Mono",
+      data: jetbrainsMono,
+      weight: 700,
+      style: "normal",
+    },
+  ],
+});
+```
+
+---
+
+## Result: Instant, Beautiful Previews
+
+The resulting image renders crisp monospace box characters, high-contrast barcodes, and accurate cost tags in a fraction of a second. Every share becomes a striking, tactile artifact that commands attention in developer timelines.

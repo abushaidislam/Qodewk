@@ -1,0 +1,101 @@
+---
+title: "Dual-Engine Cost Estimation: From Deterministic Logs to AST Multipliers"
+description: "When exact provider logs are missing, how Qodewk uses syntactic complexity and diff volume to produce honest heuristic bounds."
+date: 2026-10-04
+author:
+  name: "Abushaid Islam"
+  avatar: "https://github.com/abushaidislam.png"
+  twitter: "qodewk"
+tags: ["algorithms", "ast", "heuristics", "precision", "provenance"]
+---
+
+<TLDR>
+What happens when you run Qodewk on a teammate's commit or on code authored before Qodewk was installed? Qodewk's dual-engine architecture seamlessly switches between deterministic harvesting and syntactic AST complexity estimation.
+</TLDR>
+
+## The Challenge of Incomplete Telemetry
+
+Telemetry tools often fail when external conditions aren't ideal:
+- The developer used a tool with encrypted local logs.
+- The commit was authored by a collaborator who hasn't installed Qodewk yet.
+- The work was done in a sandbox container where editor state files were discarded upon container exit.
+
+Most systems either give up entirely and print `$0.00`, or make an unsubstantiated wild guess and present it as fact.
+
+Qodewk forbids both extremes through its core invariant:
+
+> **Never Fake Precision:** Always label metrics by provenance (`observed`, `estimated`, `imported`, `verified`, or `unknown`), and never present a heuristic dollar amount without an explicit `~` or confidence range.
+
+```text
+               ┌───────────────────────────────┐
+               │         Git Commit SHA        │
+               └───────────────┬───────────────┘
+                               │
+               ┌───────────────▼───────────────┐
+               │    Local Harvester Found?     │
+               └───────┬───────────────┬───────┘
+                       │               │
+                     YES               NO
+                       │               │
+                       ▼               ▼
+         ┌───────────────────┐   ┌───────────────────────────┐
+         │  Engine 1: Exact  │   │  Engine 2: Heuristic AST  │
+         │  - Provenance:    │   │  - Syntactic Churn Metric │
+         │    "observed"     │   │  - Language Token Density │
+         │  - Confidence:    │   │  - Provenance: "estimated"│
+         │    1.0            │   │  - Confidence: 0.50 - 0.75│
+         └───────────────────┘   └───────────────────────────┘
+```
+
+---
+
+## Engine 2: Syntactic Complexity & AST Multipliers
+
+When no local agent session correlates with a commit, Engine 2 activates. Rather than simply counting raw lines, Engine 2 analyzes the syntactic nature of the changes:
+
+### 1. Language Token Density
+Different languages possess drastically different token-to-line ratios. Writing 50 lines of idiomatic Python consumes substantially fewer prompt and output tokens than 50 lines of strict TypeScript with extensive interface definitions, or 50 lines of verbose Rust with lifetimes and trait bounds.
+
+| Language | Approx Tokens / Line of Code | Complexity Multiplier |
+| :--- | :--- | :--- |
+| **Python** | 7.2 | 1.0x |
+| **JavaScript / TS** | 9.4 | 1.2x |
+| **Go** | 8.8 | 1.1x |
+| **Rust** | 12.6 | 1.5x |
+| **JSON / Config** | 4.1 | 0.6x |
+
+### 2. AST Churn vs Boilerplate
+Engine 2 inspects diff hunks to categorize the type of edit:
+- **Structural Code (Logic, Loops, Functions):** High weight. Usually generated via detailed prompt back-and-forth.
+- **Imports & Re-exports:** Low weight. Commonly generated in a single shot.
+- **Documentation & Comments:** Medium weight. High token count per line but low reasoning cost.
+
+---
+
+## The Heuristic Formula
+
+```text
+Est. Prompt Tokens = Σ [ Lines_add * D_lang * M_context * α ]
+```
+
+Where:
+- `D_lang` is the language token density.
+- `M_context` is the estimated context multiplier (average codebase size ratio needed to generate the patch).
+- `α` is the empirical generation efficiency constant (`2.4`).
+
+---
+
+## Honest Presentation on Receipts
+
+When Engine 2 generates a receipt, the UI explicitly flags the heuristic nature:
+
+```text
+ ├────────────────────────────────────────────────────────┤
+ │ Input Tokens:        ~28,000 (est.)                    │
+ │ Output Tokens:        ~2,400 (est.)                    │
+ │ Est. Cost:           ~$0.09 USD  [provenance: estimated]│
+ │ Confidence:          0.62 (AST complexity heuristic)   │
+ └────────────────────────────────────────────────────────┘
+```
+
+By maintaining absolute honesty in our numbers, developers and executives know they can trust Qodewk receipts implicitly.

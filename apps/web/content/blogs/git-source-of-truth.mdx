@@ -1,0 +1,119 @@
+---
+title: "Git Revisions as the Single Source of Truth"
+description: "How Qodewk anchors telemetry to immutable Git commits rather than volatile cloud sessions or transient logs."
+date: 2026-09-28
+author:
+  name: "Abushaid Islam"
+  avatar: "https://github.com/abushaidislam.png"
+  twitter: "qodewk"
+tags: ["git", "architecture", "telemetry", "invariants"]
+---
+
+<TLDR>
+Cloud dashboards and proxy servers can be dropped, purged, or misconfigured. Git's directed acyclic graph (DAG) of cryptographic object hashes is permanent. Qodewk binds agent telemetry directly to commit SHAs and Git Notes.
+</TLDR>
+
+## Why Ephemeral Telemetry Fails in Coding
+
+Most developer tooling treats analytics as an afterthought: an HTTP POST sent to a remote telemetry collector after an event occurs. In the world of autonomous coding agents, this model breaks down completely:
+
+1. **Disconnected Development:** Developers switch branches, rebase commits, cherry-pick hotfixes, squash feature branches, or code offline while traveling.
+2. **Session Drift:** A single chat session with Claude Code or Cursor might span 4 different commits, or conversely, 5 separate prompt rounds might be consolidated into one single atomic git commit.
+3. **Data Loss:** If your local machine crashes or the editor window closes, in-memory agent metrics vanish forever.
+
+To solve this, Qodewk treats the **Git revision graph (`simple-git`) and local filesystem** as the sole foundational source of truth.
+
+```text
+  [ Commit c1 ] ───> [ Commit c2 ] ───> [ Commit c3 (HEAD) ]
+        │                   │                   │
+  refs/notes/qodewk   refs/notes/qodewk   refs/notes/qodewk
+  (Metadata JSON)     (Metadata JSON)     (Metadata JSON)
+```
+
+---
+
+## The Commit Tree Extraction Pipeline
+
+When you run `qodewk` or when a Git hook fires, Qodewk inspects the commit topology using low-overhead git plumbing commands:
+
+```bash
+git diff-tree --numstat --summary -r HEAD
+```
+
+This reveals:
+- Total files modified, added, renamed, or deleted.
+- Exact line additions and deletions partitioned by programming language.
+- Parent commit hashes to compute merge relationships and branching origin.
+
+```typescript
+// Core extraction model in @qodewk/core
+export interface GitCommitMetrics {
+  commitSha: string;
+  parentShas: string[];
+  author: { name: string; email: string };
+  timestamp: number;
+  filesChanged: number;
+  insertions: number;
+  deletions: number;
+  languageDistribution: Record<string, number>;
+}
+```
+
+---
+
+## Reconciling Git Commits with Agent Transcripts
+
+The magic happens when Qodewk cross-references the git commit timestamp and file touch-points against local agent transcripts:
+
+```text
+┌───────────────────────────────┐     ┌───────────────────────────────┐
+│       Git Object Graph        │     │    Local Agent Transcripts    │
+│  Commit SHA: 7b9a4c1          │     │  Session ID: ses_89f02a       │
+│  Files: src/db.ts, package.json│    │  Tool Calls: WriteFile, Patch │
+│  Timestamp: 1727512800        │     │  Prompt Tokens: 42,100        │
+└───────────────┬───────────────┘     └───────────────┬───────────────┘
+                │                                     │
+                └───────────────┐     ┌───────────────┘
+                                ▼     ▼
+                 ┌─────────────────────────────┐
+                 │    Attribution Matching     │
+                 │   - Timestamp Proximity     │
+                 │   - File Overlap Scoring    │
+                 │   - Diff Size Correlation   │
+                 └──────────────┬──────────────┘
+                                │
+                                ▼
+                 Receipt: Verified Attribution
+```
+
+### The Attribution Scoring Formula
+
+Qodewk evaluates candidate sessions using a multi-factor attribution algorithm:
+
+```text
+Score = (w_t * S_time) + (w_f * S_files) + (w_d * S_diff)
+```
+
+- **Time Proximity (`S_time`):** How close was the agent's last file modification to the `GIT_AUTHOR_DATE`? (Exponential decay with a 15-minute half-life).
+- **File Overlap (`S_files`):** Jaccard similarity between files edited by the agent and files staged in the Git commit.
+- **Diff Volume (`S_diff`):** Ratio of tokens output by the agent to total bytes introduced into the tree.
+
+If the calculated score exceeds `0.70`, Qodewk assigns `provenance: "observed"` with high confidence. If no local transcript can be reliably correlated (for example, if the commit was authored manually or before Qodewk was installed), Qodewk gracefully degrades to `provenance: "estimated"` using syntax complexity analysis.
+
+---
+
+## Zero Pollution with Git Notes
+
+Where does this receipt data get preserved? Rather than creating annoying dotfiles (`.qodewk-receipt.json`) that clutter your git worktree and show up in `git status`, Qodewk uses **Git Notes** under the custom namespace:
+
+```bash
+git notes --ref=refs/notes/qodewk add -m '{"receiptId":"rec_091a","cost":0.12}' HEAD
+```
+
+Git Notes:
+1. Never modify the commit hash or tree SHA.
+2. Do not pollute `git status` or working directories.
+3. Can be fetched and pushed independently (`git push origin refs/notes/qodewk`).
+4. Allow entire teams to share AI receipt history without adding merge conflicts.
+
+This architecture ensures that your telemetry is as resilient, distributed, and permanent as your git history itself.

@@ -1,0 +1,129 @@
+---
+title: "Zero Code Exfiltration: Privacy by Construction"
+description: "Why raw source code and diff bodies never leave your machine, and how HMAC-SHA256 salted proofs guarantee receipt verifiability."
+date: 2026-09-29
+author:
+  name: "Abushaid Islam"
+  avatar: "https://github.com/abushaidislam.png"
+  twitter: "qodewk"
+tags: ["privacy", "security", "cryptography", "architecture"]
+---
+
+<TLDR>
+Enterprise security policies and open-source contributors alike agree: proprietary code should never be leaked to third-party servers. Qodewk enforces privacy at the architectural layer: raw file contents and diff chunks are never transmitted over the wire.
+</TLDR>
+
+## The Problem with Traditional Developer Analytics
+
+Many developer analytics tools claim to be "secure," but their client binaries quietly upload raw git diffs, file trees, commit messages, and even whole files to cloud servers for "processing."
+
+If you work in healthcare, finance, defense, or proprietary IP environments, this is an instant disqualifier. A single inadvertent upload of proprietary code or API credentials violates compliance protocols such as SOC 2, HIPAA, and GDPR.
+
+When we architected Qodewk, we implemented an absolute non-negotiable invariant:
+
+> **Privacy by Construction:** Raw source code and diff bodies **NEVER** leave the developer's machine by default.
+
+---
+
+## What Stays Local vs What Is Shared
+
+Every metric captured by Qodewk is bifurcated into two strictly guarded tiers:
+
+| Metric Category | Local Workstation (`~/.qodewk`) | Public Receipt (`https://qodewk.dev/r/...`) |
+| :--- | :--- | :--- |
+| **Raw Diff Bodies** | Stored in local git cache only | **NEVER SENT** (Hard stripped) |
+| **File Paths & Content** | Processed in memory only | **NEVER SENT** (Only language extension tallies) |
+| **Commit Message** | Preserved locally | Sanitized or omitted unless flagged public |
+| **Token Counts** | Preserved in local SQLite | Aggregate numbers (Prompt, Output, Cache) |
+| **Cost Estimates** | Computed locally | Computed dollar amount with provenance |
+| **Cryptographic Proof** | Salted HMAC-SHA256 | Public hash signature for tamper detection |
+
+```text
+┌────────────────────────────────────────────────────────┐
+│                   YOUR WORKSTATION                     │
+│  [Source Files]  ──>  [Git Diff Engine]                │
+│                                │                       │
+│                        (Local Processing)              │
+│                                │                       │
+│                                ▼                       │
+│                   Metadata Extraction Only             │
+│                   - File count: 6                      │
+│                   - Languages: TS (80%), Rust (20%)    │
+│                   - Line stats: +240, -12              │
+│                   - Token metrics: 18,400              │
+│                   - Salted HMAC-SHA256 hash            │
+└────────────────────────────────┬───────────────────────┘
+                                 │
+                            HTTPS POST
+                     (Hard Cap: 50 KB Payload)
+                                 │
+                                 ▼
+┌────────────────────────────────────────────────────────┐
+│                   QODEWK PUBLIC CLOUD                  │
+│       Publishes Receipt Card — ZERO CODE STORED        │
+└────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Cryptographic Proof via Salted HMAC-SHA256
+
+How can someone verifying a receipt know it wasn't fabricated or tampered with if the source code itself isn't uploaded?
+
+Qodewk uses a salted hash construction:
+
+```typescript
+import { createHmac } from "node:crypto";
+
+export function computeReceiptProof(payload: ReceiptPayload, secretSalt: string): string {
+  const canonicalString = [
+    payload.commitSha,
+    payload.timestamp,
+    payload.metrics.insertions,
+    payload.metrics.deletions,
+    payload.telemetry.totalTokens,
+    payload.cost.amount,
+  ].join(":");
+
+  return createHmac("sha256", secretSalt)
+    .update(canonicalString)
+    .digest("hex");
+}
+```
+
+The author's local CLI holds the private receipt salt. The public receipt includes the resulting hash signature. If anyone attempts to tamper with the line counts or token numbers in the cloud database, the signature fails validation instantly.
+
+---
+
+## The 50 Kilobyte Enforcement Barrier
+
+In `apps/web/app/api/receipts/route.ts`, our serverless endpoint enforces a strict payload cap:
+
+```typescript
+const MAX_RECEIPT_PAYLOAD_BYTES = 50 * 1024; // 50 KB hard cap
+
+export async function POST(req: Request) {
+  const contentLength = Number(req.headers.get("content-length") ?? 0);
+  if (contentLength > MAX_RECEIPT_PAYLOAD_BYTES) {
+    return new Response(
+      JSON.stringify({ error: "Payload exceeds 50KB. Diff bodies are forbidden." }),
+      { status: 413, headers: { "Content-Type": "application/json" } }
+    );
+  }
+  // Proceed with Zod validation...
+}
+```
+
+Because source files and git patches routinely measure hundreds of kilobytes or megabytes, a hard 50 KB ceiling makes it mathematically impossible for full diff bodies or file contents to leak into public receipts.
+
+---
+
+## Verifiable Trust
+
+Every generated thermal receipt displays our signature trust pledge:
+
+```text
+[✓] Source code was never uploaded to Qodewk
+```
+
+By guaranteeing privacy by construction, developers, engineering managers, and enterprise security officers can deploy Qodewk across any repository with total confidence.

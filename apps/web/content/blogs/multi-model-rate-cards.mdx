@@ -1,0 +1,92 @@
+---
+title: "Dynamic Pricing & Multi-Model Rate Cards at the Edge"
+description: "Deconstructing prompt caching math, input/output tokens, and cost estimation across Claude, OpenAI, Gemini, and DeepSeek."
+date: 2026-10-01
+author:
+  name: "Abushaid Islam"
+  avatar: "https://github.com/abushaidislam.png"
+  twitter: "qodewk"
+tags: ["pricing", "tokens", "llm", "math", "caching"]
+---
+
+<TLDR>
+LLM pricing is no longer as simple as `input_tokens * rate`. With prompt caching discounts, 1-hour cache write markups, and cross-model aliases, accurate cost computation requires a deterministic rate card engine.
+</TLDR>
+
+## The Token Pricing Multi-Tier Reality
+
+In early 2024, calculating an LLM API bill was straightforward multiplication:
+
+```text
+Total = (N_in * P_in) + (N_out * P_out)
+```
+
+Today, autonomous coding agents rely heavily on **prompt caching**. When Claude Code or Cursor sends a 150,000-token codebase context window repeatedly, Anthropic discounts cached input tokens by **90%** ($0.30 per million instead of $3.00), while assessing a **25% premium** ($3.75 per million) for writing that cache.
+
+If your telemetry engine ignores prompt caching, your cost calculations will be off by up to **800%**.
+
+---
+
+## The Qodewk Rate Card Contract
+
+In `@qodewk/pricing`, every foundation model is registered with versioned per-million token rates:
+
+```typescript
+export interface ModelRateCard {
+  provider: "anthropic" | "openai" | "google" | "deepseek";
+  inputPerMillion: number;
+  outputPerMillion: number;
+  cacheReadPerMillion?: number;
+  cacheWritePerMillion?: number;
+  effectiveDate: string;
+}
+```
+
+Here is a comparison of active rates across major coding models:
+
+| Model ID | Input ($/M) | Output ($/M) | Cache Read ($/M) | Cache Write ($/M) |
+| :--- | :--- | :--- | :--- | :--- |
+| `claude-3-7-sonnet` | \$3.00 | \$15.00 | \$0.30 | \$3.75 |
+| `claude-3-5-haiku` | \$0.80 | \$4.00 | \$0.08 | \$1.00 |
+| `gpt-4o` | \$2.50 | \$10.00 | \$1.25 | — |
+| `o3-mini` | \$1.10 | \$4.40 | \$0.55 | — |
+| `gemini-2.5-pro` | \$1.25 | \$5.00 | \$0.31 | — |
+| `deepseek-chat (V3)` | \$0.14 | \$0.28 | \$0.014 | — |
+
+---
+
+## Deterministic Cost Calculation Algorithm
+
+To prevent floating point precision drift, Qodewk calculates dollar values down to 6 decimal places before rounding:
+
+```typescript
+export function computeCost(
+  usage: TokenUsage,
+  card: ModelRateCard
+): number {
+  const inputCost = ((usage.inputTokens ?? 0) / 1_000_000) * card.inputPerMillion;
+  const outputCost = ((usage.outputTokens ?? 0) / 1_000_000) * card.outputPerMillion;
+  
+  const cacheReadCost = card.cacheReadPerMillion
+    ? ((usage.cacheReadTokens ?? 0) / 1_000_000) * card.cacheReadPerMillion
+    : 0;
+
+  const cacheWriteCost = card.cacheWriteWritePerMillion
+    ? ((usage.cacheWriteTokens ?? 0) / 1_000_000) * card.cacheWritePerMillion
+    : 0;
+
+  return Math.round((inputCost + outputCost + cacheReadCost + cacheWriteCost) * 1_000_000) / 1_000_000;
+}
+```
+
+---
+
+## Offline-First with 24-Hour Remote Sync
+
+AI providers constantly tweak their prices. To ensure developers get up-to-date rate cards without breaking offline mode, Qodewk uses a dual strategy:
+
+1. **Embedded Zero-Native Bundles:** `@qodewk/pricing` includes hardcoded rate cards that require zero network requests, ensuring instant CLI responsiveness (under 2ms).
+2. **Dynamic 24h Background TTL:** When internet access is present, the CLI non-blockingly pulls updated rate cards from `https://qodewk.dev/api/pricing/sync` and stores them in `~/.qodewk/pricing-cache.json`.
+3. **Airplane Mode Immunity:** If you code on a flight with no Wi-Fi, Qodewk gracefully operates on the cached or embedded rates without stalling or raising network errors.
+
+Explore our full interactive rate cards registry at [/rate-cards](/rate-cards).

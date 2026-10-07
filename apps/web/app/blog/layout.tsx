@@ -2,28 +2,29 @@ import { RootProvider } from "fumadocs-ui/provider/next";
 import type { Metadata } from "next";
 import { createMetadata } from "@/lib/metadata";
 
-const description = "Latest updates, articles, and insights about Better Auth";
+const description =
+	"Engineering updates, telemetry deep-dives, and architectural insights from the Qodewk team.";
 
 export const metadata: Metadata = createMetadata({
-	title: "Blog",
+	title: "Blog - Qodewk",
 	description,
 	openGraph: {
 		url: "/blog",
-		title: "Blog - Better Auth",
+		title: "Blog - Qodewk",
 		description,
-		images: ["/api/og-release?heading=Better%20Auth%20Blog"],
+		images: ["/api/og-release?heading=Qodewk%20Blog"],
 	},
 	twitter: {
-		images: ["/api/og-release?heading=Better%20Auth%20Blog"],
-		title: "Blog - Better Auth",
+		images: ["/api/og-release?heading=Qodewk%20Blog"],
+		title: "Blog - Qodewk",
 		description,
 	},
 	alternates: {
 		types: {
 			"application/rss+xml": [
 				{
-					title: "Better Auth Blog",
-					url: "https://better-auth.com/blog/rss.xml",
+					title: "Qodewk Blog",
+					url: "https://qodewk.dev/blog/rss.xml",
 				},
 			],
 		},

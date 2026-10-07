@@ -1,0 +1,92 @@
+---
+title: "Sub-5ms Git Hooks: Building Detached Non-Blocking Telemetry"
+description: "How Qodewk's post-commit and post-rewrite hooks operate in under 5 milliseconds without interrupting developer flow."
+date: 2026-10-02
+author:
+  name: "Abushaid Islam"
+  avatar: "https://github.com/abushaidislam.png"
+  twitter: "qodewk"
+tags: ["git", "performance", "hooks", "concurrency", "posix"]
+---
+
+<TLDR>
+Developers despise slow git hooks. If `git commit` hangs for even 500ms, developers will bypass it with `--no-verify`. Qodewk guarantees hook execution completes in under 5 milliseconds by detaching telemetry recording into an asynchronous daemon process.
+</TLDR>
+
+## The Latency Death Spiral of Git Hooks
+
+Git hooks are notoriously abused in modern workflows. Linters, formatting scripts, and vulnerability scanners often hijack `pre-commit` or `post-commit`, causing a simple commit to freeze the terminal for 3 to 10 seconds.
+
+For an AI coding agent that makes 20 iterative commits in a single session, blocking hooks create compounding delays and broken feedback loops.
+
+When designing Qodewk's automated capture hooks (`post-commit`, `post-rewrite`), our engineering specification was clear:
+
+> **The Hook Rule:** The synchronous portion of the hook script must execute in **less than 5 milliseconds** and exit with code `0`.
+
+---
+
+## Detached Process Spawning Mechanics
+
+To achieve sub-5ms return times, Qodewk never performs diff parsing, SQLite inserts, or transcript harvesting in the foreground hook process.
+
+Instead, the hook script spawns a detached background worker completely decoupled from `stdout`, `stdin`, and `stderr`:
+
+```bash
+#!/bin/sh
+# --- BEGIN QODEWK HOOK ---
+if command -v qodewk >/dev/null 2>&1; then
+  (qodewk record-event --hook post-commit &) >/dev/null 2>&1
+fi
+# --- END QODEWK HOOK ---
+exit 0
+```
+
+### Why Standard Backgrounding Fails
+
+Simply running `qodewk record-event &` is insufficient on many Unix platforms because Git holds open inherited file descriptors. If Git detects an active background child process holding open standard output streams, it will block until that child process terminates.
+
+By explicitly wrapping the invocation in subshell parentheses `(...)` and redirecting both `stdout` and `stderr` to `/dev/null`, the parent shell exits instantly, allowing Git to return prompt control back to the developer in **~3.2ms**.
+
+```text
+  Developer runs `git commit -m "fix: resolve edge case"`
+       │
+       ▼
+  Git completes commit SHA: c89f10a
+       │
+       ▼
+  Runs .git/hooks/post-commit
+       │
+       ├───> Spawns detached (qodewk record-event &) [Background PID 8192]
+       │
+       ▼ (Elapsed time: 3.2ms)
+  Exit 0 ──> Terminal prompt returned immediately to developer!
+       │
+       └────────────────────────────────────────────────────────┐
+                                                                ▼
+                                                [Background PID 8192]
+                                                - Harvests session
+                                                - Updates SQLite db
+                                                - Appends refs/notes/qodewk
+```
+
+---
+
+## Non-Destructive Coexistence with Husky and Lefthook
+
+Many repositories already utilize hook managers such as Husky, Lefthook, or pre-commit. A naive installer that overwrites `.git/hooks/post-commit` breaks existing team workflows.
+
+Qodewk uses strict boundary markers:
+
+```bash
+# --- BEGIN QODEWK HOOK ---
+...
+# --- END QODEWK HOOK ---
+```
+
+When you run `qodewk init-hooks`:
+1. If `.git/hooks/post-commit` does not exist, Qodewk creates it with `chmod +x`.
+2. If it already exists, Qodewk checks for `# --- BEGIN QODEWK HOOK ---`.
+3. If absent, it cleanly appends the non-blocking snippet at the bottom.
+4. On uninstall (`qodewk remove-hooks`), it strips only the section between the markers, leaving Husky and Lefthook completely untouched.
+
+Speed and safety aren't mutually exclusive—they are the prerequisite for developer trust.
