@@ -40,6 +40,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **Workspace Scope Standardization & Dependency Hoisting (Phase 2):**
   - Standardized web application package name from `web` to `@qodewk/web` across `apps/web/package.json`, `Dockerfile`, `vercel.json`, and deployment documentation.
   - Explicitly declared `vitest` in `devDependencies` across all workspace packages (`@qodewk/protocol`, `@qodewk/pricing`, `@qodewk/core`, `qodewk`, `@qodewk/action`, `@qodewk/web`) to eliminate phantom dependency hoisting.
+- **Shared Workspace Configurations & Tooling Modernization (Phase 3):**
+  - Created shared configuration package `@qodewk/tsconfig` (`packages/tsconfig/`) providing `base.json`, `node.json`, and `nextjs.json` presets to eliminate duplicate compiler configurations.
+  - Refactored `tsconfig.json` across all applications (`apps/web`) and packages (`@qodewk/protocol`, `@qodewk/pricing`, `@qodewk/core`, `qodewk`, `@qodewk/action`) to extend `@qodewk/tsconfig`.
+  - Established root ESLint flat configuration (`eslint.config.mjs`) and Prettier configs (`.prettierrc`, `.prettierignore`).
+  - Repaired `turbo lint` by migrating `apps/web/package.json` from the deprecated Next.js 16 CLI command (`next lint`) to direct `eslint .`.
 
 ## [0.9.0] — 2026-10-02
 
