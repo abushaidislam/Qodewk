@@ -48,4 +48,15 @@ describe("Digital Receipt Page (`apps/web/app/r/[id]`)", () => {
     expect(res.status).toBe(200);
     expect(res.headers.get("content-type")).toContain("image/png");
   });
+
+  it("safely generates a dynamic OG image for arbitrary or non-demo receipt IDs without 500 error", async () => {
+    const { GET } = await import("../app/api/og/[id]/route.js");
+    const { NextRequest } = await import("next/server");
+    const req = new NextRequest(new URL("http://localhost:3000/api/og/rec_5b10008675a0cd20194c3696"));
+    const res = await GET(req, { params: Promise.resolve({ id: "rec_5b10008675a0cd20194c3696" }) });
+    expect(res.status).toBe(200);
+    expect(res.headers.get("content-type")).toContain("image/png");
+    const bytes = await res.arrayBuffer();
+    expect(bytes.byteLength).toBeGreaterThan(1000);
+  });
 });
