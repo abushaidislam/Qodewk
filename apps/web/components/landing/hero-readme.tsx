@@ -46,10 +46,10 @@ const aiPromptText = `Set up Qodewk in my project to track AI coding agent telem
 Refer to qodewk.dev/docs for rate cards, configuration, and CI workflows.`;
 
 function CredentialFields() {
-	const emailText = "user@email.com";
-	const passwordDots = "••••••••";
-	const [emailDisplay, setEmailDisplay] = useState(emailText);
-	const [passwordDisplay, setPasswordDisplay] = useState(passwordDots);
+	const sourceText = "source: local-only";
+	const egressText = "diff: 0-bytes-egress";
+	const [sourceDisplay, setSourceDisplay] = useState(sourceText);
+	const [egressDisplay, setEgressDisplay] = useState(egressText);
 	const [isTyping, setIsTyping] = useState(false);
 	const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
 	const isTypingRef = useRef(false);
@@ -64,29 +64,29 @@ function CredentialFields() {
 		timeoutsRef.current = [];
 
 		// Reset to empty
-		setEmailDisplay("");
-		setPasswordDisplay("");
+		setSourceDisplay("");
+		setEgressDisplay("");
 
-		// Type email character by character
-		for (let i = 0; i <= emailText.length; i++) {
+		// Type source text character by character
+		for (let i = 0; i <= sourceText.length; i++) {
 			const t = setTimeout(() => {
-				setEmailDisplay(emailText.slice(0, i));
-			}, i * 60);
+				setSourceDisplay(sourceText.slice(0, i));
+			}, i * 50);
 			timeoutsRef.current.push(t);
 		}
 
-		// Type password dots after email finishes
-		const passwordStart = (emailText.length + 2) * 60;
-		for (let i = 0; i <= passwordDots.length; i++) {
+		// Type egress text after source finishes
+		const egressStart = (sourceText.length + 2) * 50;
+		for (let i = 0; i <= egressText.length; i++) {
 			const t = setTimeout(
 				() => {
-					setPasswordDisplay(passwordDots.slice(0, i));
-					if (i === passwordDots.length) {
+					setEgressDisplay(egressText.slice(0, i));
+					if (i === egressText.length) {
 						isTypingRef.current = false;
 						setIsTyping(false);
 					}
 				},
-				passwordStart + i * 50,
+				egressStart + i * 40,
 			);
 			timeoutsRef.current.push(t);
 		}
@@ -103,19 +103,22 @@ function CredentialFields() {
 			<div className="flex items-center h-5 px-2 border border-foreground/[0.08] bg-foreground/[0.02] flex-1 min-w-0">
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
-					width="8"
-					height="8"
+					width="9"
+					height="9"
 					viewBox="0 0 24 24"
-					className="text-foreground/45 dark:text-foreground/30 shrink-0 mr-1.5"
+					fill="none"
+					stroke="currentColor"
+					strokeWidth="2"
+					strokeLinecap="round"
+					strokeLinejoin="round"
+					className="text-[#5db8a6] shrink-0 mr-1.5"
 				>
-					<path
-						fill="currentColor"
-						d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2m0 4-8 5-8-5V6l8 5 8-5z"
-					/>
+					<rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+					<path d="M7 11V7a5 5 0 0 1 10 0v4" />
 				</svg>
-				<span className="text-[9px] font-mono text-foreground/50 dark:text-foreground/35 truncate">
-					{emailDisplay}
-					{isTyping && emailDisplay.length < emailText.length && (
+				<span className="text-[9px] font-mono text-foreground/60 dark:text-foreground/45 truncate">
+					{sourceDisplay}
+					{isTyping && sourceDisplay.length < sourceText.length && (
 						<span className="inline-block w-px h-2.5 bg-foreground/50 ml-px animate-[blink_0.8s_step-end_infinite] align-middle" />
 					)}
 				</span>
@@ -123,21 +126,23 @@ function CredentialFields() {
 			<div className="flex items-center h-5 px-2 border border-foreground/[0.08] bg-foreground/[0.02] flex-1 min-w-0">
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
-					width="8"
-					height="8"
+					width="9"
+					height="9"
 					viewBox="0 0 24 24"
-					className="text-foreground/45 dark:text-foreground/30 shrink-0 mr-1.5"
+					fill="none"
+					stroke="currentColor"
+					strokeWidth="2"
+					strokeLinecap="round"
+					strokeLinejoin="round"
+					className="text-[#cc785c] shrink-0 mr-1.5"
 				>
-					<path
-						fill="currentColor"
-						d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2m-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2M9 8V6c0-1.66 1.34-3 3-3s3 1.34 3 3v2z"
-					/>
+					<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
 				</svg>
-				<span className="text-[9px] font-mono text-foreground/50 dark:text-foreground/35 tracking-[0.1em]">
-					{passwordDisplay}
+				<span className="text-[9px] font-mono text-foreground/60 dark:text-foreground/45 truncate">
+					{egressDisplay}
 					{isTyping &&
-						emailDisplay.length >= emailText.length &&
-						passwordDisplay.length < passwordDots.length && (
+						sourceDisplay.length >= sourceText.length &&
+						egressDisplay.length < egressText.length && (
 							<span className="inline-block w-px h-2.5 bg-foreground/50 ml-px animate-[blink_0.8s_step-end_infinite] align-middle" />
 						)}
 				</span>
@@ -1183,7 +1188,7 @@ export function HeroReadMe({
 						<div className="flex items-center gap-3 my-4">
 							<div className="flex-1 border-t border-foreground/6"></div>
 							<span className="text-[11px] sm:text-xs text-foreground/50 dark:text-foreground/50 font-mono tracking-wider uppercase shrink-0">
-								Trusted By
+								Supported Providers & Models
 							</span>
 						</div>
 
@@ -1328,84 +1333,107 @@ export function HeroReadMe({
 										</div>
 										{"logos" in feature && feature.logos && (
 											<div className="flex items-center gap-3.5 mt-3">
-												{/* Next.js */}
-												<svg
-													xmlns="http://www.w3.org/2000/svg"
-													width="15"
-													height="15"
-													viewBox="0 0 24 24"
-													className="text-neutral-800 dark:text-neutral-200 opacity-90 transition-all duration-300 group-hover/card:opacity-100 group-hover/card:animate-[icon-bounce_0.4s_ease-out_0s]"
-												>
-													<path
-														fill="currentColor"
-														d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10s-4.477 10-10 10m4-14h-1.35v4H16zM9.346 9.71l6.059 7.828l1.054-.809L9.683 8H8v7.997h1.346z"
-													/>
-												</svg>
-												{/* Nuxt */}
-												<svg
-													xmlns="http://www.w3.org/2000/svg"
-													width="15"
-													height="15"
-													viewBox="0 0 24 24"
-													className="text-[#00DC82] opacity-90 transition-all duration-300 group-hover/card:opacity-100 group-hover/card:animate-[icon-bounce_0.4s_ease-out_0.05s]"
-												>
-													<path
-														fill="currentColor"
-														d="M13.2 18.666h7.4c.236 0 .462-.083.667-.2c.204-.117.415-.264.533-.466c.118-.203.2-.433.2-.667s-.082-.464-.2-.667l-5-8.6a1.2 1.2 0 0 0-.467-.466a1.6 1.6 0 0 0-.733-.2c-.236 0-.462.083-.667.2a1.2 1.2 0 0 0-.466.466l-1.267 2.2L10.667 6c-.118-.203-.262-.417-.467-.534s-.43-.133-.667-.133c-.236 0-.462.016-.666.133s-.416.33-.534.534l-6.2 10.666c-.118.203-.133.433-.133.667s.015.464.133.667c.118.202.33.35.534.466s.43.2.666.2H8c1.85 0 3.195-.83 4.133-2.4l2.267-3.933l1.2-2.067l3.667 6.267H14.4zm-5.267-2.133H4.667l4.866-8.4l2.467 4.2l-1.634 2.848c-.623 1.02-1.333 1.352-2.433 1.352"
-													/>
-												</svg>
-												{/* SvelteKit */}
-												<svg
-													xmlns="http://www.w3.org/2000/svg"
-													width="13"
-													height="15"
-													viewBox="0 0 426 512"
-													className="text-[#FF3E00] opacity-90 transition-all duration-300 group-hover/card:opacity-100 group-hover/card:animate-[icon-bounce_0.4s_ease-out_0.1s]"
-												>
-													<path
-														fill="currentColor"
-														d="M403.508 229.23C491.235 87.7 315.378-58.105 190.392 23.555L71.528 99.337c-57.559 37.487-82.55 109.513-47.45 183.53c-87.761 133.132 83.005 289.03 213.116 205.762l118.864-75.782c64.673-42.583 79.512-116.018 47.45-183.616m-297.592-80.886l118.69-75.739c77.973-46.679 167.756 34.942 135.388 110.992c-19.225-15.274-40.65-24.665-56.923-28.894c6.186-24.57-22.335-42.796-42.174-30.106l-118.95 75.48c-29.411 20.328 1.946 62.138 31.014 44.596l45.33-28.895c101.725-57.403 198 80.425 103.38 147.975l-118.692 75.739C131.455 485.225 34.11 411.96 67.592 328.5c17.786 13.463 36.677 23.363 56.923 28.894c-4.47 28.222 24.006 41.943 42.476 30.365L285.64 312.02c29.28-21.955-2.149-61.692-30.97-44.595l-45.504 28.894c-100.56 58.77-199.076-80.42-103.25-147.975"
-													/>
-												</svg>
-												{/* Solid Start */}
-												<svg
-													xmlns="http://www.w3.org/2000/svg"
-													width="15"
-													height="15"
-													viewBox="0 0 128 128"
-													className="text-[#2C4F7C] dark:text-[#66AAEE] opacity-90 transition-all duration-300 group-hover/card:opacity-100 group-hover/card:animate-[icon-bounce_0.4s_ease-out_0.2s]"
-												>
-													<path
-														fill="currentColor"
-														d="M61.832 4.744c-3.205.058-6.37.395-9.45 1.07l-2.402.803c-4.806 1.603-8.813 4.005-11.216 7.21l-1.602 2.404l-12.017 20.828l.166.031c-4.785 5.823-5.007 14.07-.166 21.6c1.804 2.345 4.073 4.431 6.634 6.234l-15.445 4.982L.311 97.946s42.46 32.044 75.306 24.033l2.403-.801c5.322-1.565 9.292-4.48 11.683-8.068l.334.056l16.022-28.84c3.204-5.608 2.404-12.016-1.602-18.425a36 36 0 0 0-7.059-6.643l15.872-5.375l14.42-24.033S92.817 4.19 61.831 4.744z"
-													/>
-												</svg>
-												{/* TanStack Start */}
-												<svg
-													height="15"
-													viewBox="0 0 64.04 83.84"
-													width="12"
-													className="text-neutral-800 dark:text-neutral-200 opacity-90 transition-all duration-300 group-hover/card:opacity-100 group-hover/card:animate-[icon-bounce_0.4s_ease-out_0.15s]"
-													xmlns="http://www.w3.org/2000/svg"
-												>
-													<path
-														fill="currentColor"
-														d="M32.02,0c23.15,0,32.02,14.33,32.02,41.92s-8.87,41.92-32.02,41.92S0,69.53,0,41.92C0,14.33,8.87,0,32.02,0ZM42.61,61.08c-3.01,0-4.65.82-5.97,1.48-1.14.57-2.03,1.02-4.01,1.02s-2.87-.45-4.01-1.02c-1.32-.66-2.96-1.48-5.97-1.48s-4.65.82-5.97,1.48c-1.14.57-2.03,1.02-4.01,1.02v4.37c3.01,0,4.65-.82,5.97-1.48,1.14-.57,2.03-1.02,4.01-1.02s2.87.45,4.01,1.02c1.32.66,2.96,1.48,5.97,1.48s4.65-.82,5.97-1.48c1.14-.57,2.03-1.02,4.01-1.02s2.87.45,4.01,1.02c1.32.66,2.96,1.48,5.97,1.48v-4.37c-1.97,0-2.87-.45-4.01-1.02-1.32-.66-2.96-1.48-5.97-1.48ZM44.04,17.29c2.27-2.05,0-5.76-2.84-4.64-1.57.63-3.05,1.53-4.37,2.72-2.06,1.87-3.45,4.22-4.2,6.78-.75-2.56-2.14-4.91-4.2-6.78-1.32-1.18-2.8-2.09-4.37-2.72-2.84-1.12-5.11,2.59-2.84,4.64l8.33,7.52c-2.72-1.84-6-2.93-9.54-2.93-1.93,0-3.78.31-5.52.91-2.92.99-2.11,5.35.96,5.35h11.62c-2.56.49-4.99,1.63-7.03,3.45-1.32,1.18-2.36,2.56-3.14,4.07-1.41,2.71,2.05,5.34,4.32,3.31l9.38-8.45-.7,23.25c0,.28-.16.55-.37.78-.3-.13-.58-.27-.9-.43-1.32-.66-2.96-1.48-5.97-1.48s-4.65.82-5.97,1.48c-1.14.57-2.03,1.02-4.01,1.02v4.37c3.01,0,4.65-.82,5.97-1.48,1.14-.57,2.03-1.02,4.01-1.02s2.87.45,4.01,1.02c1.32.66,2.96,1.48,5.97,1.48s4.65-.82,5.97-1.48c1.14-.57,2.03-1.02,4.01-1.02s2.87.45,4.01,1.02c1.32.66,2.96,1.48,5.97,1.48v-4.37c-1.97,0-2.87-.45-4.01-1.02v-.02c-1.32-.66-2.96-1.48-5.97-1.48s-4.65.82-5.97,1.48c-.34.16-.66.33-.99.46-.25-.22-.4-.51-.42-.81l-.7-23.37,9.51,8.58c2.27,2.05,5.73-.58,4.32-3.31-.78-1.5-1.82-2.89-3.14-4.07-2.03-1.84-4.46-2.96-7.03-3.45h11.62c3.08,0,3.87-4.35.96-5.35-1.73-.58-3.59-.91-5.52-.91-3.53,0-6.8,1.09-9.54,2.93l8.33-7.52Z"
-													/>
-												</svg>
-												{/* Expo */}
-												<svg
-													xmlns="http://www.w3.org/2000/svg"
-													width="15"
-													height="15"
-													viewBox="0 0 32 32"
-													className="text-neutral-800 dark:text-neutral-200 opacity-90 transition-all duration-300 group-hover/card:opacity-100 group-hover/card:animate-[icon-bounce_0.4s_ease-out_0.25s]"
-												>
-													<path
-														fill="currentColor"
-														d="M24.292 15.547a3.93 3.93 0 0 0 4.115-3.145a2.57 2.57 0 0 0-2.161-1.177c-2.272-.052-3.491 2.651-1.953 4.323zm-9.177-10.85l5.359-3.104L18.766.63l-7.391 4.281l.589.328l1.119.629l2.032-1.176zm6.046-3.39c.089.027.161.1.188.188l2.484 7.593a.285.285 0 0 1-.125.344a5.06 5.06 0 0 0-2.317 5.693a5.066 5.066 0 0 0 5.401 3.703a.3.3 0 0 1 .307.203l2.563 7.803a.3.3 0 0 1-.125.344l-7.859 4.771a.3.3 0 0 1-.131.036a.26.26 0 0 1-.203-.041l-2.765-1.797a.3.3 0 0 1-.109-.129l-5.396-12.896l-8.219 4.875c-.016.011-.037.021-.052.032a.3.3 0 0 1-.261-.021l-1.859-1.093a.283.283 0 0 1-.115-.381l7.953-15.749a.27.27 0 0 1 .135-.131L18.615.045a.29.29 0 0 1 .292-.005zm-8.322 5.1l-1.932-1.089l-7.693 15.229l1.396.823l6.631-9.015a.28.28 0 0 1 .271-.12a.29.29 0 0 1 .235.177l7.228 17.296l1.933 1.251l-8.063-24.552zm13.406 10.557c-2.256 0-3.787-2.292-2.923-4.376c.86-2.083 3.563-2.619 5.156-1.025c.595.593.928 1.396.928 2.235a3.16 3.16 0 0 1-3.161 3.167z"
-													/>
-												</svg>
+												{/* Claude Code */}
+												<span title="Claude Code" className="inline-flex">
+													<svg
+														xmlns="http://www.w3.org/2000/svg"
+														width="15"
+														height="15"
+														viewBox="0 0 16 16"
+														className="text-[#D97706] dark:text-[#F59E0B] opacity-90 transition-all duration-300 group-hover/card:opacity-100 group-hover/card:animate-[icon-bounce_0.4s_ease-out_0s]"
+													>
+														<path
+															fill="currentColor"
+															d="m6.96 15.2l.224-.992l.256-1.28l.208-1.024l.192-1.264l.112-.416l-.016-.032l-.08.016l-.96 1.312l-1.456 1.968l-1.152 1.216l-.272.112l-.48-.24l.048-.448l.272-.384l1.584-2.032l.96-1.264l.624-.72l-.016-.096h-.032l-4.224 2.752L2 12.48l-.336-.304l.048-.496l.16-.16l1.264-.88l3.152-1.76l.048-.16l-.048-.08h-.16L5.6 8.608L3.808 8.56l-1.552-.064l-1.52-.08l-.384-.08L0 7.856l.032-.24l.32-.208l.464.032l1.008.08l1.52.096l1.104.064l1.632.176h.256l.032-.112l-.08-.064l-.064-.064L4.64 6.56L2.944 5.44l-.896-.656l-.48-.336l-.24-.304l-.096-.672l.432-.48l.592.048l.144.032l.592.464l1.264.976L5.92 5.744l.24.192l.112-.064v-.048l-.112-.176l-.896-1.632l-.96-1.664l-.432-.688l-.112-.416a1.7 1.7 0 0 1-.064-.48l.496-.672L4.464 0l.672.096l.272.24l.416.944l.656 1.488l1.04 2.016l.304.608l.16.544l.064.176h.112v-.096l.08-1.152l.16-1.392l.16-1.792l.048-.512l.256-.608l.496-.32l.384.176l.32.464l-.048.288L9.84 2.4l-.384 1.936l-.24 1.312h.144l.16-.176l.656-.864l1.104-1.376l.48-.544l.576-.608l.368-.288h.688l.496.752l-.224.784l-.704.896l-.592.752l-.848 1.136l-.512.912l.048.064h.112l1.904-.416l1.04-.176l1.216-.208l.56.256l.064.256l-.224.544l-1.312.32l-1.536.304l-2.288.544l-.032.016l.032.048l1.024.096l.448.032h1.088l2.016.144l.528.352l.304.416l-.048.336l-.816.4l-1.088-.256l-2.56-.608l-.864-.208h-.128v.064l.736.72l1.328 1.2l1.68 1.552l.08.384l-.208.32l-.224-.032l-1.472-1.12l-.576-.496l-1.28-1.072h-.08v.112l.288.432l1.568 2.352l.08.72l-.112.224l-.416.144l-.432-.08l-.928-1.28l-.944-1.456l-.768-1.296l-.08.064l-.464 4.832l-.208.24l-.48.192l-.4-.304z"
+														/>
+													</svg>
+												</span>
+												{/* Cursor */}
+												<span title="Cursor" className="inline-flex">
+													<svg
+														xmlns="http://www.w3.org/2000/svg"
+														width="15"
+														height="15"
+														viewBox="0 0 24 24"
+														className="text-neutral-800 dark:text-neutral-200 opacity-90 transition-all duration-300 group-hover/card:opacity-100 group-hover/card:animate-[icon-bounce_0.4s_ease-out_0.05s]"
+													>
+														<path
+															fill="currentColor"
+															d="M11.503.131L1.891 5.678a.84.84 0 0 0-.42.726v11.188c0 .3.162.575.42.724l9.609 5.55a1 1 0 0 0 .998 0l9.61-5.55a.84.84 0 0 0 .42-.724V6.404a.84.84 0 0 0-.42-.726L12.497.131a1.01 1.01 0 0 0-.996 0M2.657 6.338h18.55c.263 0 .43.287.297.515L12.23 22.918c-.062.107-.229.064-.229-.06V12.335a.59.59 0 0 0-.295-.51l-9.11-5.257c-.109-.063-.064-.23.061-.23"
+														/>
+													</svg>
+												</span>
+												{/* OpenAI Codex */}
+												<span title="OpenAI Codex" className="inline-flex">
+													<svg
+														xmlns="http://www.w3.org/2000/svg"
+														width="15"
+														height="15"
+														viewBox="0 0 24 24"
+														className="text-[#10A37F] opacity-90 transition-all duration-300 group-hover/card:opacity-100 group-hover/card:animate-[icon-bounce_0.4s_ease-out_0.1s]"
+													>
+														<path
+															fill="currentColor"
+															d="M22.282 9.821a6 6 0 0 0-.516-4.91a6.05 6.05 0 0 0-6.51-2.9A6.065 6.065 0 0 0 4.981 4.18a6 6 0 0 0-3.998 2.9a6.05 6.05 0 0 0 .743 7.097a5.98 5.98 0 0 0 .51 4.911a6.05 6.05 0 0 0 6.515 2.9A6 6 0 0 0 13.26 24a6.06 6.06 0 0 0 5.772-4.206a6 6 0 0 0 3.997-2.9a6.06 6.06 0 0 0-.747-7.073M13.26 22.43a4.48 4.48 0 0 1-2.876-1.04l.141-.081l4.779-2.758a.8.8 0 0 0 .392-.681v-6.737l2.02 1.168a.07.07 0 0 1 .038.052v5.583a4.504 4.504 0 0 1-4.494 4.494M3.6 18.304a4.47 4.47 0 0 1-.535-3.014l.142.085l4.783 2.759a.77.77 0 0 0 .78 0l5.843-3.369v2.332a.08.08 0 0 1-.033.062L9.74 19.95a4.5 4.5 0 0 1-6.14-1.646M2.34 7.896a4.5 4.5 0 0 1 2.366-1.973V11.6a.77.77 0 0 0 .388.677l5.815 3.354l-2.02 1.168a.08.08 0 0 1-.071 0l-4.83-2.786A4.504 4.504 0 0 1 2.34 7.872zm16.597 3.855l-5.833-3.387L15.119 7.2a.08.08 0 0 1 .071 0l4.83 2.791a4.494 4.494 0 0 1-.676 8.105v-5.678a.79.79 0 0 0-.407-.667m2.01-3.023l-.141-.085l-4.774-2.782a.78.78 0 0 0-.785 0L9.409 9.23V6.897a.07.07 0 0 1 .028-.061l4.83-2.787a4.5 4.5 0 0 1 6.68 4.66zm-12.64 4.135l-2.02-1.164a.08.08 0 0 1-.038-.057V6.075a4.5 4.5 0 0 1 7.375-3.453l-.142.08L8.704 5.46a.8.8 0 0 0-.393.681zm1.097-2.365l2.602-1.5l2.607 1.5v2.999l-2.597 1.5l-2.607-1.5Z"
+														/>
+													</svg>
+												</span>
+												{/* Windsurf */}
+												<span title="Windsurf" className="inline-flex">
+													<svg
+														xmlns="http://www.w3.org/2000/svg"
+														width="15"
+														height="15"
+														viewBox="0 0 24 24"
+														className="text-[#09B6A2] opacity-90 transition-all duration-300 group-hover/card:opacity-100 group-hover/card:animate-[icon-bounce_0.4s_ease-out_0.15s]"
+													>
+														<path
+															fill="currentColor"
+															d="M12 2L3.5 7v10L12 22l8.5-5V7L12 2zm6.5 14.1l-6.5 3.8l-6.5-3.8V7.9l6.5-3.8l6.5 3.8v8.2z"
+														/>
+													</svg>
+												</span>
+												{/* Aider */}
+												<span title="Aider" className="inline-flex">
+													<svg
+														xmlns="http://www.w3.org/2000/svg"
+														width="15"
+														height="15"
+														viewBox="0 0 24 24"
+														className="text-[#6366F1] opacity-90 transition-all duration-300 group-hover/card:opacity-100 group-hover/card:animate-[icon-bounce_0.4s_ease-out_0.2s]"
+													>
+														<path
+															fill="none"
+															stroke="currentColor"
+															strokeWidth="2.5"
+															strokeLinecap="round"
+															strokeLinejoin="round"
+															d="M4 17l6-6l-6-6m8 14h8"
+														/>
+													</svg>
+												</span>
+												{/* Antigravity */}
+												<span title="Antigravity" className="inline-flex">
+													<svg
+														xmlns="http://www.w3.org/2000/svg"
+														width="15"
+														height="15"
+														viewBox="0 0 24 24"
+														className="text-[#A855F7] opacity-90 transition-all duration-300 group-hover/card:opacity-100 group-hover/card:animate-[icon-bounce_0.4s_ease-out_0.25s]"
+													>
+														<circle cx="12" cy="12" r="3.5" fill="currentColor" />
+														<ellipse
+															cx="12"
+															cy="12"
+															rx="9"
+															ry="4.5"
+															transform="rotate(-30 12 12)"
+															fill="none"
+															stroke="currentColor"
+															strokeWidth="1.8"
+														/>
+													</svg>
+												</span>
 												{/* +14 more */}
 												<div className="flex items-center justify-center size-[20px] border border-dashed border-foreground/[0.1] text-foreground/35 dark:text-foreground/20 transition-all duration-300 group-hover/card:text-foreground/60 dark:group-hover/card:text-foreground/40 group-hover/card:border-foreground/20 group-hover/card:animate-[icon-bounce_0.4s_ease-out_0.3s]">
 													<span className="text-[7px] font-mono leading-none">
@@ -1419,39 +1447,29 @@ export function HeroReadMe({
 												<div className="flex items-center gap-2.5">
 													<div className="relative flex items-center gap-2.5">
 														<div className="absolute left-3 right-3 top-1/2 h-px -translate-y-1/2 bg-foreground/[0.08]" />
-														{/* Google — stretches to "Sign in with Google" on hover */}
+														{/* Hook — stretches to "post-commit: 4.2ms" on hover */}
 														<motion.div
-															animate={{ width: socialHovered ? 120 : 24 }}
+															animate={{ width: socialHovered ? 136 : 24 }}
 															transition={{
 																duration: 0.3,
 																ease: [0.4, 0, 0.2, 1],
 															}}
-															className="relative flex items-center h-6 border border-foreground/8 bg-background shrink-0 overflow-hidden opacity-60 transition-opacity duration-300 group-hover/card:opacity-100"
+															className="relative flex items-center h-6 border border-foreground/8 bg-background shrink-0 overflow-hidden opacity-80 transition-opacity duration-300 group-hover/card:opacity-100"
 														>
 															<div className="flex items-center gap-1.5 px-[7px]">
 																<svg
 																	xmlns="http://www.w3.org/2000/svg"
 																	width="10"
 																	height="10"
-																	viewBox="0 0 48 48"
-																	className="shrink-0"
+																	viewBox="0 0 24 24"
+																	fill="none"
+																	stroke="currentColor"
+																	strokeWidth="2.5"
+																	strokeLinecap="round"
+																	strokeLinejoin="round"
+																	className="text-[#5db8a6] shrink-0"
 																>
-																	<path
-																		fill="#FFC107"
-																		d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C12.955 4 4 12.955 4 24s8.955 20 20 20s20-8.955 20-20c0-1.341-.138-2.65-.389-3.917"
-																	/>
-																	<path
-																		fill="#FF3D00"
-																		d="m6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C16.318 4 9.656 8.337 6.306 14.691"
-																	/>
-																	<path
-																		fill="#4CAF50"
-																		d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.9 11.9 0 0 1 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44"
-																	/>
-																	<path
-																		fill="#1976D2"
-																		d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 0 1-4.087 5.571l.003-.002l6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917"
-																	/>
+																	<polyline points="20 6 9 17 4 12" />
 																</svg>
 																<motion.span
 																	animate={{ opacity: socialHovered ? 1 : 0 }}
@@ -1459,99 +1477,107 @@ export function HeroReadMe({
 																		duration: 0.2,
 																		delay: socialHovered ? 0.1 : 0,
 																	}}
-																	className="text-[8px] font-mono text-foreground/60 dark:text-foreground/40 whitespace-nowrap"
+																	className="text-[8px] font-mono text-foreground/70 dark:text-foreground/50 whitespace-nowrap"
 																>
-																	Sign in with Google
+																	post-commit: 4.2ms
 																</motion.span>
 															</div>
 														</motion.div>
-														{/* GitHub */}
-														<div className="relative flex items-center justify-center size-6 border border-foreground/[0.08] bg-background text-neutral-800 dark:text-neutral-200 shrink-0 opacity-60 transition-opacity duration-300 group-hover/card:opacity-100">
+														{/* post-rewrite */}
+														<div className="relative flex items-center justify-center size-6 border border-foreground/[0.08] bg-background text-neutral-800 dark:text-neutral-200 shrink-0 opacity-60 transition-opacity duration-300 group-hover/card:opacity-100" title="post-rewrite hook">
 															<svg
 																xmlns="http://www.w3.org/2000/svg"
 																width="10"
 																height="10"
 																viewBox="0 0 24 24"
+																fill="none"
+																stroke="currentColor"
+																strokeWidth="2"
+																strokeLinecap="round"
+																strokeLinejoin="round"
 															>
-																<path
-																	fill="currentColor"
-																	d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"
-																/>
+																<line x1="6" y1="3" x2="6" y2="15" />
+																<circle cx="18" cy="6" r="3" />
+																<circle cx="6" cy="18" r="3" />
+																<path d="M18 9a9 9 0 0 1-9 9" />
 															</svg>
 														</div>
-														{/* Apple */}
-														<div className="relative flex items-center justify-center size-6 border border-foreground/[0.08] bg-background text-neutral-800 dark:text-neutral-200 shrink-0 opacity-60 transition-opacity duration-300 group-hover/card:opacity-100">
+														{/* pre-push */}
+														<div className="relative flex items-center justify-center size-6 border border-foreground/[0.08] bg-background text-neutral-800 dark:text-neutral-200 shrink-0 opacity-60 transition-opacity duration-300 group-hover/card:opacity-100" title="pre-push hook">
 															<svg
 																xmlns="http://www.w3.org/2000/svg"
 																width="10"
 																height="10"
 																viewBox="0 0 24 24"
+																fill="none"
+																stroke="currentColor"
+																strokeWidth="2"
+																strokeLinecap="round"
+																strokeLinejoin="round"
 															>
-																<path
-																	fill="currentColor"
-																	d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"
-																/>
+																<polyline points="16 16 12 12 8 16" />
+																<line x1="12" y1="12" x2="12" y2="21" />
+																<path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3" />
 															</svg>
 														</div>
-														{/* Discord */}
-														<div className="relative flex items-center justify-center size-6 border border-foreground/[0.08] bg-background text-[#5865F2] shrink-0 opacity-60 transition-opacity duration-300 group-hover/card:opacity-100">
+														{/* Detached background runner */}
+														<div className="relative flex items-center justify-center size-6 border border-foreground/[0.08] bg-background text-[#cc785c] shrink-0 opacity-60 transition-opacity duration-300 group-hover/card:opacity-100" title="detached subshell">
 															<svg
 																xmlns="http://www.w3.org/2000/svg"
 																width="10"
 																height="10"
 																viewBox="0 0 24 24"
+																fill="none"
+																stroke="currentColor"
+																strokeWidth="2.5"
+																strokeLinecap="round"
+																strokeLinejoin="round"
 															>
-																<path
-																	fill="currentColor"
-																	d="M20.317 4.37a19.8 19.8 0 0 0-4.885-1.515.07.07 0 0 0-.073.036c-.21.375-.444.864-.608 1.25a18.3 18.3 0 0 0-5.487 0 13 13 0 0 0-.617-1.25.07.07 0 0 0-.073-.036A19.7 19.7 0 0 0 3.69 4.37a.06.06 0 0 0-.032.025C.533 9.046-.32 13.58.099 18.057a.08.08 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.08.08 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.08.08 0 0 0-.041-.106 13 13 0 0 1-1.872-.892.08.08 0 0 1-.008-.128q.188-.141.372-.287a.08.08 0 0 1 .078-.01c3.928 1.793 8.18 1.793 12.062 0a.08.08 0 0 1 .079.01q.183.149.372.288a.08.08 0 0 1-.006.127c-.598.35-1.22.645-1.873.892a.08.08 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.08.08 0 0 0 .084.029 19.8 19.8 0 0 0 6.002-3.03.08.08 0 0 0 .032-.056c.5-5.177-.838-9.674-3.549-13.66a.06.06 0 0 0-.031-.026M8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419s.955-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418m7.975 0c-1.183 0-2.157-1.085-2.157-2.419s.955-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418"
-																/>
+																<polyline points="4 17 10 11 4 5" />
+																<line x1="12" y1="19" x2="20" y2="19" />
 															</svg>
 														</div>
-														{/* Microsoft */}
-														<div className="relative flex items-center justify-center size-6 border border-foreground/[0.08] bg-background shrink-0 opacity-60 transition-opacity duration-300 group-hover/card:opacity-100">
-															<svg
-																xmlns="http://www.w3.org/2000/svg"
-																width="9"
-																height="9"
-																viewBox="0 0 256 256"
-															>
-																<path
-																	fill="#F1511B"
-																	d="M121.666 121.666H0V0h121.666z"
-																/>
-																<path
-																	fill="#80CC28"
-																	d="M256 121.666H134.335V0H256z"
-																/>
-																<path
-																	fill="#00ADEF"
-																	d="M121.663 256.002H0V134.336h121.663z"
-																/>
-																<path
-																	fill="#FBBC09"
-																	d="M256 256.002H134.335V134.336H256z"
-																/>
-															</svg>
-														</div>
-														{/* X/Twitter */}
-														<div className="relative flex items-center justify-center size-6 border border-foreground/[0.08] bg-background text-neutral-800 dark:text-neutral-200 shrink-0 opacity-60 transition-opacity duration-300 group-hover/card:opacity-100">
+														{/* Husky / Lefthook */}
+														<div className="relative flex items-center justify-center size-6 border border-foreground/[0.08] bg-background text-[#5db8a6] shrink-0 opacity-60 transition-opacity duration-300 group-hover/card:opacity-100" title="husky/lefthook compatible">
 															<svg
 																xmlns="http://www.w3.org/2000/svg"
 																width="9"
 																height="9"
 																viewBox="0 0 24 24"
+																fill="none"
+																stroke="currentColor"
+																strokeWidth="2"
+																strokeLinecap="round"
+																strokeLinejoin="round"
 															>
-																<path
-																	fill="currentColor"
-																	d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"
-																/>
+																<circle cx="12" cy="12" r="10" />
+																<polyline points="12 6 12 12 16 14" />
+															</svg>
+														</div>
+														{/* Git Notes hook */}
+														<div className="relative flex items-center justify-center size-6 border border-foreground/[0.08] bg-background text-neutral-800 dark:text-neutral-200 shrink-0 opacity-60 transition-opacity duration-300 group-hover/card:opacity-100" title="git notes">
+															<svg
+																xmlns="http://www.w3.org/2000/svg"
+																width="9"
+																height="9"
+																viewBox="0 0 24 24"
+																fill="none"
+																stroke="currentColor"
+																strokeWidth="2"
+																strokeLinecap="round"
+																strokeLinejoin="round"
+															>
+																<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+																<polyline points="14 2 14 8 20 8" />
+																<line x1="16" y1="13" x2="8" y2="13" />
+																<line x1="16" y1="17" x2="8" y2="17" />
 															</svg>
 														</div>
 													</div>
-													{/* +34 */}
-													<div className="flex items-center justify-center size-6 border border-dashed border-foreground/[0.1] text-foreground/35 dark:text-foreground/20 shrink-0">
+													{/* <5ms badge */}
+													<div className="flex items-center justify-center h-6 px-1.5 border border-dashed border-[#5db8a6]/40 text-[#5db8a6] shrink-0">
 														<span className="text-[8px] font-mono leading-none">
-															+34
+															&lt;5ms
 														</span>
 													</div>
 												</div>
@@ -1563,39 +1589,39 @@ export function HeroReadMe({
 										)}
 										{"org" in feature && feature.org && (
 											<div className="mt-3 flex items-center gap-2.5">
-												{/* Overlapping member avatars */}
+												{/* Dual-engine provenance badges */}
 												<div className="flex -space-x-1.5">
-													<div className="relative size-5 rounded-full border border-foreground/[0.08] bg-neutral-100 dark:bg-neutral-900 flex items-center justify-center z-[3]">
-														<span className="text-[8px] font-mono text-foreground/55 dark:text-foreground/35 leading-none">
+													<div className="relative size-5 rounded-full border border-foreground/[0.08] bg-neutral-100 dark:bg-neutral-900 flex items-center justify-center z-[3]" title="Session Harvesting (JSONL/SQLite)">
+														<span className="text-[8px] font-mono text-[#5db8a6] leading-none font-semibold">
+															S
+														</span>
+													</div>
+													<div className="relative size-5 rounded-full border border-foreground/[0.08] bg-neutral-100 dark:bg-neutral-900 flex items-center justify-center z-[2]" title="AST Git Complexity">
+														<span className="text-[8px] font-mono text-[#cc785c] leading-none font-semibold">
 															A
 														</span>
 													</div>
-													<div className="relative size-5 rounded-full border border-foreground/[0.08] bg-neutral-100 dark:bg-neutral-900 flex items-center justify-center z-[2]">
-														<span className="text-[8px] font-mono text-foreground/50 dark:text-foreground/30 leading-none">
-															B
-														</span>
-													</div>
-													<div className="relative size-5 rounded-full border border-foreground/[0.08] bg-neutral-100 dark:bg-neutral-900 flex items-center justify-center z-[1]">
-														<span className="text-[8px] font-mono text-foreground/40 dark:text-foreground/50 leading-none">
-															C
+													<div className="relative size-5 rounded-full border border-foreground/[0.08] bg-neutral-100 dark:bg-neutral-900 flex items-center justify-center z-[1]" title="Multi-Model Rate Card">
+														<span className="text-[8px] font-mono text-[#e8a55a] leading-none font-semibold">
+															R
 														</span>
 													</div>
 													<div className="relative size-5 rounded-full border border-dashed border-foreground/[0.1] bg-background flex items-center justify-center z-[0]">
-														<span className="text-[8px] font-mono text-foreground/35 dark:text-foreground/20 leading-none">
-															+
+														<span className="text-[8px] font-mono text-foreground/45 leading-none">
+															$
 														</span>
 													</div>
 												</div>
-												{/* Role badges */}
+												{/* Provenance tags */}
 												<div className="flex items-center gap-1">
-													<span className="text-[8px] font-mono text-foreground/50 dark:text-foreground/30 px-1.5 py-0.5 border border-foreground/[0.08] bg-foreground/[0.015]">
-														owner
+													<span className="text-[8px] font-mono text-[#5db8a6] px-1.5 py-0.5 border border-[#5db8a6]/20 bg-[#5db8a6]/[0.05]">
+														observed
 													</span>
-													<span className="text-[8px] font-mono text-foreground/35 dark:text-foreground/20 px-1.5 py-0.5 border border-foreground/[0.06] bg-foreground/[0.015]">
-														admin
+													<span className="text-[8px] font-mono text-[#cc785c] px-1.5 py-0.5 border border-[#cc785c]/20 bg-[#cc785c]/[0.05]">
+														estimated
 													</span>
-													<span className="text-[8px] font-mono text-foreground/30  px-1.5 py-0.5 border border-dashed border-foreground/[0.08]">
-														member
+													<span className="text-[8px] font-mono text-foreground/40 px-1.5 py-0.5 border border-dashed border-foreground/[0.08]">
+														verified
 													</span>
 												</div>
 											</div>
@@ -1604,26 +1630,26 @@ export function HeroReadMe({
 											<div className="mt-3 relative overflow-hidden">
 												<div className="flex items-center gap-1 overflow-hidden">
 													{[
-														"passkeys",
-														"2fa",
-														"magic-link",
-														"jwt",
-														"api-keys",
-														"anonymous",
-														"oidc",
-														"otp",
-														"bearer",
-														"multi-session",
-													].map((plugin, i) => (
+														"thermal-cut",
+														"serrated-edge",
+														"code128-barcode",
+														"og-image:35ms",
+														"qr-code",
+														"monospace-box",
+														"json-v1",
+														"git-notes",
+														"ansi-color",
+														"sticky-pr",
+													].map((tag, i) => (
 														<span
-															key={plugin}
-															className={`text-[8px] font-mono whitespace-nowrap px-1.5 py-0.5 border shrink-0 ${i < 2 ? "text-foreground/50 dark:text-foreground/30 border-foreground/[0.08] bg-foreground/[0.02]" : i < 4 ? "text-foreground/40 dark:text-foreground/22 border-foreground/[0.06] bg-foreground/[0.015]" : "text-foreground/30  border-foreground/[0.05]"}`}
+															key={tag}
+															className={`text-[8px] font-mono whitespace-nowrap px-1.5 py-0.5 border shrink-0 ${i < 2 ? "text-foreground/60 dark:text-foreground/40 border-foreground/[0.08] bg-foreground/[0.02]" : i < 4 ? "text-foreground/45 dark:text-foreground/30 border-foreground/[0.06] bg-foreground/[0.015]" : "text-foreground/30 border-foreground/[0.05]"}`}
 														>
-															{plugin}
+															{tag}
 														</span>
 													))}
 												</div>
-												{/* Fade-out gradient on the right to imply "there's more" */}
+												{/* Fade-out gradient on the right */}
 												<div className="absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-background to-transparent pointer-events-none" />
 											</div>
 										)}
@@ -1631,36 +1657,8 @@ export function HeroReadMe({
 											<div className="mt-3 flex items-center gap-2.5">
 												<div className="relative flex items-center gap-2.5">
 													<div className="absolute left-3 right-3 top-1/2 h-px -translate-y-1/2 bg-foreground/[0.08]" />
-													{/* Okta */}
-													<div className="relative flex items-center justify-center size-6 border border-foreground/[0.08] bg-background text-neutral-800 dark:text-neutral-200 opacity-60 transition-opacity duration-300 group-hover/card:opacity-100">
-														<svg
-															xmlns="http://www.w3.org/2000/svg"
-															width="10"
-															height="10"
-															viewBox="0 0 256 256"
-														>
-															<path
-																fill="currentColor"
-																d="m140.844 1.778l-5.266 64.853a66 66 0 0 0-7.542-.427c-3.203 0-6.334.214-9.393.712l-2.99-31.432a1.72 1.72 0 0 1 1.709-1.848h5.337l-2.562-31.787C120.066.853 120.848 0 121.774 0h17.434c.996 0 1.779.853 1.636 1.849zm-43.976 3.2c-.285-.925-1.281-1.494-2.206-1.138L78.295 9.813c-.925.356-1.352 1.423-.925 2.276l13.307 29.013l-5.052 1.85c-.926.355-1.352 1.421-.926 2.275l13.592 28.515a61 61 0 0 1 15.868-6.044L96.94 4.978zM56.734 23.04l37.643 53.049c-4.768 3.129-9.108 6.827-12.809 11.093L59.011 64.996a1.72 1.72 0 0 1 .071-2.49l4.127-3.413L40.794 36.41c-.711-.711-.64-1.849.142-2.489l13.307-11.164c.783-.64 1.85-.498 2.42.284zM25.139 53.76c-.783-.569-1.921-.284-2.42.569l-8.68 15.075c-.499.854-.143 1.92.71 2.347L43.64 85.404l-2.704 4.623c-.498.853-.142 1.99.783 2.346l28.749 13.156a60.2 60.2 0 0 1 8.254-14.791zM3.862 94.72c.143-.996 1.139-1.564 2.064-1.351l62.976 16.427a62.3 62.3 0 0 0-2.704 16.782l-31.524-2.56a1.642 1.642 0 0 1-1.494-1.991l.925-5.263l-31.808-2.986c-.996-.071-1.637-.996-1.495-1.991l2.99-17.138zm-2.348 42.524c-.996.072-1.637.996-1.494 1.992l3.06 17.137c.142.996 1.138 1.565 2.063 1.351l30.883-8.035l.925 5.262c.143.996 1.139 1.565 2.064 1.351l30.456-8.39c-1.779-5.263-2.917-10.88-3.202-16.64l-64.826 5.972zM11.62 182.33c-.498-.853-.143-1.92.711-2.347l58.778-27.875c2.206 5.262 5.195 10.169 8.753 14.577L54.1 185.031c-.783.569-1.921.356-2.42-.498l-2.704-4.693l-26.257 18.133c-.783.57-1.922.285-2.42-.569l-8.752-15.075zm71.23-12.231L37.094 216.39c-.712.711-.64 1.849.142 2.489l13.378 11.164c.783.64 1.85.498 2.42-.284l18.501-26.027l4.127 3.485c.783.64 1.922.498 2.49-.356l17.933-26.026c-4.839-2.987-9.322-6.614-13.165-10.738zm-9.037 74.31c-.925-.355-1.352-1.421-.925-2.275L100 182.97c4.98 2.56 10.389 4.48 16.01 5.547l-7.97 30.577c-.213.925-1.28 1.494-2.205 1.138l-5.052-1.849l-8.468 30.791c-.285.925-1.281 1.494-2.206 1.138l-16.367-5.973zm46.68-55.11l-5.265 64.853c-.071.996.711 1.849 1.637 1.849h17.434c.996 0 1.779-.853 1.636-1.849l-2.561-31.787h5.336a1.72 1.72 0 0 0 1.708-1.848l-2.988-31.432c-3.06.498-6.191.712-9.393.712c-2.562 0-5.053-.143-7.543-.498m62.763-175.574c.427-.924 0-1.92-.925-2.275l-16.366-5.973c-.926-.356-1.922.213-2.206 1.137l-8.468 30.791l-5.053-1.848c-.925-.356-1.921.213-2.206 1.137l-7.97 30.578c5.693 1.138 11.03 3.058 16.011 5.547zm35.722 25.814L173.222 85.83a62 62 0 0 0-13.165-10.738l17.933-26.026c.569-.783 1.707-.996 2.49-.356l4.127 3.485l18.502-26.027c.57-.782 1.708-.925 2.42-.285l13.377 11.165c.783.64.783 1.778.143 2.489zm24.764 36.409c.925-.427 1.21-1.494.711-2.347L235.7 58.524c-.498-.853-1.637-1.066-2.42-.568l-26.257 18.133l-2.704-4.622c-.499-.854-1.637-1.138-2.42-.498l-25.76 18.347c3.558 4.408 6.476 9.315 8.753 14.577l58.778-27.875zm9.25 23.609l2.99 17.137c.142.996-.499 1.85-1.495 1.991l-64.826 6.045c-.285-5.831-1.424-11.378-3.203-16.64l30.457-8.391c.925-.285 1.921.355 2.063 1.35l.925 5.263l30.884-8.035c.925-.214 1.92.355 2.063 1.35zm-2.917 62.933c.925.213 1.921-.356 2.064-1.351L255.126 144c.143-.996-.498-1.849-1.494-1.991l-31.808-2.987l.925-5.262c.142-.996-.498-1.849-1.495-1.991l-31.523-2.56a62.3 62.3 0 0 1-2.704 16.782l62.976 16.427zM233.28 201.6c-.498.853-1.636 1.067-2.419.569l-53.583-36.978a60.2 60.2 0 0 0 8.254-14.791l28.749 13.156c.925.426 1.28 1.493.783 2.346l-2.704 4.622l28.89 13.654c.854.426 1.21 1.493.712 2.346zm-71.657-21.831l37.643 53.049c.57.782 1.708.924 2.42.284l13.306-11.164c.783-.64.783-1.778.143-2.49l-22.415-22.684l4.127-3.413c.783-.64.783-1.778.07-2.489l-22.557-22.186c-3.771 4.266-8.04 8.035-12.808 11.093zm-.356 72.249c-.925.355-1.921-.214-2.206-1.138l-17.22-62.72a61 61 0 0 0 15.868-6.044l13.592 28.515c.426.925 0 1.991-.926 2.276l-5.052 1.849l13.307 29.013c.427.924 0 1.92-.925 2.275l-16.367 5.974z"
-															/>
-														</svg>
-													</div>
-													{/* Microsoft Entra / Azure AD */}
-													<div className="relative flex items-center justify-center size-6 border border-foreground/[0.08] bg-background shrink-0 opacity-60 transition-opacity duration-300 group-hover/card:opacity-100">
-														<svg
-															xmlns="http://www.w3.org/2000/svg"
-															width="10"
-															height="10"
-															viewBox="0 0 24 24"
-														>
-															<path
-																fill="#0078D4"
-																d="M13.05 4.24L6.56 18.05L2 18l5.09-8.76zm.7 1.09L22 19.76H6.74l9.3-1.66l-4.87-5.79z"
-															/>
-														</svg>
-													</div>
-													{/* SCIM / Directory Sync */}
-													<div className="relative flex items-center justify-center size-6 border border-foreground/[0.08] bg-background text-[#10B981] shrink-0 opacity-60 transition-opacity duration-300 group-hover/card:opacity-100">
+													{/* Commit */}
+													<div className="relative flex items-center justify-center size-6 border border-foreground/[0.08] bg-background text-neutral-800 dark:text-neutral-200 opacity-70 transition-opacity duration-300 group-hover/card:opacity-100" title="commit sha">
 														<svg
 															xmlns="http://www.w3.org/2000/svg"
 															width="10"
@@ -1672,30 +1670,68 @@ export function HeroReadMe({
 															strokeLinecap="round"
 															strokeLinejoin="round"
 														>
-															<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-															<circle cx="9" cy="7" r="4" />
-															<polyline points="16 11 18 13 22 9" />
+															<circle cx="12" cy="12" r="4" />
+															<line x1="1.05" y1="12" x2="8" y2="12" />
+															<line x1="16" y1="12" x2="22.95" y2="12" />
 														</svg>
 													</div>
-													{/* Generic IdP / Building */}
-													<div className="relative flex items-center justify-center size-6 border border-foreground/[0.08] bg-background text-neutral-800 dark:text-neutral-200 opacity-60 transition-opacity duration-300 group-hover/card:opacity-100">
+													{/* Tokens */}
+													<div className="relative flex items-center justify-center size-6 border border-foreground/[0.08] bg-background text-[#5db8a6] opacity-70 transition-opacity duration-300 group-hover/card:opacity-100" title="token payload">
 														<svg
 															xmlns="http://www.w3.org/2000/svg"
 															width="10"
 															height="10"
 															viewBox="0 0 24 24"
+															fill="none"
+															stroke="currentColor"
+															strokeWidth="2"
+															strokeLinecap="round"
+															strokeLinejoin="round"
 														>
-															<path
-																fill="currentColor"
-																d="M12 7V3H2v18h20V7zM6 19H4v-2h2zm0-4H4v-2h2zm0-4H4V9h2zm0-4H4V5h2zm4 12H8v-2h2zm0-4H8v-2h2zm0-4H8V9h2zm0-4H8V5h2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8zm-2-8h-2v2h2zm0 4h-2v2h2z"
-															/>
+															<line x1="4" y1="9" x2="20" y2="9" />
+															<line x1="4" y1="15" x2="20" y2="15" />
+															<line x1="10" y1="3" x2="8" y2="21" />
+															<line x1="16" y1="3" x2="14" y2="21" />
+														</svg>
+													</div>
+													{/* Salt Key */}
+													<div className="relative flex items-center justify-center size-6 border border-foreground/[0.08] bg-background text-[#cc785c] opacity-70 transition-opacity duration-300 group-hover/card:opacity-100" title="cryptographic salt">
+														<svg
+															xmlns="http://www.w3.org/2000/svg"
+															width="10"
+															height="10"
+															viewBox="0 0 24 24"
+															fill="none"
+															stroke="currentColor"
+															strokeWidth="2"
+															strokeLinecap="round"
+															strokeLinejoin="round"
+														>
+															<path d="M21 2l-2 2m-1.5 1.5L16 7l-1.5-1.5L13 7l1.5 1.5L13 10l-1.5-1.5L10 10l1.5 1.5L10 13l-1.5-1.5L7 13l1.5 1.5L6.5 16 2 20.5 3.5 22 8 17.5l1.5 1.5 1.5-1.5 1.5 1.5 1.5-1.5 1.5 1.5 1.5-1.5 1.5 1.5 4.5-4.5z" />
+														</svg>
+													</div>
+													{/* Author Sig */}
+													<div className="relative flex items-center justify-center size-6 border border-foreground/[0.08] bg-background text-[#5db8a6] opacity-70 transition-opacity duration-300 group-hover/card:opacity-100" title="verified author">
+														<svg
+															xmlns="http://www.w3.org/2000/svg"
+															width="10"
+															height="10"
+															viewBox="0 0 24 24"
+															fill="none"
+															stroke="currentColor"
+															strokeWidth="2"
+															strokeLinecap="round"
+															strokeLinejoin="round"
+														>
+															<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+															<polyline points="9 12 11 14 15 10" />
 														</svg>
 													</div>
 												</div>
-												{/* +more */}
-												<div className="flex items-center justify-center size-6 border border-dashed border-foreground/[0.1] text-foreground/35 dark:text-foreground/20">
+												{/* 256 hash badge */}
+												<div className="flex items-center justify-center h-6 px-1.5 border border-dashed border-foreground/[0.1] text-foreground/40">
 													<span className="text-[8px] font-mono leading-none">
-														+
+														HMAC-256
 													</span>
 												</div>
 											</div>
@@ -1703,19 +1739,19 @@ export function HeroReadMe({
 										{"agent" in feature && feature.agent && (
 											<div className="mt-3 flex items-center h-5 px-2.5 border border-foreground/[0.06] bg-foreground/[0.015] font-mono text-[8px] gap-1">
 												<span className="text-foreground/30 ">$</span>
-												<span className="text-foreground/50 dark:text-foreground/30">
-													agent
+												<span className="text-foreground/60 dark:text-foreground/40">
+													qodewk
 													<span className="text-foreground/30 ">.</span>
-													auth
+													action
 													<span className="text-foreground/30 ">()</span>
 												</span>
-												<span className="text-foreground/50 dark:text-foreground/10 mx-0.5">
+												<span className="text-foreground/50 dark:text-foreground/20 mx-0.5">
 													→
 												</span>
-												<span className="text-foreground/35 dark:text-foreground/20">
-													sk-<span className="tracking-[0.08em]">••••</span>
+												<span className="text-foreground/60 dark:text-foreground/45">
+													PR #42: <span className="text-[#5db8a6]">+1,240 tok ($0.018)</span>
 												</span>
-												<span className="text-foreground/40 dark:text-foreground/50">
+												<span className="text-[#5db8a6]">
 													✓
 												</span>
 												<span className="inline-block w-px h-2.5 bg-foreground/30 animate-[blink_1s_steps(2)_infinite]" />
@@ -1724,37 +1760,40 @@ export function HeroReadMe({
 										{"security" in feature && feature.security && (
 											<div className="mt-3 relative overflow-hidden">
 												<div className="flex items-center gap-1.5 font-mono text-[8px]">
-													{/* Shield icon */}
+													{/* Rate card icon */}
 													<div className="flex items-center justify-center size-5 border border-foreground/[0.08] bg-foreground/[0.02] shrink-0">
 														<svg
 															xmlns="http://www.w3.org/2000/svg"
-															width="10"
-															height="10"
+															width="9"
+															height="9"
 															viewBox="0 0 24 24"
-															className="text-foreground/50 dark:text-foreground/30"
+															fill="none"
+															stroke="currentColor"
+															strokeWidth="2"
+															strokeLinecap="round"
+															strokeLinejoin="round"
+															className="text-foreground/60"
 														>
-															<path
-																fill="currentColor"
-																d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12c5.16-1.26 9-6.45 9-12V5zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11z"
-															/>
+															<line x1="12" y1="1" x2="12" y2="23" />
+															<path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
 														</svg>
 													</div>
-													{/* Blocked */}
-													<div className="flex items-center gap-1 px-1.5 py-0.5 border border-red-500/15 bg-red-500/[0.03] shrink-0">
-														<span className="inline-block size-1 rounded-full bg-red-500/40" />
-														<span className="text-red-500/40">blocked</span>
+													{/* Claude */}
+													<div className="flex items-center gap-1 px-1.5 py-0.5 border border-amber-500/20 bg-amber-500/[0.04] shrink-0">
+														<span className="inline-block size-1 rounded-full bg-amber-500/60" />
+														<span className="text-amber-600 dark:text-amber-400">claude: $3/M</span>
 													</div>
-													{/* Challenged */}
-													<div className="flex items-center gap-1 px-1.5 py-0.5 border border-yellow-600/15 bg-yellow-600/[0.03] shrink-0">
-														<span className="inline-block size-1 rounded-full bg-yellow-600/40" />
-														<span className="text-yellow-600/40">
-															challenged
+													{/* GPT-4o */}
+													<div className="flex items-center gap-1 px-1.5 py-0.5 border border-emerald-500/20 bg-emerald-500/[0.04] shrink-0">
+														<span className="inline-block size-1 rounded-full bg-emerald-500/60" />
+														<span className="text-emerald-600 dark:text-emerald-400">
+															gpt-4o: $2.5/M
 														</span>
 													</div>
-													{/* Allowed */}
-													<div className="flex items-center gap-1 px-1.5 py-0.5 border border-green-500/15 bg-green-500/[0.03] shrink-0">
-														<span className="inline-block size-1 rounded-full bg-green-500/50" />
-														<span className="text-green-500/50">allowed</span>
+													{/* DeepSeek */}
+													<div className="flex items-center gap-1 px-1.5 py-0.5 border border-teal-500/20 bg-teal-500/[0.04] shrink-0">
+														<span className="inline-block size-1 rounded-full bg-teal-500/60" />
+														<span className="text-teal-600 dark:text-teal-400">deepseek: $0.14/M</span>
 													</div>
 												</div>
 												<div className="absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-background to-transparent pointer-events-none" />
@@ -1768,41 +1807,41 @@ export function HeroReadMe({
 															{[
 																{
 																	time: "10:50 AM",
-																	user: "John",
-																	action: "created a session",
+																	scope: "commit 8f2a1b",
+																	action: "harvested 1,240 tokens ($0.018)",
 																},
 																{
 																	time: "10:48 AM",
-																	user: "Sarah",
-																	action: "updated profile",
+																	scope: "git-notes",
+																	action: "refs/notes/qodewk written",
 																},
 																{
 																	time: "10:45 AM",
-																	user: "Alex",
-																	action: "joined organization",
+																	scope: "sqlite db",
+																	action: "~/.qodewk/state.db cached rate card",
 																},
 																{
 																	time: "10:42 AM",
-																	user: "Emma",
-																	action: "revoked token",
+																	scope: "receipt",
+																	action: "thermal monospace card generated",
 																},
 																{
 																	time: "10:38 AM",
-																	user: "Mike",
-																	action: "enabled 2FA",
+																	scope: "privacy",
+																	action: "0 network egress (local verified)",
 																},
 															].map((event) => (
 																<div
-																	key={`${setIdx}-${event.time}-${event.user}`}
+																	key={`${setIdx}-${event.time}-${event.scope}`}
 																	className="flex items-center gap-1.5 shrink-0 h-5 whitespace-nowrap"
 																>
 																	<span className="text-[8px] font-mono text-foreground/30 ">
 																		{event.time}
 																	</span>
-																	<span className="text-[8px] font-mono text-foreground/50 dark:text-foreground/30 border-b border-dashed border-foreground/20">
-																		{event.user}
+																	<span className="text-[8px] font-mono text-foreground/60 dark:text-foreground/40 border-b border-dashed border-foreground/20">
+																		{event.scope}
 																	</span>
-																	<span className="text-[8px] font-mono text-foreground/35 dark:text-foreground/20">
+																	<span className="text-[8px] font-mono text-foreground/40 dark:text-foreground/30">
 																		{event.action}
 																	</span>
 																</div>

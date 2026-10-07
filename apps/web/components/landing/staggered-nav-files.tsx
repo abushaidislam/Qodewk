@@ -399,11 +399,14 @@ export function StaggeredNavFiles() {
 	);
 	const isDocs = pathname.startsWith("/docs");
 	const isPricingPage = pathname === "/pricing";
-	const isProductsPage = products.some(
-		(p) =>
-			p.activatesTab &&
-			(pathname === p.href || pathname.startsWith(`${p.href}/`)),
-	);
+	const isReceiptPage = pathname.startsWith("/r");
+	const isProductsPage =
+		isReceiptPage ||
+		products.some(
+			(p) =>
+				p.activatesTab &&
+				(pathname === p.href || pathname.startsWith(`${p.href}/`)),
+		);
 	const isResourcePage = resourceFiles.some((r) => {
 		const matchPath = r.path || r.href;
 		return pathname === matchPath || pathname.startsWith(`${matchPath}/`);
@@ -414,11 +417,12 @@ export function StaggeredNavFiles() {
 		isPricingPage ||
 		isProductsPage ||
 		isResourcePage ||
+		isReceiptPage ||
 		isActive("/enterprise");
 	const isNarrowLeft = isDocs;
 	const leftPaneWidthClass = isNarrowLeft
 		? "w-[22vw] max-w-[300px]"
-		: isPricingPage || isResourcePage
+		: isPricingPage || isResourcePage || isReceiptPage
 			? "w-[30%]"
 			: "w-[40%]";
 	const navBottomBorderClass = isNarrowLeft ? "border-foreground/5" : "";
