@@ -3,6 +3,16 @@
 All notable changes to the **Qodewk** monorepo are documented in this file.  
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.2] — 2026-10-08
+
+### 🚀 Added
+- **13 In-Depth Qodewk Engineering Blogs (`apps/web/content/blogs`):**
+  - Replaced legacy placeholders with authentic technical articles detailing the Git DAG telemetry architecture, zero-leak privacy mechanics, multi-model rate-card pricing, sub-5ms non-blocking git hooks, edge receipt cards, and the Qodewk v1.0 protocol specification.
+- **1:1 Dot-Track Table of Contents (TOC) (`apps/web/components/blog/blog-toc.tsx`):**
+  - Collapsed state displays a minimal, compact vertical dot-track on the right edge.
+  - Hover state seamlessly expands into right-aligned section links ending in horizontal dashes (`—`) with an "≡ On this page" header matching Better Auth 1:1.
+  - Real-time scroll observation with active section highlighting and smooth scrolling.
+
 ## [0.9.1] — 2026-10-03
 
 ### 🚀 Added

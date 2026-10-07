@@ -1,0 +1,117 @@
+---
+title: "Inside Harvesters: Reconstructing Claude Code and Cursor Sessions"
+description: "How Qodewk extracts tokens and tool calls from local JSONL logs, SQLite databases, and editor state files."
+date: 2026-10-03
+author:
+  name: "Abushaid Islam"
+  avatar: "https://github.com/abushaidislam.png"
+  twitter: "qodewk"
+tags: ["harvesters", "claude-code", "cursor", "reverse-engineering", "sqlite"]
+---
+
+<TLDR>
+Different AI tools store their interaction history in wildly divergent formats. Qodewk’s modular harvester engine normalizes Claude Code JSONL transcripts, Cursor SQLite state stores, and Aider markdown logs into a unified telemetry stream.
+</TLDR>
+
+## The Fragmented Landscape of Local Agent Storage
+
+There is no universal standard for how coding agents record their actions on disk. Every vendor invents their own storage mechanism:
+
+- **Claude Code:** Appends session events into JSON Lines files under `~/.claude/transcripts/` or project subdirectories.
+- **Cursor:** Stores chat conversations, prompt iterations, and tool outputs inside an embedded SQLite database at `~/.config/Cursor/User/workspaceStorage/[workspace-hash]/state.vscdb`.
+- **Windsurf (Cascade):** Similar to Cursor, maintains session states inside VS Code-derived SQLite tables.
+- **Aider:** Writes a companion markdown log file named `.aider.chat.history.md` in the repo root.
+- **Antigravity:** Writes structured step traces to `brain/[id]/.system_generated/logs/transcript.jsonl`.
+
+To provide a unified receipt across all these tools, Qodewk implements the **Harvester Plugin Architecture** in `@qodewk/core`.
+
+---
+
+## Reverse Engineering Claude Code Transcripts
+
+Claude Code records rich session context in JSONL format. Each line represents a discrete turn:
+
+```json
+{"type":"user","message":"Refactor auth middleware to use JWT verification"}
+{"type":"assistant","model":"claude-3-7-sonnet-20250219","usage":{"input_tokens":14200,"output_tokens":890,"cache_read_input_tokens":11200}}
+{"type":"tool_use","name":"WriteFile","path":"src/auth.ts"}
+```
+
+Our Claude harvester streams the JSONL file backwards (tail-first) using an efficient reverse byte reader. It extracts:
+1. Active model identifier (`claude-3-7-sonnet`, `claude-3-5-sonnet`, `claude-3-5-haiku`).
+2. Exact input, output, and cache read token counts.
+3. Timestamp deltas between user prompt and tool completion.
+4. Set of touched file paths to match against the staged git diff.
+
+```typescript
+export class ClaudeCodeHarvester implements AgentHarvester {
+  readonly id = "claude-code";
+
+  async findActiveSessions(workspacePath: string, sinceTimestamp: number): Promise<AgentSession[]> {
+    const transcriptFiles = await locateClaudeTranscripts(workspacePath);
+    return parseTranscriptsTail(transcriptFiles, sinceTimestamp);
+  }
+}
+```
+
+---
+
+## Harvesting Cursor’s SQLite State (`state.vscdb`)
+
+Cursor does not write flat files; it stores chat history as key-value JSON blobs inside SQLite.
+
+```bash
+# Location on Linux/macOS
+~/.config/Cursor/User/workspaceStorage/[id]/state.vscdb
+# Location on Windows
+%APPDATA%\Cursor\User\workspaceStorage\[id]\state.vscdb
+```
+
+The database contains an `ItemTable` with keys like `workbench.panel.aichat.chatdata` or `aiService.generations`.
+
+Because the Cursor editor process frequently holds a write lock on `state.vscdb`, attempting to open the database directly in read-write mode can produce `SQLITE_BUSY` errors.
+
+Qodewk resolves this using **WAL-mode Read-Only Snapshots**:
+
+```typescript
+import Database from "better-sqlite3";
+
+export function readCursorDatabase(dbPath: string): CursorRecord[] {
+  // Open with readonly: true and query in WAL mode
+  const db = new Database(dbPath, { readonly: true, fileMustExist: true });
+  try {
+    const row = db.prepare(
+      "SELECT value FROM ItemTable WHERE key = 'workbench.panel.aichat.chatdata'"
+    ).get() as { value: string } | undefined;
+
+    if (!row) return [];
+    return parseCursorChatJson(row.value);
+  } finally {
+    db.close();
+  }
+}
+```
+
+---
+
+## Normalization into Unified Protocol v1.0
+
+Regardless of whether the data originated from Claude Code, Cursor, Windsurf, or Antigravity, all harvested records are transformed into the canonical `ProviderSession` schema defined in `@qodewk/protocol`:
+
+```typescript
+export interface ProviderSession {
+  agent: "claude-code" | "cursor" | "windsurf" | "aider" | "antigravity" | "unknown";
+  model: string;
+  sessionDurationSeconds: number;
+  tokens: {
+    prompt: number;
+    completion: number;
+    cacheRead?: number;
+    cacheWrite?: number;
+  };
+  provenance: "observed";
+  confidence: 1.0;
+}
+```
+
+This normalization empowers Qodewk to remain tool-agnostic. No matter how developers write code, Qodewk gathers the receipts.

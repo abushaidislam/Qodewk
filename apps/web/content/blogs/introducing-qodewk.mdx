@@ -1,0 +1,107 @@
+---
+title: "Introducing Qodewk: Universal Telemetry for AI Coding Agents"
+description: "Why we built an open-source, local-first telemetry engine and digital receipt generator for the autonomous coding agent era."
+date: 2026-09-27
+author:
+  name: "Abushaid Islam"
+  avatar: "https://github.com/abushaidislam.png"
+  twitter: "qodewk"
+tags: ["announcement", "telemetry", "git", "agents", "open-source"]
+---
+
+<TLDR>
+Qodewk is an open-source telemetry engine and digital receipt generator for AI coding agents. It treats the local Git revision graph as the single source of truth, pairs it with local provider transcripts when available, and prints verifiable monospace thermal receipts with zero source code exfiltration.
+</TLDR>
+
+## The Blind Spot of the AI Coding Agent Era
+
+In 2024 and 2025, software development crossed a generational threshold. Coding is no longer just typing characters into a text editor; it is a collaborative orchestration between human engineers and autonomous agents—Claude Code, Cursor, Windsurf, Aider, GitHub Copilot CLI, and Antigravity.
+
+Agents write multi-file features, debug race conditions, refactor legacy architectures, and execute terminal test suites in seconds. Yet despite this monumental leap in velocity, an enormous visibility void emerged:
+
+1. **How much did that pull request actually cost?** Was it $0.12 or $14.50 in Anthropic prompt tokens?
+2. **Which model wrote which lines?** Was Sonnet 3.7 responsible for the core algorithm while Haiku cleaned up typing?
+3. **Did the AI introduce code churn?** How many tokens were consumed relative to the actual lines committed to the git tree?
+4. **Where is the proof?** Teams have no standardized, portable, and verifiable audit trail of AI agent activity.
+
+Until today, engineering leads were left checking monthly provider billing dashboards with zero attribution down to the branch, commit, or pull request.
+
+**Enter Qodewk.**
+
+```bash
+$ npx qodewk
+```
+
+```text
+ ┌────────────────────────────────────────────────────────┐
+ │                      Q O D E W K                       │
+ │        Universal Git Telemetry & Digital Receipt       │
+ ├────────────────────────────────────────────────────────┤
+ │ Commit:   a4f89d2 (feat: implement sqlite session store)│
+ │ Author:   Abushaid Islam <abu@qodewk.dev>              │
+ │ Agent:    Claude Code (v0.2.29)                        │
+ │ Model:    claude-3-7-sonnet-20250219                   │
+ ├────────────────────────────────────────────────────────┤
+ │ Files Changed:          8 files                        │
+ │ Insertions:          +412 lines                        │
+ │ Deletions:            -48 lines                        │
+ │ AI-Written Ratio:     92.4%                            │
+ ├────────────────────────────────────────────────────────┤
+ │ Input Tokens:        34,810 (cache read: 28,400)       │
+ │ Output Tokens:        4,120                            │
+ │ Est. Cost:           $0.1428 USD [provenance: observed]│
+ ├────────────────────────────────────────────────────────┤
+ │ [✓] Source code was never uploaded to Qodewk           │
+ │ Receipt URL: https://qodewk.dev/r/rec_89b21f90        │
+ └────────────────────────────────────────────────────────┘
+```
+
+---
+
+## The Prime Directive: Git as the Single Source of Truth
+
+From day one, we established an immutable invariant:
+
+> *"Git tells Qodewk what changed. Provider telemetry, when available, tells Qodewk what was consumed. Qodewk must never present an inference as exact usage."*
+
+Every other telemetry approach relies either on intrusive cloud proxies that intercept your API keys, or heavyweight background daemons that phone home to proprietary SaaS servers. 
+
+Qodewk takes the opposite path. It is **local-first** and **zero-exfiltration by construction**:
+- **Local SQLite & Git Notes:** All session data and cost allocations live inside `~/.qodewk/state.db` and your repository's `refs/notes/qodewk`.
+- **Harvester Architecture:** Qodewk reads local editor session logs (JSONL transcripts from Claude Code, SQLite workspaces from Cursor and Windsurf, markdown logs from Aider).
+- **Dual-Engine Precision:** When provider logs are present, metrics are marked `observed` with 1.0 confidence. When offline, our AST syntactic complexity engine produces honest heuristic bounds marked `estimated`.
+
+---
+
+## Monospace Thermal Receipts
+
+Rather than building another generic corporate dashboard with bland SVG bar charts, we embraced a tactile, editorial visual identity inspired by physical thermal register receipts.
+
+Every commit receipt features:
+- Monospace box-drawing terminal formatting.
+- Serrated zig-zag cut edges at the top and bottom.
+- Cryptographically verifiable Code 128 barcodes linking to `https://qodewk.dev/r/[id]`.
+- Strict provenance labels for every token count and dollar figure.
+
+```bash
+# Generate terminal receipt for the current HEAD commit
+qodewk
+
+# Inspect machine-readable telemetry schema
+qodewk --json
+
+# Publish a public receipt (zero source code included)
+qodewk share
+```
+
+---
+
+## What Comes Next
+
+Today's initial release (`v0.1.0`) is the foundation. Over the coming weeks, we are shipping:
+- Multi-model dynamic rate cards updated at the edge.
+- Universal harvesters for Cursor, Windsurf, Aider, and Copilot CLI.
+- Sub-5ms non-blocking detached git hooks for seamless background logging.
+- GitHub Actions composite workflow for sticky PR receipts.
+
+Qodewk is completely open-source under the MIT license. Check out our repository at [github.com/abushaidislam/Qodewk](https://github.com/abushaidislam/Qodewk), run `npx qodewk` in any active git repo, and start capturing digital receipts for your AI-assisted work today.

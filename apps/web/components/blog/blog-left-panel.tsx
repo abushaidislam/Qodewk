@@ -119,18 +119,18 @@ export function BlogLeftPanel({ postCount, post }: BlogLeftPanelProps) {
 							<span className="text-sm text-foreground/60">Blog</span>
 						</div>
 						<h1 className="text-2xl md:text-3xl xl:text-4xl text-neutral-800 dark:text-neutral-200 tracking-tight leading-tight">
-							News, releases, and insights
+							News, telemetry, and insights
 						</h1>
-						<p className="text-sm text-foreground/70 dark:text-foreground/50 leading-relaxed max-w-[240px] pt-1">
-							Follow along as we build the most comprehensive authentication
-							framework for the web.
+						<p className="text-sm text-foreground/70 dark:text-foreground/50 leading-relaxed max-w-[260px] pt-1">
+							Follow along as we build universal telemetry and digital receipts
+							for autonomous AI coding agents.
 						</p>
 					</div>
 
 					{/* Social & RSS */}
 					<div className="flex items-center gap-3 pt-2">
 						<a
-							href="https://github.com/better-auth/better-auth"
+							href="https://github.com/abushaidislam/Qodewk"
 							target="_blank"
 							rel="noopener noreferrer"
 							className="flex items-center gap-1.5 text-foreground/30 hover:text-foreground/70 transition-colors"
@@ -149,7 +149,7 @@ export function BlogLeftPanel({ postCount, post }: BlogLeftPanelProps) {
 							</svg>
 						</a>
 						<a
-							href="https://x.com/better_auth"
+							href="https://x.com/qodewk"
 							target="_blank"
 							rel="noopener noreferrer"
 							className="flex items-center gap-1.5 text-foreground/30 hover:text-foreground/70 transition-colors"

@@ -1,0 +1,105 @@
+---
+title: "Local-First Storage: Git Notes and Embedded SQLite"
+description: "Storing receipt receipts directly inside your repository with refs/notes/qodewk and local state databases."
+date: 2026-10-05
+author:
+  name: "Abushaid Islam"
+  avatar: "https://github.com/abushaidislam.png"
+  twitter: "qodewk"
+tags: ["sqlite", "git-notes", "local-first", "storage", "databases"]
+---
+
+<TLDR>
+Developers should never need an internet connection, a subscription, or an API key just to inspect telemetry on their own code. Qodewk uses a dual local storage layer: embedded SQLite for fast indexed queries, and Git Notes for repository-native decentralization.
+</TLDR>
+
+## The Cloud Dependency Trap
+
+Too many modern developer tools force you through a compulsory cloud sign-up before you can even run a basic command. If you lose Wi-Fi on a train or in a cafe, the CLI errors out: `Error: Unable to connect to cloud service`.
+
+Qodewk repudiates this pattern. From our first architecture RFC, we designed Qodewk to be **100% functional locally**:
+
+```bash
+$ qodewk
+# Works completely offline. No account required.
+```
+
+To deliver this experience without sacrificing speed or team collaboration, Qodewk pairs two distinct storage technologies:
+1. **Embedded SQLite (`~/.qodewk/state.db`)**: For instant local indexing, historical aggregation, and fast search.
+2. **Git Notes (`refs/notes/qodewk`)**: For immutable, decentralized commit metadata that can travel with the repository.
+
+---
+
+## Architecture of `~/.qodewk/state.db`
+
+The local SQLite database resides in the user's home directory. It maintains a relational record of all observed sessions, parsed commits, and cost allocations:
+
+```sql
+CREATE TABLE IF NOT EXISTS sessions (
+  id TEXT PRIMARY KEY,
+  agent TEXT NOT NULL,
+  model TEXT NOT NULL,
+  started_at INTEGER NOT NULL,
+  ended_at INTEGER NOT NULL,
+  prompt_tokens INTEGER DEFAULT 0,
+  completion_tokens INTEGER DEFAULT 0,
+  cache_read_tokens INTEGER DEFAULT 0,
+  cost_amount REAL DEFAULT 0.0,
+  confidence REAL DEFAULT 1.0,
+  raw_payload TEXT
+);
+
+CREATE TABLE IF NOT EXISTS commit_receipts (
+  commit_sha TEXT PRIMARY KEY,
+  repository_path TEXT NOT NULL,
+  session_id TEXT REFERENCES sessions(id),
+  ai_written_ratio REAL DEFAULT 0.0,
+  insertions INTEGER DEFAULT 0,
+  deletions INTEGER DEFAULT 0,
+  created_at INTEGER NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_repo_sha ON commit_receipts(repository_path, commit_sha);
+```
+
+Using `better-sqlite3` with Write-Ahead Logging (`PRAGMA journal_mode = WAL`), reading and writing local records takes **under 0.4 milliseconds**.
+
+---
+
+## Decentralized Repository Sync with Git Notes
+
+While SQLite is fast for single-user indexing, how do team members share telemetry across machines without requiring a centralized SaaS database?
+
+Git has a built-in, under-utilized feature designed for this: **Git Notes**.
+
+```bash
+# Add a Qodewk receipt to HEAD
+git notes --ref=refs/notes/qodewk add -m '{"receiptId":"rec_91a","cost":0.1428}' HEAD
+
+# Push notes to remote origin alongside branches
+git push origin refs/notes/qodewk
+
+# Fetch notes from teammates
+git fetch origin refs/notes/qodewk:refs/notes/qodewk
+```
+
+### Why Git Notes are Ideal for Telemetry:
+- **Immutable Commits:** Adding a note does not alter the commit SHA, commit date, or GPG signing signature.
+- **Merge-Free:** Notes use an internal tree of blob objects. Concurrent notes on different commits never conflict.
+- **Zero Worktree Pollution:** Notes do not show up as dirty files in `git status` or pollute project root directories.
+
+---
+
+## Seamless CI/CD Fallback with In-Memory Storage
+
+When Qodewk executes in automated CI environments (where writing to `~/.qodewk` may be restricted or ephemeral), the engine detects `CI=true` or `--no-db` and switches dynamically to an in-memory database (`:memory:`):
+
+```typescript
+export function openStateDatabase(options?: { inMemory?: boolean }): Database {
+  const isCI = process.env.CI === "true" || options?.inMemory;
+  const path = isCI ? ":memory:" : getLocalDatabasePath();
+  return new Database(path);
+}
+```
+
+This guarantees that tests and deployment workflows execute with zero disk residue and zero permission friction.

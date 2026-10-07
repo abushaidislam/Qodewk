@@ -206,7 +206,7 @@ export default async function Page({
 	return (
 		<div
 			id="fd-glass-layout"
-			className="flex flex-col lg:flex-row h-full min-h-dvh pt-14 lg:pt-0 [--fd-right-width:0px]"
+			className="relative flex flex-col lg:flex-row h-full min-h-dvh pt-14 lg:pt-0"
 		>
 			<BlogLeftPanel
 				post={{
@@ -218,15 +218,8 @@ export default async function Page({
 			/>
 
 			{/* Right panel — blog content */}
-			<div
-				className="grid w-full lg:w-[70%] min-w-0"
-				style={{
-					gridTemplate:
-						'"content right" 1fr / minmax(0, 1fr) var(--fd-right-width)',
-				}}
-			>
-				<div className="flex min-w-0 flex-col [grid-area:content]">
-					<div className="relative min-w-0 pl-5 pr-7 lg:px-8 pb-24 pt-8 lg:py-24">
+			<div className="relative w-full lg:w-[70%] min-w-0 flex flex-col">
+				<div className="relative min-w-0 pl-5 pr-7 lg:px-8 pb-24 pt-8 lg:py-24">
 						{/* Article body */}
 						<article className="prose prose-neutral dark:prose-invert max-w-3xl prose-headings:tracking-tight prose-a:decoration-dashed prose-a:underline-offset-4 prose-pre:rounded-none prose-pre:border prose-pre:border-foreground/10 prose-img:rounded-none [&_[data-header-label]+h2]:mt-2 [&_[data-header-label]+h3]:mt-2 [&_[data-header-label]+h4]:mt-1">
 							<MDX
@@ -343,7 +336,6 @@ export default async function Page({
 				</div>
 				<BlogTOC items={toc} />
 			</div>
-		</div>
 	);
 }
 
@@ -355,8 +347,9 @@ export async function generateMetadata({
 	const { slug } = await params;
 	if (!slug) {
 		return createMetadata({
-			title: "Blog - Better Auth",
-			description: "Latest updates, articles, and insights about Better Auth",
+			title: "Blog - Qodewk",
+			description:
+				"Engineering updates, telemetry deep-dives, and architectural insights from the Qodewk team.",
 		});
 	}
 	const page = blogs.getPage(slug);
