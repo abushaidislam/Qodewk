@@ -3,7 +3,7 @@ import { NextRequest } from "next/server";
 import { getReceiptFromStore } from "@/lib/storage";
 import { DEMO_RECEIPTS } from "@/lib/demo-receipts";
 
-async function loadGeistFont(): Promise<ArrayBuffer> {
+async function loadGeistFont(): Promise<ArrayBuffer | null> {
   try {
     const { fileURLToPath } = await import("node:url");
     const fs = await import("node:fs/promises");
@@ -11,7 +11,15 @@ async function loadGeistFont(): Promise<ArrayBuffer> {
     const buf = await fs.readFile(fontPath);
     return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength) as ArrayBuffer;
   } catch {
-    return await fetch(new URL("../../../../assets/Geist.ttf", import.meta.url)).then((res) => res.arrayBuffer());
+    try {
+      const res = await fetch(new URL("../../../../assets/Geist.ttf", import.meta.url));
+      if (res.ok) {
+        return await res.arrayBuffer();
+      }
+    } catch {
+      // Fallback cleanly to default sans-serif font
+    }
+    return null;
   }
 }
 
@@ -49,50 +57,176 @@ export async function GET(
     const costPrefix = receipt?.ai?.mode === "verified" ? "$" : "~$";
     const costLabel = receipt?.ai?.mode === "verified" ? "VERIFIED AI COST" : "ESTIMATED AI COST";
 
+    const imageOptions: any = {
+      width: 1200,
+      height: 630,
+      headers: {
+        "Cache-Control": "public, max-age=86400, s-maxage=31536000, immutable",
+      },
+    };
+
+    if (geist) {
+      imageOptions.fonts = [
+        {
+          name: "Geist",
+          data: geist,
+          weight: 400,
+          style: "normal",
+        },
+      ];
+    }
+
     return new ImageResponse(
       (
         <div
-          tw="flex w-full h-full items-center justify-center bg-[#faf9f5]"
-          style={{ fontFamily: "Geist" }}
+          style={{
+            display: "flex",
+            width: "100%",
+            height: "100%",
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: "#faf9f5",
+            fontFamily: geist ? "Geist" : "sans-serif",
+          }}
         >
-          <div tw="flex flex-col items-center justify-center p-12 bg-[#efe9de] rounded-xl border border-[#e6dfd8] w-[700px]">
-            <div tw="flex justify-between w-full pb-4 border-b border-[#dcd5c9] mb-6">
-              <div tw="flex text-3xl font-bold text-[#141413]">QODEWK</div>
-              <div tw="flex text-sm font-bold text-[#cc785c] bg-[#faf9f5] px-3 py-1 rounded-full border border-[#e6dfd8]">
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "48px",
+              backgroundColor: "#efe9de",
+              borderRadius: "12px",
+              border: "1px solid #e6dfd8",
+              width: "700px",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                width: "100%",
+                paddingBottom: "16px",
+                borderBottom: "1px solid #dcd5c9",
+                marginBottom: "24px",
+              }}
+            >
+              <div style={{ display: "flex", fontSize: "32px", fontWeight: "bold", color: "#141413" }}>
+                QODEWK
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  fontSize: "13px",
+                  fontWeight: "bold",
+                  color: "#cc785c",
+                  backgroundColor: "#faf9f5",
+                  padding: "4px 12px",
+                  borderRadius: "9999px",
+                  border: "1px solid #e6dfd8",
+                }}
+              >
                 PROOF OF SHIPMENT
               </div>
             </div>
 
-            <div tw="flex flex-col w-full text-lg text-[#3d3d3a]">
-              <div tw="flex justify-between w-full mb-3">
-                <div tw="text-[#8e8b82]">Project / Repo:</div>
-                <div tw="font-bold text-[#141413]">{projectAlias}</div>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                width: "100%",
+                fontSize: "17px",
+                color: "#3d3d3a",
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", width: "100%", marginBottom: "12px" }}>
+                <span style={{ color: "#8e8b82" }}>Project / Repo:</span>
+                <span style={{ fontWeight: "bold", color: "#141413" }}>{projectAlias}</span>
               </div>
-              <div tw="flex justify-between w-full mb-3">
-                <div tw="text-[#8e8b82]">Files Touched:</div>
-                <div tw="font-bold text-[#141413]">{filesTouched} files</div>
+              <div style={{ display: "flex", justifyContent: "space-between", width: "100%", marginBottom: "12px" }}>
+                <span style={{ color: "#8e8b82" }}>Files Touched:</span>
+                <span style={{ fontWeight: "bold", color: "#141413" }}>{filesTouched} files</span>
               </div>
-              <div tw="flex justify-between w-full mb-3">
-                <div tw="text-[#8e8b82]">Lines Inserted / Deleted:</div>
-                <div tw="font-bold text-[#5db8a6]">+{insertions} / -{deletions}</div>
+              <div style={{ display: "flex", justifyContent: "space-between", width: "100%", marginBottom: "12px" }}>
+                <span style={{ color: "#8e8b82" }}>Lines Inserted / Deleted:</span>
+                <span style={{ fontWeight: "bold", color: "#5db8a6" }}>+{insertions} / -{deletions}</span>
               </div>
-              <div tw="flex justify-between w-full mb-3">
-                <div tw="text-[#8e8b82]">AI Provider:</div>
-                <div tw="font-bold text-[#141413]">{providerName}</div>
+              <div style={{ display: "flex", justifyContent: "space-between", width: "100%", marginBottom: "12px" }}>
+                <span style={{ color: "#8e8b82" }}>AI Provider:</span>
+                <span style={{ fontWeight: "bold", color: "#141413" }}>{providerName}</span>
               </div>
-              <div tw="flex justify-between w-full">
-                <div tw="text-[#8e8b82]">Estimated Tokens:</div>
-                <div tw="font-bold text-[#141413]">{tokensStr}</div>
+              <div style={{ display: "flex", justifyContent: "space-between", width: "100%" }}>
+                <span style={{ color: "#8e8b82" }}>Estimated Tokens:</span>
+                <span style={{ fontWeight: "bold", color: "#141413" }}>{tokensStr}</span>
               </div>
             </div>
 
-            <div tw="flex justify-between items-center w-full py-4 border-t-2 border-b-2 border-[#141413] my-6">
-              <div tw="text-base font-bold text-[#6c6a64]">{costLabel}</div>
-              <div tw="text-4xl font-bold text-[#cc785c]">{costPrefix}{costVal.toFixed(2)}</div>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                width: "100%",
+                paddingTop: "16px",
+                paddingBottom: "16px",
+                borderTop: "2px solid #141413",
+                borderBottom: "2px solid #141413",
+                marginTop: "24px",
+                marginBottom: "24px",
+              }}
+            >
+              <span style={{ fontSize: "15px", fontWeight: "bold", color: "#6c6a64" }}>{costLabel}</span>
+              <span style={{ fontSize: "36px", fontWeight: "bold", color: "#cc785c" }}>{costPrefix}{costVal.toFixed(2)}</span>
             </div>
 
-            <div tw="flex text-sm text-[#5db8a6] font-semibold">
-              [✓] Source code was never uploaded to Qodewk
+            <div style={{ display: "flex", alignItems: "center", fontSize: "14px", color: "#5db8a6", fontWeight: 600 }}>
+              <span style={{ marginRight: "6px" }}>[OK]</span>
+              <span>Source code was never uploaded to Qodewk</span>
+            </div>
+          </div>
+        </div>
+      ),
+      imageOptions
+    );
+  } catch (err) {
+    console.error("Error generating OG image, falling back to safe placeholder:", err);
+    return new ImageResponse(
+      (
+        <div
+          style={{
+            display: "flex",
+            width: "100%",
+            height: "100%",
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: "#faf9f5",
+            fontFamily: "sans-serif",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "48px",
+              backgroundColor: "#efe9de",
+              borderRadius: "12px",
+              border: "1px solid #e6dfd8",
+              width: "600px",
+            }}
+          >
+            <div style={{ display: "flex", fontSize: "32px", fontWeight: "bold", color: "#141413", marginBottom: "16px" }}>
+              QODEWK
+            </div>
+            <div style={{ display: "flex", fontSize: "18px", color: "#3d3d3a", marginBottom: "12px" }}>
+              Digital Telemetry Receipt
+            </div>
+            <div style={{ display: "flex", alignItems: "center", fontSize: "14px", color: "#5db8a6", fontWeight: 600 }}>
+              <span style={{ marginRight: "6px" }}>[OK]</span>
+              <span>Source code was never uploaded to Qodewk</span>
             </div>
           </div>
         </div>
@@ -100,21 +234,10 @@ export async function GET(
       {
         width: 1200,
         height: 630,
-        fonts: [
-          {
-            name: "Geist",
-            data: geist,
-            weight: 400,
-            style: "normal",
-          },
-        ],
         headers: {
-          "Cache-Control": "public, max-age=86400, s-maxage=31536000, immutable",
+          "Cache-Control": "public, max-age=3600, s-maxage=3600",
         },
       }
     );
-  } catch (err) {
-    console.error("Error generating OG image:", err);
-    return new Response("Failed to generate receipt OG image", { status: 500 });
   }
 }
