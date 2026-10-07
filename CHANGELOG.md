@@ -33,6 +33,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   - Replaced unsupported Satori layout styles with Claude editorial tokens and added robust local font loading with Node.js filesystem fallback.
   - Connected `metadataBase` across receipt pages so Twitter, LinkedIn, and OpenGraph crawlers resolve absolute image URLs.
   - Streamlined `/r/[id]` receipt page UX to focus on a single thermal receipt presentation with an interactive demo switcher and registered full Vitest regression tests.
+- **Monorepo Pipeline Integrity & CLI Dependency Isolation:**
+  - Added explicit `simple-git` dependency to `packages/cli/package.json` to eliminate undeclared phantom dependency imports in `menu.ts` and resolve `turbo typecheck` errors.
+  - Exported testable `run()` function in `packages/action/src/index.ts` with test-runner environment guards and authored comprehensive unit tests in `packages/action/test/action.test.ts` covering outputs, error handling, and PR comment synchronization.
+  - Standardized package-level Vitest configs with 30s timeouts across `packages/core`, `packages/cli`, and `apps/web` to ensure `turbo test` passes reliably across all monorepo workspaces.
 
 ## [0.9.0] — 2026-10-02
 

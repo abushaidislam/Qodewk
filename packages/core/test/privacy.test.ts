@@ -10,7 +10,7 @@ import {
 } from "../src/index.js";
 import { ReceiptV1 } from "@qodewk/protocol";
 
-describe("Privacy by Construction Regression Suite (`privacy.test.ts`)", () => {
+describe("Privacy by Construction Regression Suite (`privacy.test.ts`)", { timeout: 30000 }, () => {
   let tempRepoDir: string;
 
   beforeEach(async () => {

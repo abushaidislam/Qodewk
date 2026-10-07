@@ -2,7 +2,7 @@ import * as core from "@actions/core";
 import * as github from "@actions/github";
 import { generateReceipt, formatMarkdownReceipt } from "@qodewk/core";
 
-async function run() {
+export async function run() {
   try {
     const token = core.getInput("github-token") || process.env.GITHUB_TOKEN;
     const baseRef = core.getInput("base-ref") || undefined;
@@ -98,4 +98,6 @@ async function run() {
   }
 }
 
-run();
+if (process.env.NODE_ENV !== "test" && !process.env.VITEST) {
+  run();
+}
