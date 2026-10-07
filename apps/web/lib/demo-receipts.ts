@@ -38,8 +38,8 @@ export const DEMO_RECEIPTS: Record<string, ReceiptV1> = {
         cached: 21000
       },
       cost: 0.19,
-      mode: "verified",
-      confidence: 0.95,
+      mode: "estimated",
+      confidence: 0.55,
       sessions: [
         {
           provider: "cursor",
@@ -47,8 +47,8 @@ export const DEMO_RECEIPTS: Record<string, ReceiptV1> = {
           task: "Implement indexer concurrency",
           tokens: { input: 38000, output: 4800, cached: 21000 },
           cost: 0.19,
-          confidence: 0.95,
-          mode: "verified"
+          confidence: 0.55,
+          mode: "estimated"
         }
       ]
     },

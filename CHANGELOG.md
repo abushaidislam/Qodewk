@@ -28,6 +28,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Cursor commit-tracking footprints derive tokens from line counts, so they are now labeled `estimated` (confidence 0.55) instead of `verified`.
 - Antigravity model detection now normalizes the selected model name and relies on pricing aliases/fallbacks, so newer models no longer resolve to the wrong rate card.
 - Fixed `pricing-sync` tests to use the real `ModelRateCard` shape.
+- **Dynamic Receipt OG Image & Social Preview Fix (`/api/og/[id]` & `/r/[id]`):**
+  - Resolved dynamic OG image generation for seeded demo receipts (`rec_demo_cursor`, `demo-claude`, `demo-antigravity`) alongside stored receipts.
+  - Replaced unsupported Satori layout styles with Claude editorial tokens and added robust local font loading with Node.js filesystem fallback.
+  - Connected `metadataBase` across receipt pages so Twitter, LinkedIn, and OpenGraph crawlers resolve absolute image URLs.
+  - Streamlined `/r/[id]` receipt page UX to focus on a single thermal receipt presentation with an interactive demo switcher and registered full Vitest regression tests.
 
 ## [0.9.0] — 2026-10-02
 

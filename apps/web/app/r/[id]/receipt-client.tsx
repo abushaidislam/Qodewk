@@ -4,23 +4,14 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import {
-	ArrowLeft,
 	Check,
 	Copy,
 	ExternalLink,
-	GitBranch,
-	GitCommit,
-	ShieldCheck,
 	Code2,
 	Share2,
-	ChevronDown,
-	ChevronUp,
-	FileText,
 	Lock,
-	Sparkles,
-	Terminal,
+	ShieldCheck,
 	Cpu,
-	SlidersHorizontal,
 } from "lucide-react";
 import type { ReceiptV1 } from "@qodewk/protocol";
 import { DEMO_RECEIPTS } from "@/lib/demo-receipts";
@@ -76,28 +67,28 @@ export function ReceiptClient({ receipt: initialReceipt }: ReceiptClientProps) {
 		antigravityReceipt.receipt.id,
 	].includes(initialReceipt.receipt.id);
 
-	const showcaseList = isKnownDemo
-		? demoList
-		: [
-				{
-					id: "custom",
-					receiptId: initialReceipt.receipt.id,
-					agentName: `${initialReceipt.ai.provider.toUpperCase()}`,
-					modelName: initialReceipt.ai.model || "Observed Agent",
-					pillColor: "bg-primary/10 text-primary border-primary/20",
-					receipt: initialReceipt,
-					href: `/r/${initialReceipt.receipt.id}`,
-				},
-				...demoList.slice(0, 2),
-		  ];
-
 	// Determine currently selected receipt for inspector and left-rail metadata
 	const [activeReceipt, setActiveReceipt] = useState<ReceiptV1>(initialReceipt);
 	const [copiedSha, setCopiedSha] = useState(false);
 	const [copiedHash, setCopiedHash] = useState(false);
 	const [copiedJson, setCopiedJson] = useState(false);
 	const [copiedMarkdown, setCopiedMarkdown] = useState(false);
+	const [copiedLink, setCopiedLink] = useState(false);
 	const [showJson, setShowJson] = useState(false);
+
+	const selectDemo = (item: (typeof demoList)[number]) => {
+		setActiveReceipt(item.receipt);
+		// Keep the address bar a valid permalink for the receipt being viewed
+		window.history.replaceState(null, "", item.href);
+	};
+
+	const copyLink = () => {
+		navigator.clipboard.writeText(
+			`${window.location.origin}/r/${activeReceipt.receipt.id}`,
+		);
+		setCopiedLink(true);
+		setTimeout(() => setCopiedLink(false), 2000);
+	};
 
 	const copySha = () => {
 		navigator.clipboard.writeText(activeReceipt.repository.headSha);
@@ -190,49 +181,6 @@ Estimated Cost:    ${costPrefix}${activeReceipt.ai.cost.toFixed(2)} (${confidenc
 								</p>
 							</div>
 
-							{/* Agent Switcher Navigator */}
-							<div className="border-t border-foreground/10 pt-3 space-y-1.5">
-								<div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-wider text-foreground/50 pb-1">
-									<span>AI Coding Agents</span>
-									<span>Switch View</span>
-								</div>
-
-								<div className="space-y-1">
-									{showcaseList.map((item) => {
-										const isSelected =
-											activeReceipt.receipt.id === item.receiptId;
-										return (
-											<button
-												key={item.id}
-												type="button"
-												onClick={() => setActiveReceipt(item.receipt)}
-												className={cn(
-													"w-full flex items-center justify-between py-1.5 px-2.5 rounded-sm text-xs font-mono transition-all text-left",
-													isSelected
-														? "bg-foreground/10 text-foreground font-medium border border-foreground/15 shadow-2xs"
-														: "text-foreground/60 hover:text-foreground hover:bg-foreground/5",
-												)}
-											>
-												<span className="flex items-center gap-2 truncate">
-													<span
-														className={cn(
-															"w-1.5 h-1.5 rounded-full shrink-0",
-															isSelected
-																? "bg-primary animate-pulse"
-																: "bg-foreground/20",
-														)}
-													/>
-													<span className="truncate">{item.agentName}</span>
-												</span>
-												<span className="text-[10px] text-foreground/45 font-mono truncate">
-													{item.receipt.repository.projectAlias}
-												</span>
-											</button>
-										);
-									})}
-								</div>
-							</div>
-
 							{/* Active Order Telemetry Metadata Table */}
 							<div className="border-t border-foreground/10 pt-3 space-y-1.5 font-mono text-[11px]">
 								<div className="flex justify-between items-center text-foreground/60">
@@ -261,7 +209,15 @@ Estimated Cost:    ${costPrefix}${activeReceipt.ai.cost.toFixed(2)} (${confidenc
 								</div>
 								<div className="flex justify-between items-center text-foreground/60">
 									<span className="text-foreground/40">PROVENANCE:</span>
-									<span className="text-emerald-500 font-medium capitalize">
+									<span
+										className={cn(
+											"font-medium capitalize",
+											activeReceipt.ai.mode === "verified"
+												? "text-emerald-500"
+												: "text-[#e8a55a]",
+										)}
+									>
+										{activeReceipt.ai.mode === "verified" ? "" : "~ "}
 										{activeReceipt.ai.mode} ({confidencePercent})
 									</span>
 								</div>
@@ -339,88 +295,80 @@ Estimated Cost:    ${costPrefix}${activeReceipt.ai.cost.toFixed(2)} (${confidenc
 								</div>
 							</div>
 
-							{/* THE 3 SIDE-BY-SIDE THERMAL RECEIPTS */}
-							<div className="pt-2">
-								<div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 items-start justify-center">
-									{showcaseList.map((item) => {
+							{/* DEMO SWITCHER — only for seeded demo receipts, never for real shared receipts */}
+							{isKnownDemo && (
+								<div
+									role="tablist"
+									aria-label="Demo receipt agent"
+									className="flex flex-wrap items-center gap-2"
+								>
+									<span className="text-[10px] font-mono uppercase tracking-wider text-foreground/45 mr-1">
+										Demo receipts
+									</span>
+									{demoList.map((item) => {
 										const isSelected =
 											activeReceipt.receipt.id === item.receiptId;
 										return (
-											<div
+											<button
 												key={item.id}
+												type="button"
+												role="tab"
+												aria-selected={isSelected}
+												onClick={() => selectDemo(item)}
 												className={cn(
-													"flex flex-col items-center transition-all duration-200 rounded-lg p-2 sm:p-2.5",
+													"inline-flex items-center gap-2 px-3 py-1.5 rounded-sm border text-xs font-mono transition-all cursor-pointer",
 													isSelected
-														? "ring-2 ring-primary/40 bg-primary/[0.02] shadow-xs"
-														: "opacity-85 hover:opacity-100",
+														? "bg-foreground text-background border-foreground"
+														: "border-foreground/15 text-foreground/70 hover:text-foreground hover:bg-foreground/5",
 												)}
 											>
-												{/* Top Agent Header Bar */}
-												<div className="w-full max-w-[380px] flex items-center justify-between pb-2.5 px-1">
-													<div className="flex items-center gap-1.5 min-w-0">
-														<span
-															className={cn(
-																"text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded border shrink-0",
-																item.pillColor,
-															)}
-														>
-															{item.agentName}
-														</span>
-														<span className="text-[10px] font-mono text-foreground/50 truncate max-w-[120px]">
-															{item.modelName}
-														</span>
-													</div>
-
-													<button
-														type="button"
-														onClick={() => setActiveReceipt(item.receipt)}
-														className={cn(
-															"text-[11px] font-mono underline hover:text-primary transition-colors cursor-pointer shrink-0 ml-1",
-															isSelected
-																? "text-primary font-medium"
-																: "text-foreground/50",
-														)}
-													>
-														{isSelected ? "Active" : "Inspect"}
-													</button>
-												</div>
-
-												{/* The Thermal Receipt Component */}
-												<ThermalReceipt
-													receipt={item.receipt}
-													showActions={false}
+												<span
+													className={cn(
+														"w-1.5 h-1.5 rounded-full",
+														isSelected ? "bg-[#5db8a6]" : "bg-foreground/25",
+													)}
 												/>
-
-												{/* Quick Card Action Footer */}
-												<div className="w-full max-w-[380px] flex items-center justify-between gap-2 pt-2.5 px-1 text-xs font-mono">
-													<button
-														type="button"
-														onClick={() => {
-															setActiveReceipt(item.receipt);
-															navigator.clipboard.writeText(
-																`[✓] Qodewk Receipt: ${item.receipt.repository.projectAlias} (${item.receipt.mutation.files} files, est. ~$${item.receipt.ai.cost.toFixed(2)})\nhttps://qodewk.dev/r/${item.receipt.receipt.id}`,
-															);
-														}}
-														className="flex-1 py-1.5 px-2 border border-foreground/15 hover:bg-foreground/5 rounded text-foreground/80 hover:text-foreground text-center transition-all cursor-pointer"
-													>
-														Copy Link
-													</button>
-
-													<a
-														href={`/api/og/${item.receipt.receipt.id}`}
-														target="_blank"
-														rel="noreferrer"
-														className="py-1.5 px-3 border border-foreground/15 hover:bg-foreground/5 rounded text-foreground/80 hover:text-foreground transition-all flex items-center gap-1"
-													>
-														<Share2 className="w-3 h-3 text-primary" />
-														OG
-													</a>
-												</div>
-											</div>
+												{item.agentName}
+												<span className="opacity-60">{item.modelName}</span>
+											</button>
 										);
 									})}
 								</div>
-							</div>
+							)}
+
+							<div className="grid grid-cols-1 xl:grid-cols-[minmax(0,400px)_minmax(0,1fr)] gap-6 xl:gap-8 items-start">
+								{/* SINGLE HERO THERMAL RECEIPT */}
+								<div className="flex flex-col items-center w-full">
+									<motion.div
+										key={activeReceipt.receipt.id}
+										initial={{ opacity: 0, y: 8 }}
+										animate={{ opacity: 1, y: 0 }}
+										transition={{ duration: 0.25 }}
+										className="w-full flex justify-center"
+									>
+										<ThermalReceipt receipt={activeReceipt} showActions={false} />
+									</motion.div>
+
+									<div className="w-full max-w-[380px] flex items-center gap-2 pt-3 text-xs font-mono">
+										<button
+											type="button"
+											onClick={copyLink}
+											className="flex-1 py-1.5 px-2 border border-foreground/15 hover:bg-foreground/5 rounded text-foreground/80 hover:text-foreground text-center transition-all cursor-pointer"
+										>
+											{copiedLink ? "Link copied" : "Copy Link"}
+										</button>
+										<a
+											href={`/api/og/${activeReceipt.receipt.id}`}
+											target="_blank"
+											rel="noreferrer"
+											className="py-1.5 px-3 border border-foreground/15 hover:bg-foreground/5 rounded text-foreground/80 hover:text-foreground transition-all flex items-center gap-1"
+										>
+											<Share2 className="w-3 h-3 text-primary" />
+											OG
+										</a>
+									</div>
+								</div>
+
 
 							{/* ACTIVE RECEIPT DETAILED INSPECTOR */}
 							<motion.div
@@ -452,33 +400,6 @@ Estimated Cost:    ${costPrefix}${activeReceipt.ai.cost.toFixed(2)} (${confidenc
 										</p>
 									</div>
 
-									{/* Action Buttons */}
-									<div className="flex flex-wrap items-center gap-2">
-										<a
-											href={`/api/og/${activeReceipt.receipt.id}`}
-											target="_blank"
-											rel="noreferrer"
-											className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono border border-foreground/15 rounded hover:bg-foreground/5 transition-all text-foreground/80"
-										>
-											<Share2 className="w-3.5 h-3.5 text-primary" />
-											<span>OG Card</span>
-											<ExternalLink className="w-3 h-3 opacity-50" />
-										</a>
-
-										<button
-											type="button"
-											onClick={() => setShowJson((prev) => !prev)}
-											className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono border border-foreground/15 rounded hover:bg-foreground/5 transition-all text-foreground/80 cursor-pointer"
-										>
-											<Code2 className="w-3.5 h-3.5" />
-											<span>{showJson ? "Hide JSON" : "Raw JSON"}</span>
-											{showJson ? (
-												<ChevronUp className="w-3.5 h-3.5 opacity-50" />
-											) : (
-												<ChevronDown className="w-3.5 h-3.5 opacity-50" />
-											)}
-										</button>
-									</div>
 								</div>
 
 								{/* 4 Stat Metric Cards */}
@@ -691,6 +612,7 @@ Estimated Cost:    ${costPrefix}${activeReceipt.ai.cost.toFixed(2)} (${confidenc
 									)}
 								</AnimatePresence>
 							</motion.div>
+							</div>
 						</div>
 
 						{/* Global Site Footer */}

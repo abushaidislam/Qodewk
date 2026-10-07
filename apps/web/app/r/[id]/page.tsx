@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import type { ReceiptV1 } from "@qodewk/protocol";
 import { getReceiptFromStore } from "@/lib/storage";
 import { DEMO_RECEIPTS } from "@/lib/demo-receipts";
+import { createMetadata } from "@/lib/metadata";
 import { ReceiptClient } from "./receipt-client";
 
 interface PageProps {
@@ -54,17 +55,17 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const receipt = await resolveReceipt(id);
 
   if (!receipt) {
-    return {
+    return createMetadata({
       title: "Receipt Not Found — Qodewk",
       description: "This digital receipt could not be found or has expired."
-    };
+    });
   }
 
   const title = `Qodewk Receipt: ${receipt.repository.projectAlias} (+${receipt.mutation.insertions} / -${receipt.mutation.deletions})`;
   const description = `Digital proof of shipment for ${receipt.repository.projectAlias} (${receipt.mutation.files} files touched, est. AI cost: ~$${receipt.ai.cost.toFixed(2)}). Source code was not uploaded.`;
   const ogUrl = `/api/og/${receipt.receipt.id}`;
 
-  return {
+  return createMetadata({
     title,
     description,
     openGraph: {
@@ -85,7 +86,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       description,
       images: [ogUrl]
     }
-  };
+  });
 }
 
 export default async function ReceiptPage({ params }: PageProps) {
