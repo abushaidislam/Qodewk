@@ -5,11 +5,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "clean": "node -e \"['.next', '.turbo', '.source', 'dist'].forEach(d => require('fs').rmSync(d, { recursive: true, force: true }))\"",
     "postinstall": "fumadocs-mdx"
   },
   "dependencies": {

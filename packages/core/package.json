@@ -14,7 +14,8 @@
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "clean": "node -e \"['dist', '.turbo'].forEach(d => require('fs').rmSync(d, { recursive: true, force: true }))\""
   },
   "dependencies": {
     "@qodewk/pricing": "workspace:*",
