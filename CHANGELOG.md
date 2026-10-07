@@ -37,6 +37,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   - Added explicit `simple-git` dependency to `packages/cli/package.json` to eliminate undeclared phantom dependency imports in `menu.ts` and resolve `turbo typecheck` errors.
   - Exported testable `run()` function in `packages/action/src/index.ts` with test-runner environment guards and authored comprehensive unit tests in `packages/action/test/action.test.ts` covering outputs, error handling, and PR comment synchronization.
   - Standardized package-level Vitest configs with 30s timeouts across `packages/core`, `packages/cli`, and `apps/web` to ensure `turbo test` passes reliably across all monorepo workspaces.
+- **Workspace Scope Standardization & Dependency Hoisting (Phase 2):**
+  - Standardized web application package name from `web` to `@qodewk/web` across `apps/web/package.json`, `Dockerfile`, `vercel.json`, and deployment documentation.
+  - Explicitly declared `vitest` in `devDependencies` across all workspace packages (`@qodewk/protocol`, `@qodewk/pricing`, `@qodewk/core`, `qodewk`, `@qodewk/action`, `@qodewk/web`) to eliminate phantom dependency hoisting.
 
 ## [0.9.0] — 2026-10-02
 
