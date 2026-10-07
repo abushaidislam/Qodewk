@@ -1,152 +1,120 @@
 import { ImageResponse } from "next/og";
 import { NextRequest } from "next/server";
 import { getReceiptFromStore } from "@/lib/storage";
+import { DEMO_RECEIPTS } from "@/lib/demo-receipts";
 
-export const runtime = "edge";
+async function loadGeistFont(): Promise<ArrayBuffer> {
+  try {
+    const { fileURLToPath } = await import("node:url");
+    const fs = await import("node:fs/promises");
+    const fontPath = fileURLToPath(new URL("../../../../assets/Geist.ttf", import.meta.url));
+    const buf = await fs.readFile(fontPath);
+    return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength) as ArrayBuffer;
+  } catch {
+    return await fetch(new URL("../../../../assets/Geist.ttf", import.meta.url)).then((res) => res.arrayBuffer());
+  }
+}
+
+async function resolveReceiptForOg(id: string) {
+  if (DEMO_RECEIPTS[id]) return DEMO_RECEIPTS[id]!;
+  if (id === "demo-cursor" || id === "rec_01J8Y29K4Z00ABC123DEF456") return DEMO_RECEIPTS["rec_demo_cursor"]!;
+  if (id === "demo-claude") return DEMO_RECEIPTS["rec_demo_claude"]!;
+  if (id === "demo-antigravity") return DEMO_RECEIPTS["rec_demo_antigravity"]!;
+  if (id === "demo-aider") return DEMO_RECEIPTS["rec_demo_aider"]!;
+  if (id.startsWith("rec_demo")) {
+    const base = DEMO_RECEIPTS["rec_demo_cursor"]!;
+    return { ...base, receipt: { ...base.receipt, id } };
+  }
+  return await getReceiptFromStore(id);
+}
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params;
-  let receipt = await getReceiptFromStore(id);
+  try {
+    const { id } = await params;
+    const receipt = await resolveReceiptForOg(id);
+    const geist = await loadGeistFont();
+    const projectAlias = receipt?.repository?.projectAlias || "hyper-engine";
+    const filesTouched = receipt?.mutation?.files ?? 14;
+    const insertions = receipt?.mutation?.insertions ?? 381;
+    const deletions = receipt?.mutation?.deletions ?? 72;
+    const providerName = receipt?.ai?.provider ? `${receipt.ai.provider} · ${receipt.ai.model || "frontier"}` : "Claude Code · Opus 4";
+    const totalTokens = receipt?.ai?.tokens 
+      ? receipt.ai.tokens.input + receipt.ai.tokens.output 
+      : 183000;
+    const tokensStr = totalTokens >= 1000 ? `~${Math.round(totalTokens / 1000)}K tokens` : `${totalTokens} tokens`;
+    const costVal = receipt?.ai?.cost ?? 2.41;
+    const costPrefix = receipt?.ai?.mode === "verified" ? "$" : "~$";
+    const costLabel = receipt?.ai?.mode === "verified" ? "VERIFIED AI COST" : "ESTIMATED AI COST";
 
-  // Fallback demo values if receipt not yet saved or matching demo ID
-  const projectAlias = receipt?.repository?.projectAlias || "hyper-engine";
-  const filesTouched = receipt?.mutation?.files ?? 14;
-  const insertions = receipt?.mutation?.insertions ?? 381;
-  const deletions = receipt?.mutation?.deletions ?? 72;
-  const providerName = receipt?.ai?.provider ? `${receipt.ai.provider} · ${receipt.ai.model || "frontier"}` : "Claude Code · Opus 4";
-  const totalTokens = receipt?.ai?.tokens 
-    ? receipt.ai.tokens.input + receipt.ai.tokens.output 
-    : 183000;
-  const tokensStr = totalTokens >= 1000 ? `~${Math.round(totalTokens / 1000)}K tokens` : `${totalTokens} tokens`;
-  const costVal = receipt?.ai?.cost ?? 2.41;
-  const costPrefix = receipt?.ai?.mode === "verified" ? "$" : "~$";
-  const costLabel = receipt?.ai?.mode === "verified" ? "VERIFIED AI COST" : "ESTIMATED AI COST";
-
-  return new ImageResponse(
-    (
-      <div
-        style={{
-          height: "100%",
-          width: "100%",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          backgroundColor: "#faf9f5",
-          fontFamily: "monospace",
-          padding: "40px",
-        }}
-      >
+    return new ImageResponse(
+      (
         <div
-          style={{
-            width: "600px",
-            backgroundColor: "#efe9de",
-            border: "2px solid #e6dfd8",
-            borderRadius: "12px",
-            padding: "36px",
-            display: "flex",
-            flexDirection: "column",
-            boxShadow: "0 10px 30px rgba(20, 20, 19, 0.08)",
-          }}
+          tw="flex w-full h-full items-center justify-center bg-[#faf9f5]"
+          style={{ fontFamily: "Geist" }}
         >
-          {/* Top Label */}
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              borderBottom: "2px dashed #8e8b82",
-              paddingBottom: "16px",
-              marginBottom: "20px",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <span style={{ fontSize: "24px", color: "#141413" }}>✱</span>
-              <span style={{ fontSize: "26px", fontWeight: "bold", color: "#141413", letterSpacing: "-1px" }}>
-                QODEWK
-              </span>
+          <div tw="flex flex-col items-center justify-center p-12 bg-[#efe9de] rounded-xl border border-[#e6dfd8] w-[700px]">
+            <div tw="flex justify-between w-full pb-4 border-b border-[#dcd5c9] mb-6">
+              <div tw="flex text-3xl font-bold text-[#141413]">QODEWK</div>
+              <div tw="flex text-sm font-bold text-[#cc785c] bg-[#faf9f5] px-3 py-1 rounded-full border border-[#e6dfd8]">
+                PROOF OF SHIPMENT
+              </div>
             </div>
-            <div
-              style={{
-                fontSize: "12px",
-                fontWeight: "bold",
-                color: "#cc785c",
-                backgroundColor: "#faf9f5",
-                padding: "4px 12px",
-                borderRadius: "9999px",
-                border: "1px solid #e6dfd8",
-              }}
-            >
-              PROOF OF SHIPMENT
-            </div>
-          </div>
 
-          {/* Metric Rows */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "12px", fontSize: "16px", color: "#3d3d3a" }}>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: "#8e8b82" }}>Project / Repo:</span>
-              <span style={{ fontWeight: "bold", color: "#141413" }}>{projectAlias}</span>
+            <div tw="flex flex-col w-full text-lg text-[#3d3d3a]">
+              <div tw="flex justify-between w-full mb-3">
+                <div tw="text-[#8e8b82]">Project / Repo:</div>
+                <div tw="font-bold text-[#141413]">{projectAlias}</div>
+              </div>
+              <div tw="flex justify-between w-full mb-3">
+                <div tw="text-[#8e8b82]">Files Touched:</div>
+                <div tw="font-bold text-[#141413]">{filesTouched} files</div>
+              </div>
+              <div tw="flex justify-between w-full mb-3">
+                <div tw="text-[#8e8b82]">Lines Inserted / Deleted:</div>
+                <div tw="font-bold text-[#5db8a6]">+{insertions} / -{deletions}</div>
+              </div>
+              <div tw="flex justify-between w-full mb-3">
+                <div tw="text-[#8e8b82]">AI Provider:</div>
+                <div tw="font-bold text-[#141413]">{providerName}</div>
+              </div>
+              <div tw="flex justify-between w-full">
+                <div tw="text-[#8e8b82]">Estimated Tokens:</div>
+                <div tw="font-bold text-[#141413]">{tokensStr}</div>
+              </div>
             </div>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: "#8e8b82" }}>Files Touched:</span>
-              <span style={{ fontWeight: "bold", color: "#141413" }}>{filesTouched} files</span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: "#8e8b82" }}>Lines Inserted / Deleted:</span>
-              <span style={{ fontWeight: "bold", color: "#5db872" }}>+{insertions} / -{deletions}</span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: "#8e8b82" }}>AI Provider:</span>
-              <span style={{ fontWeight: "bold", color: "#141413" }}>{providerName}</span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: "#8e8b82" }}>Estimated Tokens:</span>
-              <span style={{ fontWeight: "bold", color: "#141413" }}>{tokensStr}</span>
-            </div>
-          </div>
 
-          {/* Cost Callout */}
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              borderTop: "2px solid #141413",
-              borderBottom: "2px solid #141413",
-              padding: "16px 0",
-              margin: "24px 0",
-            }}
-          >
-            <div style={{ fontSize: "14px", fontWeight: "bold", color: "#6c6a64" }}>
-              {costLabel}
+            <div tw="flex justify-between items-center w-full py-4 border-t-2 border-b-2 border-[#141413] my-6">
+              <div tw="text-base font-bold text-[#6c6a64]">{costLabel}</div>
+              <div tw="text-4xl font-bold text-[#cc785c]">{costPrefix}{costVal.toFixed(2)}</div>
             </div>
-            <div style={{ fontSize: "36px", fontWeight: "bold", color: "#cc785c" }}>
-              {costPrefix}{costVal.toFixed(2)}
-            </div>
-          </div>
 
-          {/* Trust Statement */}
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              fontSize: "12px",
-              color: "#5db872",
-              fontWeight: "600",
-            }}
-          >
-            [✓] Source code was never uploaded to Qodewk
+            <div tw="flex text-sm text-[#5db8a6] font-semibold">
+              [✓] Source code was never uploaded to Qodewk
+            </div>
           </div>
         </div>
-      </div>
-    ),
-    {
-      width: 1200,
-      height: 630,
-    }
-  );
+      ),
+      {
+        width: 1200,
+        height: 630,
+        fonts: [
+          {
+            name: "Geist",
+            data: geist,
+            weight: 400,
+            style: "normal",
+          },
+        ],
+        headers: {
+          "Cache-Control": "public, max-age=86400, s-maxage=31536000, immutable",
+        },
+      }
+    );
+  } catch (err) {
+    console.error("Error generating OG image:", err);
+    return new Response("Failed to generate receipt OG image", { status: 500 });
+  }
 }

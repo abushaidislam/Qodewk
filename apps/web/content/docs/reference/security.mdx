@@ -1,0 +1,63 @@
+---
+icon: referenceSecurity
+sidebarTitle: "Security & Privacy"
+title: Security & Privacy by Construction
+description: Zero source code exfiltration, cryptographic hashing, and local-first security guarantees.
+---
+
+Qodewk is engineered under a foundational security mandate: **Privacy by Construction**. 
+
+Coding agent telemetry must never compromise codebase confidentiality, leak intellectual property, or expose proprietary prompts.
+
+## Zero Source Code Exfiltration
+
+Neither raw source code nor git diff patch bodies ever leave your local development machine.
+
+```
+Local Workstation                         Public Endpoint (/api/receipts)
+┌─────────────────────────────────┐       ┌───────────────────────────────┐
+│ Git Revision Graph              │       │                               │
+│ Local Diff & AST Multipliers    │  ───> │  • Commit SHA                 │
+│ Local SQLite (~/.qodewk)        │       │  • Files changed & diff lines │
+│                                 │       │  • Language ratios            │
+│ [RAW CODE IS STRIPPED LOCALLY]  │       │  • Token counts & cost        │
+└─────────────────────────────────┘       │  • HMAC-SHA256 Salted Hashes  │
+                                          └───────────────────────────────┘
+```
+
+When you publish a receipt via `qodewk share` or CI/CD:
+- Only aggregate metrics are transmitted: files touched count, line insertions/deletions, language breakdown percentages, token counts, and computed cost.
+- Diff bodies, hunk contents, commit messages, and prompt text are pruned before network serialization.
+- The `/api/receipts` endpoint enforces a strict **50 KB payload cap**, mathematically prohibiting the exfiltration of codebase contents.
+
+## Cryptographic Proof & Salted Signatures
+
+Every published digital receipt includes a cryptographic proof signature:
+
+1. **Deterministic Salt:** Each repository session generates a unique, non-reversible salt.
+2. **HMAC-SHA256 Sealing:** Metrics are concatenated and hashed with the salt:
+   ```ts
+   const digest = crypto
+     .createHmac("sha256", sessionSalt)
+     .update(`${commitSha}:${totalTokens}:${estimatedCost}`)
+     .digest("hex");
+   ```
+3. **Receipt Claim Token:** When a receipt is created, a high-entropy author claim token is returned to the local client (`~/.qodewk/tokens.json`). Only the original author can edit, annotate, or revoke public receipt records.
+
+## Local-First Storage & Offline Safety
+
+Qodewk operates completely offline by default:
+- **Local SQLite Storage:** Stored in `~/.qodewk/state.db` with local user permissions (`0600`).
+- **Git Notes:** Permanent audit trails are recorded inside your repository's native Git revision graph (`refs/notes/qodewk`). No network requests are made unless you explicitly invoke `qodewk share`.
+- **Ephemeral CI Mode:** When `CI=true` or `--no-db` is passed, Qodewk runs in SQLite memory mode (`:memory:`), ensuring zero local artifact residue on ephemeral runners.
+
+## Reproducible Independent Verification
+
+Anyone can verify the authenticity of a receipt directly against the public Git repository without trusting Qodewk servers:
+
+```bash
+# Verify receipt metrics against the local git tree
+qodewk verify <receipt-id> --repo .
+```
+
+The CLI checks the local git commit SHA, re-computes the file diffs and language ratios, and verifies the mathematical integrity of the receipt claim.

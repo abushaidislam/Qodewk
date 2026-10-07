@@ -1,0 +1,81 @@
+---
+icon: conceptsTypeScript
+title: TypeScript Contracts & Protocol Schemas
+description: Learn about Qodewk's canonical Zod schemas, TypeScript types, and validation rules in @qodewk/protocol.
+---
+
+All data structures in Qodewk are governed by canonical, versioned Zod schemas and TypeScript interfaces provided by the `@qodewk/protocol` package.
+
+`@qodewk/protocol` has **zero native dependencies**, making it safe to import in Node.js, Next.js Edge runtime, Cloudflare Workers, browser clients, and CI environments.
+
+---
+
+## Canonical Receipt Schema (`ReceiptV1Schema`)
+
+The `ReceiptV1Schema` defines the immutable data contract for a digital receipt:
+
+```ts
+import { z } from "zod";
+import { ReceiptV1Schema, type ReceiptV1 } from "@qodewk/protocol";
+
+// Validate an unknown receipt payload
+const result = ReceiptV1Schema.safeParse(data);
+if (!result.success) {
+  console.error("Invalid receipt structure:", result.error);
+}
+```
+
+### Schema Structure
+
+```ts
+export const ReceiptV1Schema = z.object({
+  receipt: z.object({
+    version: z.literal("1.0"),
+    id: z.string().startsWith("rec_"),
+    timestamp: z.number().int().positive(),
+    provenance: z.enum(["observed", "estimated", "imported", "verified", "unknown"]),
+    confidence: z.number().min(0.0).max(1.0),
+    authorSignature: z.string().optional(),
+  }),
+  repository: z.object({
+    projectAlias: z.string().min(1),
+    commitSha: z.string().length(40),
+    branch: z.string().min(1),
+    repoHash: z.string().startsWith("hmac-sha256:"),
+  }),
+  mutation: z.object({
+    files: z.number().int().nonnegative(),
+    insertions: z.number().int().nonnegative(),
+    deletions: z.number().int().nonnegative(),
+  }),
+  ai: z.object({
+    agent: z.string(),
+    model: z.string(),
+    tokens: z.object({
+      input: z.number().int().nonnegative(),
+      output: z.number().int().nonnegative(),
+      cacheRead: z.number().int().nonnegative().optional(),
+      cacheWrite: z.number().int().nonnegative().optional(),
+    }),
+    cost: z.number().nonnegative(),
+  }),
+});
+```
+
+---
+
+## Client-Side Verification
+
+You can verify a receipt's cryptographic integrity without calling the backend:
+
+```ts
+import { verifyReceipt } from "@qodewk/protocol";
+
+const isValid = await verifyReceipt(receipt, {
+  expectedRepoSalt: process.env.NEXT_PUBLIC_REPO_SALT,
+});
+
+if (isValid) {
+  console.log("✓ Receipt HMAC is authentic");
+}
+```

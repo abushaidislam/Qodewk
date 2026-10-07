@@ -1,0 +1,52 @@
+---
+icon: Cpu
+sidebarTitle: "CI / CD Pipelines"
+title: General CI/CD Telemetry
+description: Running Qodewk in headless CI pipelines (GitLab CI, CircleCI, Jenkins, Bitbucket).
+---
+
+Qodewk runs natively in headless Continuous Integration pipelines to audit code changes and produce immutable telemetry reports.
+
+## In-Memory CI Mode
+
+When `CI=true` is set (standard across GitHub Actions, GitLab CI, CircleCI, and Vercel), Qodewk automatically activates **in-memory mode**:
+- State is held in SQLite `:memory:` rather than reading or writing to `~/.qodewk/state.db`.
+- No lingering local cache or state files are left on ephemeral runner disks.
+
+## GitLab CI Example
+
+```yaml title=".gitlab-ci.yml"
+stages:
+  - telemetry
+
+qodewk_receipt:
+  stage: telemetry
+  image: node:22-alpine
+  script:
+    - npm install -g qodewk
+    - qodewk --since $CI_MERGE_REQUEST_DIFF_BASE_SHA..$CI_COMMIT_SHA --json > receipt.json
+    - npx qodewk share --json-file receipt.json
+  artifacts:
+    paths:
+      - receipt.json
+    expire_in: 30 days
+  only:
+    - merge_requests
+```
+
+## CircleCI Example
+
+```yaml title=".circleci/config.yml"
+version: 2.1
+
+jobs:
+  telemetry-audit:
+    docker:
+      - image: cimg/node:22.0
+    steps:
+      - checkout
+      - run:
+          name: Run Qodewk Telemetry Audit
+          command: |
+            npx qodewk --since origin/main..HEAD
+```

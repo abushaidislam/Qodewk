@@ -1,0 +1,11 @@
+{
+  "title": "Reference",
+  "icon": "reference",
+  "pages": [
+    "options",
+    "security",
+    "telemetry",
+    "faq",
+    "contributing"
+  ]
+}

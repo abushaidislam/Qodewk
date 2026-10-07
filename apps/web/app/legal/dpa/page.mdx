@@ -1,0 +1,64 @@
+---
+title: Data Processing Addendum (DPA)
+---
+
+# Developer Telemetry Data Processing Statement
+
+<small>*Last updated: October 2026*</small>
+
+This Data Processing Statement outlines how **Qodewk** processes technical telemetry data in connection with the open-source CLI, GitHub Actions, and hosted digital receipt verification services.
+
+Because Qodewk is architected on **Privacy by Construction**, it does not collect, inspect, or store personal customer data or proprietary source code.
+
+---
+
+## 1. Scope & Nature of Processing
+
+### 1.1 Zero Source Code Processing
+Qodewk is **not** a source code processor. Raw code files, git commit diff contents, internal branch naming, and developer prompts are analyzed strictly in local workstation memory and are never transmitted to external Qodewk servers.
+
+### 1.2 Categories of Telemetry Data Processed
+When a developer or CI/CD workflow invokes `qodewk share`, the hosted API processes solely:
+* Quantitative file and diff metrics (counts of files touched, insertions, deletions).
+* Distribution ratios of programming languages.
+* Aggregated token usage counts and heuristic cost estimates.
+* Pseudonymized, salted cryptographic digests (`HMAC-SHA256`) of repository identifiers and commit SHAs.
+
+---
+
+## 2. Roles of the Parties
+
+* **Data Controller:** The developer, organization, or enterprise operating the repository retains complete ownership and control over all codebase data and decides whether to publish public receipts.
+* **Telemetry Processor:** Qodewk processes only the transmitted telemetry metadata for the purpose of generating verifiable digital receipts and public cryptographic cards.
+
+---
+
+## 3. Compliance with Data Protection Laws (GDPR & CCPA)
+
+* **Pseudonymization & Cryptographic Hashing:** Repository and commit identifiers are irreversibly salted and hashed, ensuring that published receipts cannot be used to reconstruct private repository architectures or personal developer identities.
+* **Data Minimization:** Under GDPR Article 5(1)(c), Qodewk enforces strict data minimization by pruning commit messages, hunk bodies, and personal metadata prior to transmission.
+* **Technical Safeguards:** The public receipts API enforces a **50 KB payload cap**, mathematically prohibiting bulk data transmission or codebase exfiltration.
+
+---
+
+## 4. Subprocessors
+
+The hosted receipt viewer operates on zero-native serverless infrastructure:
+* **Hosting & Edge Delivery:** Vercel (Edge network delivery and routing).
+* **Storage Layer:** Supabase / PostgreSQL (storage of sanitized receipt metadata and HMAC digests).
+
+No third-party subprocessor is granted access to source code, private git repositories, or un-hashed codebase identifiers.
+
+---
+
+## 5. Data Deletion & Author Rights
+
+Any public receipt can be updated, annotated, or permanently deleted from the public registry by the receipt creator using the author claim token stored in `~/.qodewk/tokens.json`.
+
+---
+
+## 6. Inquiries & Governance
+
+For inquiries regarding telemetry data handling, security compliance, or enterprise audit requests:
+* **GitHub Repository:** [github.com/abushaidislam/Qodewk](https://github.com/abushaidislam/Qodewk)
+* **Maintainers:** Reach out via GitHub Security Advisories or Discussions.

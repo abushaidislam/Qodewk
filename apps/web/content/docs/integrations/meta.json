@@ -1,0 +1,10 @@
+{
+  "title": "Integrations & CI",
+  "icon": "integrations",
+  "pages": [
+    "github-actions",
+    "husky",
+    "lefthook",
+    "ci-cd"
+  ]
+}

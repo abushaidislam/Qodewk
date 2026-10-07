@@ -1,0 +1,14 @@
+{
+  "title": "Get Started",
+  "icon": "getStarted",
+  "root": true,
+  "pages": [
+    "introduction",
+    "comparison",
+    "installation",
+    "basic-usage",
+    "concepts",
+    "integrations",
+    "reference"
+  ]
+}

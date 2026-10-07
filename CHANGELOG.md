@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [0.9.1] — 2026-10-03
 
 ### 🚀 Added
+- **Dedicated Model Rate Cards Page (`/rate-cards`):**
+  - Standalone developer tool showcasing multi-model rate cards from `@qodewk/pricing` for Claude, OpenAI, Gemini, and DeepSeek.
+  - Interactive Commit Diff Token Cost Simulator with live calculation for input, output, and prompt cached tokens.
+  - Programmatic TypeScript SDK integration examples and provider filter tabs.
+  - Added "Rate Cards" item with CPU icon into the top navigation Resources menu.
+- **Revamped Pricing Page (`/pricing`):**
+  - Rebranded pricing tiers for Qodewk: Open Source ($0 / free forever), Team Sync ($20 / month), and Enterprise (Custom / air-gapped VPC).
+  - Added comprehensive capability matrix comparing telemetry engine, team governance, security, and support.
+  - Integrated dedicated Pricing FAQ accordion clarifying free open-source status, external LLM billing separation, and zero code exfiltration guarantees.
 - `registry/pricing.json`: the remote rate-card registry that `syncDynamicPricing` fetches (generated from the built-in `RATE_CARDS` / `MODEL_ALIASES`).
 - `sanitizeRateCards` and `resetPricingRegistry` in `@qodewk/pricing`; remote registry entries are validated (finite, non-negative, bounded prices) before use.
 - Aliases for Gemini 3.x ids and family fallbacks for any Sonnet generation and Haiku.
@@ -19,6 +28,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Cursor commit-tracking footprints derive tokens from line counts, so they are now labeled `estimated` (confidence 0.55) instead of `verified`.
 - Antigravity model detection now normalizes the selected model name and relies on pricing aliases/fallbacks, so newer models no longer resolve to the wrong rate card.
 - Fixed `pricing-sync` tests to use the real `ModelRateCard` shape.
+- **Dynamic Receipt OG Image & Social Preview Fix (`/api/og/[id]` & `/r/[id]`):**
+  - Resolved dynamic OG image generation for seeded demo receipts (`rec_demo_cursor`, `demo-claude`, `demo-antigravity`) alongside stored receipts.
+  - Replaced unsupported Satori layout styles with Claude editorial tokens and added robust local font loading with Node.js filesystem fallback.
+  - Connected `metadataBase` across receipt pages so Twitter, LinkedIn, and OpenGraph crawlers resolve absolute image URLs.
+  - Streamlined `/r/[id]` receipt page UX to focus on a single thermal receipt presentation with an interactive demo switcher and registered full Vitest regression tests.
 
 ## [0.9.0] — 2026-10-02
 

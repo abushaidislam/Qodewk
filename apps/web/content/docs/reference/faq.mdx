@@ -1,0 +1,50 @@
+---
+icon: referenceFAQ
+sidebarTitle: "FAQ"
+title: Frequently Asked Questions
+description: Common questions about Qodewk telemetry, privacy, agent support, and Git hooks.
+---
+
+Frequently asked questions about Qodewk's architecture, privacy guarantees, agent support, and workflows.
+
+<Accordions>
+  <Accordion id="code-privacy" title="Does Qodewk upload my source code?">
+    **Never.** Qodewk is built on strict Privacy by Construction. 
+    
+    Source code and diff bodies never leave your machine. Public digital receipts contain solely high-level metadata: file counts, line additions/deletions, language ratios, token counts, and cryptographic salted HMAC hashes. The receipt API endpoint enforces a strict 50 KB ceiling to mathematically guarantee code cannot be exfiltrated.
+  </Accordion>
+
+  <Accordion id="supported-agents" title="Which AI coding agents does Qodewk support?">
+    Qodewk includes native footprint harvesters for:
+    - **Claude Code** (via session transcripts and subagent logs)
+    - **Cursor** (via composer databases and state snapshots)
+    - **Codex / GitHub Copilot** (via CLI execution traces)
+    - **Windsurf** (via Cascade session databases)
+    - **Aider** (via chat history and model usage logs)
+    - **Google Antigravity** (via agent conversation transcripts)
+
+    For any untracked or custom agent, Engine B automatically activates to provide AST complexity-based heuristic estimates.
+  </Accordion>
+
+  <Accordion id="git-hook-latency" title="Will Qodewk Git hooks slow down my commits?">
+    **No.** Qodewk Git hooks are non-blocking and return in under **5ms**. 
+
+    The hook immediately spawns a detached background telemetry process (`(qodewk record-event &) > /dev/null 2>&1`) and exits with `0` immediately. It will never delay your `git commit` or `git rebase` commands.
+  </Accordion>
+
+  <Accordion id="git-notes" title="What are Git Notes and do they pollute my git history?">
+    Git Notes are a native Git mechanism (`refs/notes/qodewk`) that attaches metadata to commits without altering commit SHAs or rebasing the git history. 
+    
+    They exist outside standard commit trees, meaning they will never alter your project files, cause merge conflicts, or interfere with teammates who do not have Qodewk installed.
+  </Accordion>
+
+  <Accordion id="offline-ci" title="Can Qodewk be used completely offline or in CI?">
+    **Yes.** Qodewk is local-first. It stores telemetry in local SQLite (`~/.qodewk/state.db`) and renders monospace box-drawing thermal receipts directly in your terminal. No network connectivity is required.
+    
+    In CI environments (`CI=true`), Qodewk automatically falls back to in-memory mode (`:memory:`) to ensure no state pollution on ephemeral build runners.
+  </Accordion>
+
+  <Accordion id="custom-pricing" title="Can I customize model rate cards or add internal models?">
+    Yes. You can supply custom rate cards in `qodewk.config.ts` or through environment variables. You can override input, output, cache-read, and cache-write rates per million tokens.
+  </Accordion>
+</Accordions>

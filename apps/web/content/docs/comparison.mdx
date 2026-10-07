@@ -1,0 +1,25 @@
+---
+icon: comparison
+title: Comparison
+description: Comparison of Qodewk versus traditional Git tools, manual spreadsheets, and cloud APMs.
+---
+
+> *"Git tells what changed. Provider telemetry tells what was consumed. Qodewk connects the two without compromising privacy."*
+
+### vs Traditional Git Log & Blame
+
+* **Agent-Aware:** Standard Git tools (`git log`, `git blame`) only record the human committer signature. Qodewk discovers the underlying AI coding agent (Claude Code, Cursor, Codex, Windsurf, Aider, Antigravity) and attributes proportional contributions.
+* **Token & Cost Metrics:** Git tracks insertions and deletions; Qodewk links code changes directly to input, output, cache-read, and cache-write tokens.
+* **Verifiable Receipts:** Converts commits into durable, shareable digital proof of shipment.
+
+### vs Manual Spreadsheets & Provider Dashboards
+
+* **Automated Attribution:** Eliminates manually tracking tokens and estimated dollars across provider consoles.
+* **Granular Commit Resolution:** Provider dashboards only show aggregate monthly billing. Qodewk maps token costs directly to specific commits, pull requests, and branches.
+* **Dual-Engine Accuracy:** Automatically correlates deterministic provider session transcripts with AST complexity heuristics.
+
+### vs Invasive Cloud APMs & Trackers
+
+* **Privacy by Construction:** Invasive cloud monitoring tools upload full source trees and ASTs to external servers. Qodewk enforces that raw source code and diff hunks **never** leave your machine.
+* **Strict 50 KB Payload Cap:** Public receipts transmit only mutation counts, language ratios, token figures, and HMAC-SHA256 salted hashes.
+* **100% Offline-First:** Fully operational without network connectivity using embedded SQLite and `refs/notes/qodewk`.

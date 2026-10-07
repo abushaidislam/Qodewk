@@ -1,0 +1,112 @@
+---
+icon: conceptsCLI
+title: CLI Commands
+description: Comprehensive reference for the Qodewk command-line interface.
+---
+
+The **Qodewk CLI** (`qodewk`, `npx qodewk`) provides an interactive terminal control panel, monospace thermal receipt generation, non-blocking Git hook management, and receipt sharing.
+
+## Global Synopsis
+
+```bash
+qodewk [command] [options]
+```
+
+### Top-Level Options
+
+* `-i, --interactive` - Launch the interactive terminal control panel.
+* `-j, --json` - Output receipt as machine-readable JSON.
+* `-f, --format <format>` - Output format (`terminal`, `json`, `markdown`).
+* `-o, --out <path>` - Write receipt output directly to file.
+* `-p, --provider <provider>` - Force specific AI provider (`claude`, `cursor`, `codex`, `windsurf`, `antigravity`, `aider`).
+* `-m, --model <model>` - Override AI model identifier (e.g. `claude-3-5-sonnet-20241022`, `gpt-4o`).
+* `-s, --since <duration>` - Filter telemetry footprints by duration (e.g. `today`, `24h`, `7d`).
+* `--today` - Harvest footprints created today.
+* `--anon` - Anonymize branch name in output.
+* `--local` - Force offline local mode (never open network sockets).
+* `--notes` - Persist receipt into local Git note (`refs/notes/qodewk`).
+
+---
+
+## Commands
+
+### `qodewk` (Default)
+
+Inspects the current working tree and commit graph, discovers the active agent session, and renders an authentic monospace thermal receipt:
+
+```bash
+qodewk
+```
+
+---
+
+### `qodewk menu`
+
+Launches the interactive full-screen terminal control panel with arrow-key navigation to audit commits, install hooks, inspect rate cards, and share receipts:
+
+```bash
+qodewk menu
+```
+
+---
+
+### `qodewk audit`
+
+Audits a branch or pull request diff against a base commit:
+
+```bash
+qodewk audit --base origin/main
+```
+
+#### Options:
+* `-b, --base <base>` - Base git ref or commit SHA (e.g. `origin/main`).
+* `-H, --head <head>` - Head git ref or commit SHA.
+* `-f, --format <format>` - Output format (`terminal`, `json`, `markdown`).
+
+---
+
+### `qodewk share`
+
+Publishes a privacy-sanitized receipt payload to the public registry under the strict 50 KB ceiling and returns a public URL:
+
+```bash
+qodewk share
+```
+
+Outputs:
+```text
+✓ Receipt published!
+URL: https://qodewk.dev/r/rec_01J8Y29K4Z00ABC123DEF456
+Author Claim Token: qtk_sec_7a8b9c...
+```
+
+---
+
+### `qodewk hook`
+
+Manages Git hooks for autonomous background telemetry:
+
+```bash
+# Install non-blocking post-commit and post-rewrite hooks
+qodewk hook install
+
+# Check installed hook status
+qodewk hook status
+
+# Remove Qodewk hooks cleanly
+qodewk hook uninstall
+```
+
+---
+
+### `qodewk notes`
+
+Inspects and manages receipts persisted in Git's native object database (`refs/notes/qodewk`):
+
+```bash
+# List all commit SHAs with attached receipts
+qodewk notes list
+
+# Show receipt note attached to HEAD
+qodewk notes show HEAD
+```

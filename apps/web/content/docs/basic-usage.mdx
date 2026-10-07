@@ -1,0 +1,124 @@
+---
+icon: basicUsage
+title: Basic Usage & Workflow
+description: Learn how to generate receipts, track agent telemetry, and verify commits with Qodewk.
+---
+
+Qodewk operates seamlessly across local development, terminal workflows, and automated CI/CD pipelines.
+
+## 1. Terminal Monospace Receipts
+
+Running `qodewk` without arguments inspects your current repository, determines the primary AI coding agent session, and prints an authentic monospace thermal receipt directly to your terminal:
+
+```bash
+qodewk
+```
+
+Example terminal output:
+
+```text
+ ╔══════════════════════════════════════════════╗
+ ║                Q O D E W K                   ║
+ ║         DIGITAL PROOF OF SHIPMENT            ║
+ ╠══════════════════════════════════════════════╣
+ ║ REPO:     my-org/core-api                    ║
+ ║ COMMIT:   7f8b2c1e (feat: user auth)         ║
+ ║ TIME:     2026-10-04 14:32 UTC               ║
+ ╟──────────────────────────────────────────────╢
+ ║ FILES TOUCHED: 12                            ║
+ ║ INSERTIONS:    +450                          ║
+ ║ DELETIONS:     -82                           ║
+ ║ NET LINES:     +368                          ║
+ ╟──────────────────────────────────────────────╢
+ ║ PRIMARY AGENT: Claude Code                   ║
+ ║ INPUT TOKENS:  18,400                        ║
+ ║ OUTPUT TOKENS: 3,250                         ║
+ ║ ESTIMATED COST: ~$0.48 (confidence: 94%)     ║
+ ║ PROVENANCE:    observed                      ║
+ ╟──────────────────────────────────────────────╢
+ ║ [✓] Source code was never uploaded to Qodewk ║
+ ║ HASH: sha256:4a8b...9c1e                     ║
+ ╚══════════════════════════════════════════════╝
+```
+
+---
+
+## 2. Machine-Readable JSON Export
+
+To integrate Qodewk into scripts, metrics dashboards, or custom tooling, use `--json`:
+
+```bash
+qodewk --json
+```
+
+This returns a typed payload complying with `ReceiptV1Schema`:
+
+```json
+{
+  "receipt": {
+    "version": "1.0",
+    "id": "rec_01J8Y29K4Z00ABC123DEF456",
+    "timestamp": 1727784000000,
+    "provenance": "observed",
+    "confidence": 0.94
+  },
+  "repository": {
+    "projectAlias": "my-org/core-api",
+    "commitSha": "7f8b2c1e4d3a2b1c0f9e8d7c6b5a4f3e2d1c0b9a",
+    "branch": "main",
+    "repoHash": "hmac-sha256:d8e8fca2dc44c9b917c"
+  },
+  "mutation": {
+    "files": 12,
+    "insertions": 450,
+    "deletions": 82
+  },
+  "ai": {
+    "agent": "claude-code",
+    "model": "claude-3-5-sonnet-20241022",
+    "tokens": {
+      "input": 18400,
+      "output": 3250
+    },
+    "cost": 0.48
+  }
+}
+```
+
+---
+
+## 3. Sharing Public Receipts
+
+When you want to showcase digital proof of shipment or share attribution with collaborators:
+
+```bash
+qodewk share
+```
+
+What happens under the hood:
+1. Qodewk sanitizes all local file paths and absolute disk directories.
+2. The payload is validated against strict privacy invariants (< 50 KB ceiling).
+3. The cryptographic receipt metadata is transmitted to the public registry.
+4. You receive a verifiable URL and claim token:
+
+```bash
+✓ Receipt published!
+URL: https://qodewk.dev/r/rec_01J8Y29K4Z00ABC123DEF456
+Author Claim Token: qtk_sec_7a8b9c...
+```
+
+---
+
+## 4. Local Git Notes Storage
+
+By default, Qodewk persists receipts into Git's native object database using Git Notes under `refs/notes/qodewk`:
+
+```bash
+# View the note attached to HEAD
+git notes --ref=qodewk show HEAD
+
+# List all Qodewk notes
+git notes --ref=qodewk list
+```
+
+Because notes are part of Git, they travel with your repository when pushed (`git push origin refs/notes/qodewk`) without polluting commit messages or branch history.

@@ -1,0 +1,67 @@
+---
+icon: conceptsHooks
+title: Git Hooks Architecture
+description: Learn how Qodewk executes non-blocking background Git hooks in under 5ms.
+---
+
+Qodewk's autonomous telemetry engine relies on lightweight Git hooks (`post-commit` and `post-rewrite`) to capture file mutations and agent footprints without adding latency to developer workflows.
+
+<Callout type="info">
+  **Core Invariant:**  
+  Git hooks must never block standard developer commits. Qodewk hooks spawn detached background processes and exit with code `0` in under **5ms**.
+</Callout>
+
+---
+
+## How It Works
+
+When you run `qodewk hook install`, Qodewk writes hook scripts into `.git/hooks/post-commit` and `.git/hooks/post-rewrite`:
+
+```bash
+qodewk hook install
+```
+
+### Detached Process Execution
+
+The hook invokes Qodewk detached from standard input/output streams:
+
+```bash title=".git/hooks/post-commit"
+#!/bin/sh
+# --- BEGIN QODEWK HOOK ---
+if command -v qodewk >/dev/null 2>&1; then
+  (qodewk record-event &) >/dev/null 2>&1
+elif command -v npx >/dev/null 2>&1; then
+  (npx --yes qodewk record-event &) >/dev/null 2>&1
+fi
+# --- END QODEWK HOOK ---
+```
+
+Because execution is wrapped in `( ... & ) >/dev/null 2>&1`, the Git process completes instantly while Qodewk asynchronously:
+1. Gathers diff metrics (`git diff-tree --numstat --summary`).
+2. Harvesters open agent sessions (Claude Code, Cursor, Codex, Windsurf, Aider, Antigravity).
+3. Computes dual-engine cost heuristics.
+4. Stores the event in `~/.qodewk/state.db` and writes Git notes to `refs/notes/qodewk`.
+
+---
+
+## Coexistence with Husky & Lefthook
+
+Many repositories use hook management tools such as **Husky** or **Lefthook**.
+
+Qodewk respects existing hooks. It never overwrites your pre-existing scripts; instead, it injects bounded blocks delimited by:
+
+```bash
+# --- BEGIN QODEWK HOOK ---
+...
+# --- END QODEWK HOOK ---
+```
+
+### Uninstalling Hooks
+
+To remove Qodewk hooks cleanly:
+
+```bash
+qodewk hook uninstall
+```
+
+Only the bounded block is removed, leaving your existing Husky or custom scripts untouched.

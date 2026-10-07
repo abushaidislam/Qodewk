@@ -1,0 +1,80 @@
+---
+icon: conceptsDatabase
+title: Local SQLite & Git Notes
+description: Understand how Qodewk persists telemetry using embedded SQLite and Git's native Notes graph.
+---
+
+Qodewk is designed to be **100% offline-first**. You never need to provision a remote database, configure database connection strings, or run database migrations.
+
+Qodewk uses a two-tier local storage architecture:
+1. **Embedded SQLite Database** at `~/.qodewk/state.db`
+2. **Git Notes Reference** at `refs/notes/qodewk`
+
+---
+
+## 1. Embedded SQLite Storage (`~/.qodewk/state.db`)
+
+When Qodewk records telemetry events, it persists receipts into a local SQLite database:
+
+```text
+~/.qodewk/
+├── state.db          # SQLite database storing receipts and claim tokens
+└── state.db-wal      # Write-Ahead Log for high-performance concurrent writes
+```
+
+### Table Schema
+
+```sql
+CREATE TABLE IF NOT EXISTS receipts (
+  id TEXT PRIMARY KEY,
+  timestamp INTEGER NOT NULL,
+  repo_hash TEXT NOT NULL,
+  commit_sha TEXT NOT NULL,
+  branch TEXT NOT NULL,
+  provider TEXT,
+  model TEXT,
+  input_tokens INTEGER,
+  output_tokens INTEGER,
+  cost REAL,
+  confidence REAL,
+  claim_token TEXT,
+  raw_json TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_receipts_commit ON receipts(commit_sha);
+CREATE INDEX IF NOT EXISTS idx_receipts_timestamp ON receipts(timestamp);
+```
+
+### In-Memory CI Mode
+
+In automated CI environments (`CI=true` or `--local`), Qodewk automatically falls back to an in-memory database (`:memory:`). No state files are written to disk, preventing dirty working trees during pull-request checks.
+
+---
+
+## 2. Git Notes Storage (`refs/notes/qodewk`)
+
+Git Notes allow attaching arbitrary metadata to commit objects without modifying commit hashes or history.
+
+When you pass `--notes` to `qodewk` or when background hooks record an event, Qodewk writes the `ReceiptV1` payload directly into Git:
+
+```bash
+# Attach receipt to the current HEAD commit
+qodewk --notes
+
+# Read the note directly via git
+git notes --ref=qodewk show HEAD
+```
+
+### Pushing Git Notes to Remote
+
+Because Git Notes live in a dedicated refspec, you can choose whether or not to push them to GitHub or GitLab:
+
+```bash
+# Push Qodewk notes to remote
+git push origin refs/notes/qodewk
+
+# Fetch notes from remote
+git fetch origin refs/notes/qodewk:refs/notes/qodewk
+```
+
+This makes your receipt history portable across developer machines without touching the main branch commit graph.

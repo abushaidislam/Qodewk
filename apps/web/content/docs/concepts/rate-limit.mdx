@@ -1,0 +1,57 @@
+---
+icon: conceptsRateLimit
+title: Rate Cards & Pricing Registry
+description: Learn how Qodewk versions multi-model token pricing and enforces API rate limits.
+---
+
+Qodewk uses a versioned multi-model rate card registry to compute accurate dollar costs for AI coding agent sessions.
+
+## Rate Card Registry (`@qodewk/pricing`)
+
+The rate card registry provides granular per-million token pricing across all supported model families:
+
+```ts
+import { computeCost, getRateCard } from "@qodewk/pricing";
+
+const card = getRateCard("claude-3-5-sonnet-20241022");
+
+const cost = computeCost("claude-3-5-sonnet-20241022", {
+  inputTokens: 15_000,
+  outputTokens: 2_500,
+  cacheReadTokens: 10_000,
+  cacheWriteTokens: 5_000,
+});
+```
+
+### Supported Models
+
+| Model Identifier | Provider | Input ($/M) | Output ($/M) | Cache Read ($/M) | Cache Write ($/M) |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `claude-3-5-sonnet` | Anthropic | $3.00 | $15.00 | $0.30 | $3.75 |
+| `claude-3-5-haiku` | Anthropic | $0.80 | $4.00 | $0.08 | $1.00 |
+| `gpt-4o` | OpenAI | $2.50 | $10.00 | $1.25 | — |
+| `gpt-4o-mini` | OpenAI | $0.15 | $0.60 | $0.075 | — |
+| `o1` / `o3-mini` | OpenAI | $15.00 | $60.00 | $7.50 | — |
+| `deepseek-chat` (V3) | DeepSeek | $0.14 | $0.28 | $0.014 | — |
+| `deepseek-reasoner` (R1) | DeepSeek | $0.55 | $2.19 | $0.14 | — |
+| `gemini-1.5-pro` | Google | $1.25 | $5.00 | $0.3125 | — |
+
+---
+
+## Provenance & Confidence Calculation
+
+In accordance with Qodewk's prime directive, heuristic calculations must **never** be presented as exact consumption. Costs are tagged with explicit provenance:
+
+* **`observed`**: Direct token consumption parsed from local provider session transcripts (Cursor SQLite, Claude Code JSONL).
+* **`estimated`**: AST complexity heuristic fallback based on language token density and net diff lines.
+* **`imported`**: Verified external metadata supplied via trusted CI/CD environments.
+
+---
+
+## API Rate Limiting
+
+The public digital receipt registry (`/api/receipts`) enforces a sliding window rate limiter to prevent abuse and protect infrastructure:
+
+* **Window:** 60 seconds
+* **Max Submissions:** 30 requests per IP
+* **Max Payload Size:** Strict **50 KB** cap (requests exceeding 50 KB are rejected with HTTP `413 Payload Too Large`).

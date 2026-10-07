@@ -1,0 +1,81 @@
+---
+title: Privacy Policy
+---
+
+# Privacy Policy
+
+<small>*Last updated: October 2026*</small>
+
+**Qodewk** (“we,” “us,” or “our”) is an open-source universal telemetry and digital receipt generator for the AI coding agent era. We are committed to a fundamental architectural invariant: **Privacy by Construction**.
+
+This Privacy Policy explains how Qodewk handles information across the CLI tool (`qodewk`), our open-source packages, our GitHub Action, and our public receipt viewing service.
+
+---
+
+## 1. Zero Source Code Exfiltration Guarantee
+
+> **The Core Invariant:**  
+> Raw source code, private git commit diff hunks, commit messages, agent prompt text, and codebase secrets **never leave your local development machine**.
+
+Qodewk is engineered so that telemetry extraction, AST complexity heuristics, and session matching happen **entirely locally** on your workstation:
+- **Local Git Tree Inspection:** Git diff analysis (`git diff-tree --numstat`) runs locally via your native `git` binary.
+- **Local Agent Transcripts:** Transcripts and databases from Claude Code, Cursor, Windsurf, Aider, and Antigravity are parsed in local memory.
+- **No Diff Transmission:** Under no circumstances are file contents or code patch bodies serialized or transmitted to external servers.
+
+---
+
+## 2. Information Processed When Publishing a Receipt
+
+When you explicitly publish a digital receipt (via `qodewk share` or the Qodewk GitHub Action), only aggregated mathematical metadata is transmitted to the public receipt API (`/api/receipts`):
+
+### 2.1 Aggregated Metrics
+* **File Metrics:** Count of files touched, line additions, and line deletions.
+* **Language Ratios:** Distribution percentages of programming languages (e.g., 65% TypeScript, 35% Python).
+* **Token Estimations:** Total tokens consumed (input, output, cache-read, cache-write) broken down by model.
+* **Attribution Provenance:** Provenance classification (`observed`, `estimated`, `imported`, `verified`) and numeric confidence score (`0.0–1.0`).
+* **Cryptographic Hashes:** Salted HMAC-SHA256 digests of commit SHAs and repository aliases.
+
+### 2.2 Hard 50 KB Request Ceiling
+The `/api/receipts` ingestion endpoint enforces a strict request body ceiling of **50 KB**. This technical constraint mathematically prevents source code or large data payloads from being transmitted.
+
+---
+
+## 3. Local Storage & Offline Operation
+
+Qodewk is designed to function completely offline without network connectivity:
+* **Local SQLite Store:** Stored in `~/.qodewk/state.db` on your local filesystem with user-only permissions (`0600`).
+* **Git Notes:** Telemetry receipts are permanently recorded within your local Git revision graph under `refs/notes/qodewk`. Git Notes do not modify commit SHAs or push unless explicitly instructed.
+* **Ephemeral CI Mode:** In CI/CD environments (`CI=true` or `--no-db`), Qodewk operates purely in-memory (`:memory:`) without leaving any persistent state on runner disks.
+
+---
+
+## 4. Author Claim Tokens & Receipt Control
+
+When you share a receipt, an author claim token is generated and stored locally in `~/.qodewk/tokens.json`.
+* Only the possessor of this cryptographic claim token can edit metadata, add annotations, or delete the public receipt from the registry.
+* Receipts do not contain personal identifiers (such as developer names or emails) unless explicitly configured by the author.
+
+---
+
+## 5. Website & API Analytics
+
+When accessing `qodewk.dev` or the receipt viewer:
+* We collect minimal, privacy-preserving server request logs (IP address, user agent, HTTP method, response time) solely for DDoS mitigation, rate limiting, and performance monitoring.
+* We do not sell personal data, do not use invasive tracking pixels, and do not profile users across third-party websites.
+
+---
+
+## 6. Open Source Transparency
+
+Because Qodewk is 100% open-source, you can independently audit the telemetry extraction and network sanitization logic in our GitHub repository:
+- Git diff extractor: [`packages/core/src/git.ts`](https://github.com/abushaidislam/Qodewk)
+- Network sanitization: [`packages/core/src/share.ts`](https://github.com/abushaidislam/Qodewk)
+- Protocol Zod contracts: [`packages/protocol/src/receipt.ts`](https://github.com/abushaidislam/Qodewk)
+
+---
+
+## 7. Contact & Questions
+
+If you have questions regarding privacy, security, or data handling in Qodewk:
+* **GitHub Issues & Discussions:** [github.com/abushaidislam/Qodewk](https://github.com/abushaidislam/Qodewk)
+* **Security Advisories:** Report any vulnerabilities directly via GitHub Security Advisories.

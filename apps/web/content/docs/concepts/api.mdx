@@ -1,0 +1,94 @@
+---
+icon: conceptsAPI
+title: Receipt API & Serverless Boundaries
+description: Learn about Qodewk's HTTP API endpoints, 50 KB ceiling, and Edge/Serverless architectural boundaries.
+---
+
+Qodewk provides a high-performance REST API for publishing and retrieving verifiable digital receipts, backed by strict serverless and Edge runtime boundaries.
+
+---
+
+## 1. Architectural Boundaries
+
+A critical invariant of Qodewk's monorepo architecture is clean runtime isolation:
+
+<Callout type="warning">
+  **Monorepo Invariant:**  
+  `apps/web` (Next.js Edge / Serverless) **MUST NEVER** import `@qodewk/core` (which depends on native C-bindings, local `git` binaries, and the Node.js filesystem).  
+  `apps/web` can only import zero-native packages: `@qodewk/protocol` and `@qodewk/pricing`.
+</Callout>
+
+This guarantees that public receipt rendering, metadata extraction, and OG card generation execute in under 35ms without cold-start penalties.
+
+---
+
+## 2. API Endpoints
+
+### `POST /api/receipts`
+
+Submits a sanitized receipt to the public registry.
+
+* **Headers:**
+  * `Content-Type: application/json`
+* **Request Body Cap:** Hard ceiling of **50 KB**.
+* **Rate Limit:** 30 requests per minute per IP.
+
+#### Request Payload:
+```json
+{
+  "receipt": {
+    "version": "1.0",
+    "id": "rec_01J8Y29K4Z00ABC123DEF456",
+    "timestamp": 1727784000000,
+    "provenance": "observed",
+    "confidence": 0.94
+  },
+  "repository": {
+    "projectAlias": "acme/backend",
+    "commitSha": "7f8b2c1e4d3a2b1c0f9e8d7c6b5a4f3e2d1c0b9a",
+    "branch": "main",
+    "repoHash": "hmac-sha256:d8e8fca2dc44c9b917c"
+  },
+  "mutation": {
+    "files": 8,
+    "insertions": 240,
+    "deletions": 30
+  },
+  "ai": {
+    "agent": "cursor",
+    "model": "claude-3-5-sonnet",
+    "tokens": {
+      "input": 12400,
+      "output": 1850
+    },
+    "cost": 0.32
+  }
+}
+```
+
+#### Response (`201 Created`):
+```json
+{
+  "success": true,
+  "id": "rec_01J8Y29K4Z00ABC123DEF456",
+  "url": "https://qodewk.dev/r/rec_01J8Y29K4Z00ABC123DEF456",
+  "claimToken": "qtk_sec_7a8b9c..."
+}
+```
+
+---
+
+### `GET /api/receipts?id=[receiptId]`
+
+Retrieves the structured metadata for a published receipt.
+
+* **Response:** Returns the canonical `ReceiptV1` payload.
+* **Cache Header:** `Cache-Control: public, s-maxage=31536000, immutable` (Receipts are content-hashed and immutable once sealed).
+
+---
+
+### `GET /api/og/[id]`
+
+Generates a dynamic 1200x630 OpenGraph social preview image using Satori and `@resvg/resvg-js`.
+* **Latency:** ~35ms response time.
+* Renders thermal serrated paper cut edges, monospace commit details, token summary, and barcode preview.

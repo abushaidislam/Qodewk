@@ -1,0 +1,116 @@
+---
+icon: referenceOptions
+sidebarTitle: "Options & Config"
+title: CLI Options & Configuration Reference
+description: Complete reference for Qodewk CLI flags, configuration files, and environment variables.
+---
+
+Qodewk offers extensive configuration via CLI flags, optional repository config files (`qodewk.config.ts`), and environment variables.
+
+## CLI Flags & Commands
+
+### `qodewk` (Root Command)
+
+Generates and displays a monospace thermal receipt for the latest git commit or active working tree.
+
+```bash
+# View receipt for the HEAD commit
+qodewk
+
+# View receipt for a specific git commit
+qodewk a1b2c3d
+
+# View cumulative receipt across a revision range
+qodewk --since main..HEAD
+
+# Output machine-readable JSON (ReceiptV1Schema)
+qodewk --json
+
+# Publish receipt to public receipt viewer
+qodewk share
+```
+
+| Flag | Type | Description |
+| :--- | :--- | :--- |
+| `--json` | `boolean` | Output raw JSON matching `ReceiptV1Schema` instead of terminal box art. |
+| `--since <ref>` | `string` | Aggregate telemetry across a git range (e.g. `main..feature-branch`). |
+| `--no-db` | `boolean` | Run purely in-memory; bypass reading or writing `~/.qodewk/state.db`. |
+| `--repo <path>` | `string` | Target repository path (defaults to current working directory). |
+| `--version` | `boolean` | Print current CLI version. |
+
+### `qodewk share`
+
+Sanitizes local metrics, seals the payload with an HMAC-SHA256 signature, POSTs to the receipt API, and returns a verified public URL:
+
+```bash
+qodewk share
+# Output:
+# [✓] Receipt published: https://qodewk.dev/r/rec_89f72b1
+# [✓] Claim token stored in ~/.qodewk/tokens.json
+```
+
+### `qodewk audit`
+
+Inspects recent agent session footprint matches without generating a full commit receipt:
+
+```bash
+qodewk audit
+```
+
+### `qodewk hook`
+
+Installs or uninstalls non-blocking (`< 5ms`) git hooks into `.git/hooks/post-commit` and `.git/hooks/post-rewrite`:
+
+```bash
+# Install hooks safely coexisting with Husky/Lefthook
+qodewk hook install
+
+# Remove Qodewk hook markers
+qodewk hook uninstall
+```
+
+---
+
+## Configuration File (`qodewk.config.ts`)
+
+You can customize repository behavior by creating a `qodewk.config.ts` at the root of your project:
+
+```ts title="qodewk.config.ts"
+export default {
+  // Agent harvesters to enable
+  harvesters: ["claude", "cursor", "codex", "windsurf", "antigravity"],
+
+  // Custom model rate overrides (USD per million tokens)
+  rates: {
+    "claude-3-7-sonnet": {
+      input: 3.0,
+      output: 15.0,
+      cacheRead: 0.3,
+      cacheWrite: 3.75,
+    },
+    "custom-internal-llm": {
+      input: 1.0,
+      output: 2.0,
+    },
+  },
+
+  // Telemetry options
+  telemetry: {
+    // Record audit trail directly into Git Notes
+    gitNotes: true,
+    // Minimum confidence required before flagging attribution as verified
+    confidenceThreshold: 0.8,
+  },
+};
+```
+
+---
+
+## Environment Variables
+
+| Variable | Description |
+| :--- | :--- |
+| `CI` | When set to `true`, disables local file writes and uses `:memory:` SQLite. |
+| `QODEWK_API_URL` | Override public receipt viewer API endpoint (default: `https://qodewk.dev/api`). |
+| `QODEWK_TOKEN` | Author API token used for automated CI receipt sharing. |
+| `QODEWK_NO_DB` | Force in-memory mode regardless of CI state. |
