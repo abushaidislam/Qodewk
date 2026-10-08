@@ -10,6 +10,7 @@ import { BlogTOC } from "@/components/blog/blog-toc";
 import Footer from "@/components/landing/footer";
 import { BlogTweet } from "@/components/mdx/tweet";
 import { Callout } from "@/components/ui/callout";
+import { Mermaid } from "@/components/mdx/mermaid";
 import { createMetadata } from "@/lib/metadata";
 import { blogs } from "@/lib/source";
 import { cn } from "@/lib/utils";
@@ -231,6 +232,7 @@ export default async function Page({
 									Tabs,
 									Accordion,
 									Accordions,
+									Mermaid,
 									Tweet: BlogTweet,
 									TLDR: ({ children }: { children: React.ReactNode }) => (
 										<div className="not-prose relative my-8 bg-foreground/[0.02] px-5 py-4">

@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [0.9.2] — 2026-10-08
 
 ### 🚀 Added
+- **Native MDX Mermaid Architecture Diagramming (`apps/web/app/blog/[[...slug]]/page.tsx`):**
+  - Registered client-side `<Mermaid chart="..." />` in MDX component map to support dynamic technical architecture, state machines, and sequence diagrams directly within engineering blog posts.
+- **Engineering Devlog: Hardening Cross-Platform Turborepo Pipelines (`apps/web/content/blogs`):**
+  - Authored and published devlog detailing cross-platform Node ESM clean scripts, monorepo dependency isolation boundaries, and native Mermaid diagramming.
 - **13 In-Depth Qodewk Engineering Blogs (`apps/web/content/blogs`):**
   - Replaced legacy placeholders with authentic technical articles detailing the Git DAG telemetry architecture, zero-leak privacy mechanics, multi-model rate-card pricing, sub-5ms non-blocking git hooks, edge receipt cards, and the Qodewk v1.0 protocol specification.
 - **1:1 Dot-Track Table of Contents (TOC) (`apps/web/components/blog/blog-toc.tsx`):**
