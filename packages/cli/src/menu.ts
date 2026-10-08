@@ -9,10 +9,14 @@ import {
   writeGitReceiptNote,
   readGitReceiptNote,
   listGitReceiptNotes,
-  resolveApiUrl
+  resolveApiUrl,
+  auditGitHooks,
+  benchmarkHookLatency,
+  runDiagnostics
 } from "@qodewk/core";
 import { colors, bg, bannerGradient } from "./theme.js";
 import { renderTerminalReceipt } from "./receipt-view.js";
+import { formatHookTestReport, formatDoctorReport } from "./doctor-view.js";
 import {
   resolveGitHooksDir,
   checkHookStatus,
@@ -76,6 +80,12 @@ export const MENU_ITEMS: MenuItem[] = [
     description: "Inspect & attach receipts to refs/notes/qodewk"
   },
   {
+    id: "doctor",
+    key: "7",
+    label: "System Health & Diagnostics",
+    description: "Audit AI agents, Git hooks, SQLite & pricing registry (doctor)"
+  },
+  {
     id: "exit",
     key: "0",
     label: "Exit",
@@ -132,7 +142,7 @@ export function buildMenuFrame(
   selectedIndex: number,
   items: MenuItem[] = MENU_ITEMS,
   title = "Telemetry Control Panel",
-  subtitle = "↑↓ move · enter select · 0-6 quick jump · q quit",
+  subtitle = "↑↓ move · enter select · 0-7 quick jump · q quit",
   options: BuildMenuFrameOptions = {}
 ): string {
   const lines: string[] = [];
@@ -280,7 +290,7 @@ export async function runInteractiveMenu(): Promise<void> {
     const title = currentScreen === "main" ? "Telemetry Control Panel" : "Generate Local Receipt";
     const subtitle =
       currentScreen === "main"
-        ? "↑↓ move · enter select · 0-6 quick jump · q quit"
+        ? "↑↓ move · enter select · 0-7 quick jump · q quit"
         : "↑↓ move · enter select · 0-5 quick jump · esc / 0 back";
     const actionContext = currentScreen === "receipt_horizon" ? "Generate Local Receipt" : undefined;
     const showBanner = currentScreen === "main";
@@ -483,6 +493,11 @@ export async function runInteractiveMenu(): Promise<void> {
         break;
       }
 
+      case "doctor": {
+        await runDoctorDiagnosticsAction();
+        break;
+      }
+
       case "exit": {
         active = false;
         cleanup();
@@ -515,10 +530,11 @@ export async function runInteractiveMenu(): Promise<void> {
     console.log("");
     console.log("  [1] Install non-blocking hooks (< 5ms background recorder)");
     console.log("  [2] Uninstall Qodewk hooks");
+    console.log("  [3] Test & benchmark hook latency (< 5ms invariant)");
     console.log("  [0] Back to main menu");
     console.log("");
 
-    const choice = await askLine("  › Select option [0-2]: ");
+    const choice = await askLine("  › Select option [0-3]: ");
     if (choice === "1") {
       if (status.hooksDir) {
         const targets = ["post-commit", "post-rewrite"] as const;
@@ -535,6 +551,10 @@ export async function runInteractiveMenu(): Promise<void> {
         }
         console.log(colors.green("\n  [✓] Qodewk hooks removed."));
       }
+    } else if (choice === "3") {
+      const hooks = auditGitHooks();
+      const bench = await benchmarkHookLatency();
+      console.log(formatHookTestReport(hooks, bench));
     }
     await waitForKeyToReturn();
   };
@@ -630,6 +650,22 @@ export async function runInteractiveMenu(): Promise<void> {
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       console.error(pc.red(`  Failed to inspect storage: ${message}`));
+    }
+
+    await waitForKeyToReturn();
+  };
+
+  const runDoctorDiagnosticsAction = async () => {
+    console.log(pc.bold(pc.white("\n  Qodewk System Health & Diagnostics (Doctor)")));
+    console.log(pc.dim("  ──────────────────────────────────────────────────────────"));
+    console.log(pc.dim("  [·] Running diagnostic audit across agents, hooks, storage, and pricing...\n"));
+
+    try {
+      const report = await runDiagnostics();
+      console.log(formatDoctorReport(report));
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error(pc.red(`  Diagnostic check failed: ${message}`));
     }
 
     await waitForKeyToReturn();

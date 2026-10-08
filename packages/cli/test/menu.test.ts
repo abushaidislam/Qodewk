@@ -12,12 +12,12 @@ const EMOJI_REGEX = /[\u{1F300}-\u{1F5FF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\
 
 describe("Qodewk CLI Menu System (`menu.test.ts`)", () => {
   describe("Menu Items Definition", () => {
-    it("defines 7 core menu options covering 100% of CLI features", () => {
-      expect(MENU_ITEMS).toHaveLength(7);
+    it("defines 8 core menu options covering 100% of CLI features", () => {
+      expect(MENU_ITEMS).toHaveLength(8);
       const keys = MENU_ITEMS.map((item) => item.key);
       const uniqueKeys = new Set(keys);
-      expect(uniqueKeys.size).toBe(7);
-      expect(keys).toEqual(["1", "2", "3", "4", "5", "6", "0"]);
+      expect(uniqueKeys.size).toBe(8);
+      expect(keys).toEqual(["1", "2", "3", "4", "5", "6", "7", "0"]);
       expect(MENU_ITEMS.map((m) => m.id)).toEqual([
         "receipt",
         "audit",
@@ -25,6 +25,7 @@ describe("Qodewk CLI Menu System (`menu.test.ts`)", () => {
         "hooks",
         "storage",
         "notes",
+        "doctor",
         "exit"
       ]);
     });
@@ -94,10 +95,15 @@ describe("Qodewk CLI Menu System (`menu.test.ts`)", () => {
       expect(frame5).toContain("› 6  Git Notes Management");
       expect(frame5).not.toContain("› 5  Database & Storage Status");
 
-      // Selected index 6 -> 0 Exit
+      // Selected index 6 -> 7 System Health & Diagnostics
       const frame6 = stripAnsi(buildMenuFrame(6));
-      expect(frame6).toContain("› 0  Exit");
+      expect(frame6).toContain("› 7  System Health & Diagnostics");
       expect(frame6).not.toContain("› 6  Git Notes Management");
+
+      // Selected index 7 -> 0 Exit
+      const frame7 = stripAnsi(buildMenuFrame(7));
+      expect(frame7).toContain("› 0  Exit");
+      expect(frame7).not.toContain("› 7  System Health & Diagnostics");
     });
 
     it("keeps line count stable across menu selection changes for flicker-free redraws", () => {
