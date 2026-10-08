@@ -76,7 +76,9 @@ export function scoreFootprint(
         if (found) matches++;
       }
 
-      const ratio = matches / normChanged.length;
+      const maxPossibleMatches = Math.min(normChanged.length, normEdited.length);
+      const ratio = maxPossibleMatches > 0 ? matches / maxPossibleMatches : 0;
+      
       if (matches > 0) {
         score += ratio * 0.40;
       } else {

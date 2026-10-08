@@ -77,7 +77,10 @@ export interface UniversalHarvestResult {
 export async function harvestUniversalFootprints(
   options: HarvestOptions
 ): Promise<UniversalHarvestResult> {
-  const sinceDate = parseSinceOption(options.since);
+  const parsedSince = parseSinceOption(options.since);
+  // Pad the harvester horizon by 24 hours to ensure we don't miss sessions
+  // that occurred just before the commit boundary (e.g. working late at night, committing next morning).
+  const sinceDate = parsedSince ? new Date(parsedSince.getTime() - 24 * 60 * 60 * 1000) : undefined;
   const alias = options.projectAlias || "";
   let allFootprints: AgentFootprint[] = [];
 
