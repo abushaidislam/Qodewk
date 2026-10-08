@@ -12,8 +12,10 @@ import {
   resolveApiUrl,
   auditGitHooks,
   benchmarkHookLatency,
-  runDiagnostics
+  runDiagnostics,
+  discoverAntigravityEnvironment
 } from "@qodewk/core";
+import { ReceiptV1 } from "@qodewk/protocol";
 import { colors, bg, bannerGradient } from "./theme.js";
 import { renderTerminalReceipt } from "./receipt-view.js";
 import { formatHookTestReport, formatDoctorReport } from "./doctor-view.js";
@@ -132,6 +134,45 @@ export const RECEIPT_HORIZON_ITEMS: MenuItem[] = [
   }
 ];
 
+export const SHARE_HORIZON_ITEMS: MenuItem[] = [
+  {
+    id: "latest",
+    key: "1",
+    label: "Latest Changes (Default)",
+    description: "Publish git working tree or latest commit to cloud"
+  },
+  {
+    id: "today",
+    key: "2",
+    label: "Today's Work Session",
+    description: "Publish commits & agent activity since midnight (--today)"
+  },
+  {
+    id: "yesterday",
+    key: "3",
+    label: "Yesterday's Work",
+    description: "Publish activity from yesterday to now (--since yesterday)"
+  },
+  {
+    id: "week",
+    key: "4",
+    label: "Past 7 Days (Sprint)",
+    description: "Publish weekly sprint telemetry across all agents (--since 7d)"
+  },
+  {
+    id: "custom",
+    key: "5",
+    label: "Custom Duration",
+    description: "Specify hours (e.g. 12h) or days (e.g. 3d, 14d) to publish"
+  },
+  {
+    id: "back",
+    key: "0",
+    label: "Back to Main Menu",
+    description: "Return to previous screen"
+  }
+];
+
 export interface BuildMenuFrameOptions {
   repoContext?: { alias: string; branch: string };
   actionContext?: string;
@@ -172,7 +213,16 @@ export function buildMenuFrame(
     const branch = options.repoContext?.branch ? `(${options.repoContext.branch})` : "";
     push(`  ${colors.teal("◇")}  ${pc.dim("Repository:")} ${pc.white(repo)} ${pc.dim(branch)}`);
     push(`  ${colors.mutedSoft("│")}`);
-    push(`  ${colors.teal("◇")}  ${pc.dim("Telemetry:")} ${pc.white("Claude Warm Editorial Rate Cards")}`);
+    let telemetryLabel = "Multi-Model Rate Cards (Active)";
+    try {
+      const agEnv = discoverAntigravityEnvironment();
+      if (agEnv && agEnv.mode === "observed") {
+        telemetryLabel = "Google Antigravity (Active)";
+      } else if (agEnv) {
+        telemetryLabel = "Google Antigravity Detected";
+      }
+    } catch {}
+    push(`  ${colors.teal("◇")}  ${pc.dim("Telemetry:")} ${pc.white(telemetryLabel)}`);
     push(`  ${colors.mutedSoft("│")}`);
   }
 
@@ -246,6 +296,97 @@ function waitForKeyToReturn(): Promise<void> {
   });
 }
 
+function waitForKeyOrAction(promptText: string): Promise<string> {
+  return new Promise((resolve) => {
+    console.log(promptText);
+    if (!process.stdin.isTTY) {
+      resolve("");
+      return;
+    }
+    const wasRaw = process.stdin.isRaw;
+    process.stdin.setRawMode(true);
+    process.stdin.resume();
+    const onKey = (data: Buffer) => {
+      process.stdin.removeListener("data", onKey);
+      if (wasRaw !== undefined) process.stdin.setRawMode(wasRaw);
+      const str = data.toString();
+      resolve(str);
+    };
+    process.stdin.once("data", onKey);
+  });
+}
+
+export async function publishReceiptToCloud(
+  receipt: ReceiptV1
+): Promise<{ url: string; claimToken: string } | null> {
+  if (process.env.QODEWK_TELEMETRY === "off") {
+    console.log(pc.yellow("\n  Cloud publishing is disabled by QODEWK_TELEMETRY=off."));
+    return null;
+  }
+
+  const sanitized = sanitizeReceiptForShare(receipt);
+  let body = JSON.stringify(sanitized);
+
+  if (Buffer.byteLength(body, "utf-8") > SHARE_PAYLOAD_MAX_BYTES && sanitized.ai.sessions) {
+    const trimmed = {
+      ...sanitized,
+      ai: { ...sanitized.ai, sessions: undefined }
+    };
+    body = JSON.stringify(trimmed);
+  }
+
+  if (Buffer.byteLength(body, "utf-8") > SHARE_PAYLOAD_MAX_BYTES) {
+    console.error(pc.red("  Sanitized receipt still exceeds the 50 KB cloud payload limit."));
+    return null;
+  }
+
+  const endpoint = resolveApiUrl();
+  console.log(pc.dim(`\n  [·] Publishing receipt to ${endpoint}...`));
+
+  try {
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Content-Length": String(Buffer.byteLength(body, "utf-8"))
+      },
+      body
+    });
+
+    if (!response.ok) {
+      const errText = await response.text().catch(() => "");
+      if (response.status === 503) {
+        console.log(pc.yellow("\n  Notice: Remote server requires durable storage (Supabase or PostgreSQL) in production"));
+        console.log(pc.dim("  to protect receipts from serverless cold-start data loss."));
+        console.log(pc.dim(`  Endpoint: ${endpoint}`));
+        console.log(colors.green("\n  [✓] Your receipt is safely saved locally in: ~/.qodewk/state.db"));
+        console.log(pc.dim("      You can also save it as a local Git note: qodewk --notes\n"));
+        return null;
+      }
+      throw new Error(`API responded with ${response.status}: ${errText.slice(0, 100)}`);
+    }
+
+    const data = (await response.json()) as { url: string; claimToken: string };
+
+    const db = new LocalStateDB();
+    db.saveReceipt(sanitized, data.claimToken);
+    db.close();
+
+    console.log("");
+    console.log(colors.green("  [✓] Published successfully."));
+    console.log(`  ${pc.dim("Public URL:")}  ${pc.underline(pc.cyan(data.url))}`);
+    console.log(`  ${pc.bold(colors.amber("Claim token:"))} ${colors.amber(data.claimToken)}`);
+    console.log(pc.dim("  (Saved to ~/.qodewk/state.db for future authorship proofs)\n"));
+
+    await renderTerminalReceipt(sanitized, data.url);
+    return data;
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error(pc.red(`\n  Share failed: ${message}`));
+    return null;
+  }
+}
+
 let cachedRepoContext: { alias: string; branch: string } | null = null;
 
 async function getRepoContext(): Promise<{ alias: string; branch: string }> {
@@ -278,21 +419,35 @@ export async function runInteractiveMenu(): Promise<void> {
 
   const repoContext = await getRepoContext();
 
-  let currentScreen: "main" | "receipt_horizon" = "main";
+  let currentScreen: "main" | "receipt_horizon" | "share_horizon" = "main";
   let selectedIndex = 0;
   let active = true;
   let lastRenderedLinesCount = 0;
 
-  const getActiveItems = () => (currentScreen === "main" ? MENU_ITEMS : RECEIPT_HORIZON_ITEMS);
+  const getActiveItems = () => {
+    if (currentScreen === "receipt_horizon") return RECEIPT_HORIZON_ITEMS;
+    if (currentScreen === "share_horizon") return SHARE_HORIZON_ITEMS;
+    return MENU_ITEMS;
+  };
 
   const render = () => {
     const items = getActiveItems();
-    const title = currentScreen === "main" ? "Telemetry Control Panel" : "Generate Local Receipt";
+    const title =
+      currentScreen === "main"
+        ? "Telemetry Control Panel"
+        : currentScreen === "receipt_horizon"
+        ? "Generate Local Receipt"
+        : "Publish Receipt to Cloud";
     const subtitle =
       currentScreen === "main"
         ? "↑↓ move · enter select · 0-7 quick jump · q quit"
         : "↑↓ move · enter select · 0-5 quick jump · esc / 0 back";
-    const actionContext = currentScreen === "receipt_horizon" ? "Generate Local Receipt" : undefined;
+    const actionContext =
+      currentScreen === "receipt_horizon"
+        ? "Generate Local Receipt"
+        : currentScreen === "share_horizon"
+        ? "Publish Receipt to Cloud"
+        : undefined;
     const showBanner = currentScreen === "main";
 
     const frame = buildMenuFrame(selectedIndex, items, title, subtitle, {
@@ -355,9 +510,58 @@ export async function runInteractiveMenu(): Promise<void> {
       db.saveReceipt(receipt);
       db.close();
       await renderTerminalReceipt(receipt);
+
+      console.log("");
+      const actionKey = await waitForKeyOrAction(
+        `  ${colors.coral("[s]")} ${pc.white("Publish this receipt to cloud")}  ·  ${pc.dim("[any other key] Return to menu")}`
+      );
+      if (actionKey.trim().toLowerCase() === "s") {
+        await publishReceiptToCloud(receipt);
+        await waitForKeyToReturn();
+      }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       console.error(pc.red(`\n  Failed to generate receipt: ${message}`));
+      await waitForKeyToReturn();
+    }
+    currentScreen = "main";
+    selectedIndex = 0;
+  };
+
+  const executeShareHorizon = async (item: MenuItem) => {
+    cleanup();
+    console.log("");
+    lastRenderedLinesCount = 0;
+
+    let since: string | undefined = undefined;
+    let label = "latest git diff";
+
+    if (item.id === "today") {
+      since = "today";
+      label = "today's work session (--today)";
+    } else if (item.id === "yesterday") {
+      since = "yesterday";
+      label = "yesterday's work (--since yesterday)";
+    } else if (item.id === "week") {
+      since = "7d";
+      label = "past 7 days weekly sprint (--since 7d)";
+    } else if (item.id === "custom") {
+      console.log(pc.bold(pc.white("  Custom Telemetry Horizon for Cloud Publish")));
+      console.log(pc.dim("  ──────────────────────────────────────────────────────────"));
+      const input = await askLine("  › Enter duration or date (e.g. 12h, 3d, 2026-10-01): ");
+      if (input) {
+        since = input;
+        label = `custom range: ${input}`;
+      }
+    }
+
+    console.log(pc.dim(`  [·] Generating and publishing receipt for ${label}...`));
+    try {
+      const receipt = await generateReceipt({ since, isPublic: false });
+      await publishReceiptToCloud(receipt);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error(pc.red(`\n  Share failed: ${message}`));
     }
     await waitForKeyToReturn();
     currentScreen = "main";
@@ -408,73 +612,8 @@ export async function runInteractiveMenu(): Promise<void> {
       }
 
       case "share": {
-        console.log(pc.dim("  [·] Generating and sanitizing receipt for cloud publishing..."));
-        try {
-          const receipt = await generateReceipt({ isPublic: false });
-
-          if (process.env.QODEWK_TELEMETRY === "off") {
-            console.log(pc.yellow("\n  Cloud publishing is disabled by QODEWK_TELEMETRY=off."));
-            await renderTerminalReceipt(receipt);
-            await waitForKeyToReturn();
-            break;
-          }
-
-          const sanitized = sanitizeReceiptForShare(receipt);
-          let body = JSON.stringify(sanitized);
-
-          if (Buffer.byteLength(body, "utf-8") > SHARE_PAYLOAD_MAX_BYTES && sanitized.ai.sessions) {
-            const trimmed = {
-              ...sanitized,
-              ai: { ...sanitized.ai, sessions: undefined }
-            };
-            body = JSON.stringify(trimmed);
-          }
-
-          const endpoint = resolveApiUrl();
-          console.log(pc.dim(`  [·] Uploading metadata to ${endpoint}...`));
-
-          const response = await fetch(endpoint, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Content-Length": String(Buffer.byteLength(body, "utf-8"))
-            },
-            body
-          });
-
-          if (!response.ok) {
-            const errText = await response.text().catch(() => "");
-            if (response.status === 503) {
-              console.log(pc.yellow("\n  Notice: Remote server requires durable storage (Supabase or PostgreSQL) in production"));
-              console.log(pc.dim("  to protect receipts from serverless cold-start data loss."));
-              console.log(pc.dim(`  Endpoint: ${endpoint}`));
-              console.log(colors.green("\n  [✓] Your receipt is safely saved locally in: ~/.qodewk/state.db"));
-              console.log(pc.dim("      You can also save it as a local Git note: qodewk --notes\n"));
-              await renderTerminalReceipt(sanitized);
-              await waitForKeyToReturn();
-              break;
-            }
-            throw new Error(`API responded with ${response.status}${errText ? `: ${errText.slice(0, 100)}` : ""}`);
-          }
-
-          const data = (await response.json()) as { url: string; claimToken: string };
-
-          const db = new LocalStateDB();
-          db.saveReceipt(sanitized, data.claimToken);
-          db.close();
-
-          console.log("");
-          console.log(colors.green("  [✓] Published successfully."));
-          console.log(`  ${pc.dim("Public URL:")}  ${pc.underline(pc.cyan(data.url))}`);
-          console.log(`  ${pc.bold(colors.amber("Claim token:"))} ${colors.amber(data.claimToken)}`);
-          console.log(pc.dim("  (Saved to ~/.qodewk/state.db for future authorship proofs)\n"));
-
-          await renderTerminalReceipt(sanitized, data.url);
-        } catch (err: unknown) {
-          const message = err instanceof Error ? err.message : String(err);
-          console.error(pc.red(`\n  Share failed: ${message}`));
-        }
-        await waitForKeyToReturn();
+        currentScreen = "share_horizon";
+        selectedIndex = 0;
         break;
       }
 
@@ -647,6 +786,21 @@ export async function runInteractiveMenu(): Promise<void> {
 
       console.log("");
       console.log(`  ${colors.green("[✓]")} ${pc.dim("Privacy guarantee: raw source code is never stored in SQLite")}`);
+
+      if (recent.length > 0) {
+        console.log("");
+        const ans = await askLine("  › Enter receipt ID prefix to publish to cloud [Enter to return]: ");
+        if (ans) {
+          const matched = recent.find((r) => r.receipt.receipt.id.toLowerCase().startsWith(ans.toLowerCase()));
+          if (matched) {
+            await publishReceiptToCloud(matched.receipt);
+            await waitForKeyToReturn();
+            return;
+          } else {
+            console.log(pc.yellow(`  No stored receipt matching '${ans}' found.`));
+          }
+        }
+      }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       console.error(pc.red(`  Failed to inspect storage: ${message}`));
@@ -728,8 +882,14 @@ export async function runInteractiveMenu(): Promise<void> {
             if (active) startLoop();
             return;
           }
+          if (selected.id === "share") {
+            currentScreen = "share_horizon";
+            selectedIndex = 0;
+            if (active) startLoop();
+            return;
+          }
           await executeSelectedAction();
-        } else {
+        } else if (currentScreen === "receipt_horizon") {
           if (selected.id === "back") {
             currentScreen = "main";
             selectedIndex = 0;
@@ -737,6 +897,14 @@ export async function runInteractiveMenu(): Promise<void> {
             return;
           }
           await executeReceiptHorizon(selected);
+        } else if (currentScreen === "share_horizon") {
+          if (selected.id === "back") {
+            currentScreen = "main";
+            selectedIndex = 0;
+            if (active) startLoop();
+            return;
+          }
+          await executeShareHorizon(selected);
         }
         if (active) {
           startLoop();
@@ -754,8 +922,14 @@ export async function runInteractiveMenu(): Promise<void> {
             if (active) startLoop();
             return;
           }
+          if (selected.id === "share") {
+            currentScreen = "share_horizon";
+            selectedIndex = 0;
+            if (active) startLoop();
+            return;
+          }
           await executeSelectedAction();
-        } else {
+        } else if (currentScreen === "receipt_horizon") {
           if (selected.id === "back") {
             currentScreen = "main";
             selectedIndex = 0;
@@ -763,6 +937,14 @@ export async function runInteractiveMenu(): Promise<void> {
             return;
           }
           await executeReceiptHorizon(selected);
+        } else if (currentScreen === "share_horizon") {
+          if (selected.id === "back") {
+            currentScreen = "main";
+            selectedIndex = 0;
+            if (active) startLoop();
+            return;
+          }
+          await executeShareHorizon(selected);
         }
         if (active) {
           startLoop();
