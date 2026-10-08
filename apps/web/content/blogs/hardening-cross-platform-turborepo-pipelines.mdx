@@ -1,0 +1,115 @@
+---
+title: "Hardening Cross-Platform Turborepo Pipelines & Native MDX Diagrams"
+description: "How we eliminated shell drift across Windows and Linux CI with native Node ESM clean scripts, and brought live Mermaid architecture diagrams to our MDX engineering blog."
+date: 2026-10-08
+author:
+  name: "Abushaid Islam"
+  avatar: "https://github.com/abushaidislam.png"
+  twitter: "qodewk"
+tags: ["monorepo", "turborepo", "dx", "nextjs", "architecture"]
+---
+
+<TLDR>
+A robust developer experience must remain consistent across operating systems. We replaced fragile Unix-bound `rm -rf` scripts across all monorepo packages with cross-platform Node ESM one-liners, fixed CI branch triggers, and upgraded our Fumadocs MDX renderer to natively support Mermaid architecture diagrams in our engineering articles.
+</TLDR>
+
+## The Hidden Cost of Shell Assumptions in Monorepos
+
+When building a developer-first tool like Qodewk, contributors and automated agents work across varied environments: macOS workstations, Windows dev boxes with PowerShell, and headless Linux GitHub Actions runners.
+
+In early iterations of our `pnpm` + Turborepo setup, several package manifests relied on traditional shell utilities for cleanup:
+
+```json
+{
+  "scripts": {
+    "clean": "rm -rf .next .turbo dist .source"
+  }
+}
+```
+
+On Linux or macOS, this executes without friction. But the moment a contributor builds on Windows without a Cygwin or WSL layer, PowerShell chokes on `rm -rf` syntax or behaves unpredictably with directory locks.
+
+To eliminate third-party dependencies like `rimraf` while keeping our build system light and fast, we standardized all package clean scripts using modern native Node ESM calls:
+
+```json
+{
+  "scripts": {
+    "clean": "node --input-type=module -e \"import fs from 'node:fs'; ['.next', '.turbo', '.source', 'dist'].forEach(d => fs.rmSync(d, { recursive: true, force: true }))\""
+  }
+}
+```
+
+By leveraging `node:fs`'s native `rmSync({ recursive: true, force: true })`, the command executes natively on every platform where Node.js 22 is installed with zero runtime overhead and zero platform discrimination.
+
+---
+
+## Architectural Isolation Boundaries
+
+As our monorepo expanded, maintaining clean dependency boundaries became paramount. Qodewk is divided into specialized packages:
+
+<Mermaid chart={`graph TD
+    A[packages/protocol] --> B[packages/pricing]
+    A --> C[packages/core]
+    B --> C
+    A --> D[apps/web]
+    B --> D
+    C --> E[packages/cli]
+    A --> E
+    B --> E
+`} />
+
+The non-negotiable invariant in our architecture:
+- **`apps/web` (Next.js Edge / Serverless):** Only imports zero-native packages (`@qodewk/protocol`, `@qodewk/pricing`). It never touches `@qodewk/core` because core relies on the local Git binary, C-bindings, and native filesystem operations.
+- **`packages/cli`:** The terminal binary that runs locally on developer machines and has full access to `@qodewk/core`.
+
+This guarantees that public receipt rendering and API routes on Vercel boot in sub-50ms cold starts without bloating bundle sizes with local git plumbing.
+
+---
+
+## Upgrading the Engineering Blog: Live Mermaid Architecture in MDX
+
+Our documentation and blog system is powered by Fumadocs MDX in `apps/web`. We believe technical blog posts should communicate engineering reality through interactive code, receipts, and architectural topology rather than vague prose.
+
+We integrated the client-side `<Mermaid />` component directly into our MDX component registry in `apps/web/app/blog/[[...slug]]/page.tsx`:
+
+```tsx
+import { Mermaid } from "@/components/mdx/mermaid";
+
+// Inside MDX component map:
+<MDX
+  components={{
+    ...defaultMdxComponents,
+    Step,
+    Steps,
+    Tab,
+    Tabs,
+    Accordion,
+    Accordions,
+    Mermaid,
+    Tweet: BlogTweet,
+    TLDR: ({ children }) => (
+      <div className="not-prose relative my-8 bg-foreground/[0.02] px-5 py-4">
+        <span className="block mb-2 text-[11px] font-mono uppercase tracking-wider text-foreground/50 select-none">
+          TL;DR
+        </span>
+        <div className="text-sm leading-relaxed text-foreground/80 [&_p]:m-0 [&_p+p]:mt-3">
+          {children}
+        </div>
+      </div>
+    ),
+    // ...
+  }}
+/>
+```
+
+Now, every devlog can render reactive sequence diagrams, state machines, and dependency graphs that automatically adapt to light and dark themes.
+
+<Callout type="info">
+Every article in Qodewk's blog is version-controlled in Git under <code>apps/web/content/blogs</code> and verified against the Fumadocs schema before building.
+</Callout>
+
+---
+
+## What's Next
+
+With cross-platform monorepo cleanliness locked in and native architecture diagrams enabled in MDX, our next focus is refining local Git note attachments (`refs/notes/qodewk`) and automated PR receipt sticky comments. Stay tuned for the next update.
