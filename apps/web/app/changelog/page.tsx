@@ -5,7 +5,7 @@ import { SignatureMark } from "@/components/landing/signature-mark";
 import { createMetadata } from "@/lib/metadata";
 import { ChangelogContent } from "./changelog-content";
 
-export const dynamic = "force-static";
+export const revalidate = 60;
 
 interface GitHubRelease {
 	id: number;
@@ -234,7 +234,7 @@ export default async function ChangelogPage() {
 		const res = await fetch(
 			"https://api.github.com/repos/abushaidislam/Qodewk/releases",
 			{
-				next: { revalidate: 3600 },
+				next: { revalidate: 60 },
 				headers: {
 					Accept: "application/vnd.github.v3+json",
 					...(process.env.GITHUB_TOKEN && {
