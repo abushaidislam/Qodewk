@@ -70,6 +70,19 @@ function getContent(content: string) {
 
 const FALLBACK_RELEASES: GitHubRelease[] = [
 	{
+		id: 92,
+		tag_name: "v0.9.2",
+		name: "v0.9.2 — Universal Agent Harvesters & MDX Mermaid Diagrams",
+		published_at: "2026-10-08T14:00:00Z",
+		prerelease: false,
+		html_url: "https://github.com/abushaidislam/Qodewk/releases/tag/v0.9.2",
+		body: `### 🚀 Added
+- **Universal Tier B Agent Harvesters (Cline / Roo Code & OpenCode CLI):** Native session telemetry, tasks, and verified token usage extraction from VS Code storage and \`.opencode/sessions\`.
+- **Native MDX Mermaid Architecture Diagramming:** Dynamic client-side architecture and sequence diagrams directly in engineering devlogs.
+- **1:1 Dot-Track Table of Contents (TOC):** Compact vertical dot-track on the right edge with real-time scroll observation matching Better Auth.
+- **Engineering Devlogs & 13 In-Depth Articles:** Complete institutional guides to Git DAG telemetry, zero-leak privacy, and rate-card pricing.`,
+	},
+	{
 		id: 91,
 		tag_name: "v0.9.1",
 		name: "v0.9.1 — Remote Pricing Registry & Dynamic Env Resolution",

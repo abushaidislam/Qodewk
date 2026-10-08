@@ -89,12 +89,18 @@ jobs:
           cd packages/cli
           npm publish --provenance --access public
 
+      - name: Generate Release Notes from CHANGELOG.md
+        if: env.SHOULD_RELEASE == 'true'
+        run: |
+          node scripts/extract-release-notes.mjs "${{ env.CLI_VERSION }}" RELEASE_NOTES.md
+
       - name: Create Git Tag and GitHub Release
         uses: softprops/action-gh-release@v2
         if: env.SHOULD_RELEASE == 'true'
         with:
           tag_name: "v${{ env.CLI_VERSION }}"
           name: "Qodewk Release v${{ env.CLI_VERSION }}"
+          body_path: RELEASE_NOTES.md
           generate_release_notes: true
           draft: false
           prerelease: false
@@ -102,3 +108,4 @@ jobs:
             packages/cli/dist/index.cjs
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
