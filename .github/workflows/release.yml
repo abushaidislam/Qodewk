@@ -89,10 +89,10 @@ jobs:
           cd packages/cli
           npm publish --provenance --access public
 
-      - name: Generate Release Notes from CHANGELOG.md
+      - name: Generate Smart Better Auth Release Notes
         if: env.SHOULD_RELEASE == 'true'
         run: |
-          node scripts/extract-release-notes.mjs "${{ env.CLI_VERSION }}" RELEASE_NOTES.md
+          node scripts/smart-release-generator.mjs "${{ env.CLI_VERSION }}" RELEASE_NOTES.md
 
       - name: Create Git Tag and GitHub Release
         uses: softprops/action-gh-release@v2
