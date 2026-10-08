@@ -52,7 +52,7 @@ function resolveCliVersion(): string {
   } catch {
     // fall through
   }
-  return "0.9.1";
+  return "0.9.2";
 }
 
 function resolveSince(options: HarvestCliOptions): string | undefined {

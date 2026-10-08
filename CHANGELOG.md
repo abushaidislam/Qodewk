@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [0.9.2] — 2026-10-08
 
 ### 🚀 Added
+- **Universal Tier B Agent Harvesters (Cline / Roo Code & OpenCode CLI):**
+  - Added native `harvestClineFootprints` (`packages/core/src/harvester/cline.ts`) extracting session telemetry, tasks, tool calls, edited files, and verified token usage from VS Code `globalStorage` and repository-local `.cline/tasks` / `.roo/tasks`.
+  - Added native `harvestOpenCodeFootprints` (`packages/core/src/harvester/opencode.ts`) extracting pairing sessions from repo-local `.opencode/` and `~/.opencode/sessions`.
+  - Expanded `parseGitTrailers` and `detectProviderFromCommit` in `@qodewk/core` to recognize `Cline`, `Roo Code`, `OpenCode`, and `Codex`.
+  - Added model pricing aliases in `@qodewk/pricing` for provider-prefixed IDs (`anthropic/*`, `openai/*`, `openrouter/*`).
+  - Registered full unit, edge-case, and disambiguation test suite in `packages/core/test/tier-b-harvesters.test.ts` (10/10 tests pass).
 - **13 In-Depth Qodewk Engineering Blogs (`apps/web/content/blogs`):**
   - Replaced legacy placeholders with authentic technical articles detailing the Git DAG telemetry architecture, zero-leak privacy mechanics, multi-model rate-card pricing, sub-5ms non-blocking git hooks, edge receipt cards, and the Qodewk v1.0 protocol specification.
 - **1:1 Dot-Track Table of Contents (TOC) (`apps/web/components/blog/blog-toc.tsx`):**

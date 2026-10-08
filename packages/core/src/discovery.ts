@@ -17,7 +17,7 @@ import { getRateCard, computeCost } from "@qodewk/pricing";
 export interface GitTrailerInfo {
   token: string;
   value: string;
-  provider: "copilot" | "claude" | "cursor" | "aider" | "windsurf" | "antigravity" | "generic";
+  provider: "copilot" | "claude" | "cursor" | "aider" | "windsurf" | "antigravity" | "cline" | "opencode" | "codex" | "kilo" | "generic";
   model: string;
 }
 
@@ -38,7 +38,15 @@ export function parseGitTrailers(commitMessage?: string): GitTrailerInfo[] {
     const valLower = value.toLowerCase();
 
     if (token === "co-authored-by" || token === "generated-by" || token === "assisted-by" || token === "signed-off-by") {
-      if (valLower.includes("copilot") || valLower.includes("github-actions")) {
+      if (valLower.includes("cline") || valLower.includes("roo code") || valLower.includes("roo-cline")) {
+        trailers.push({ token, value, provider: "cline", model: "claude-3-7-sonnet" });
+      } else if (valLower.includes("opencode")) {
+        trailers.push({ token, value, provider: "opencode", model: "claude-3-5-sonnet" });
+      } else if (valLower.includes("codex")) {
+        trailers.push({ token, value, provider: "codex", model: "gpt-4o" });
+      } else if (valLower.includes("kilo")) {
+        trailers.push({ token, value, provider: "kilo", model: "claude-3-5-sonnet" });
+      } else if (valLower.includes("copilot") || valLower.includes("github-actions")) {
         trailers.push({ token, value, provider: "copilot", model: "gpt-4o" });
       } else if (valLower.includes("claude") || valLower.includes("anthropic")) {
         trailers.push({ token, value, provider: "claude", model: "claude-3-7-sonnet" });
@@ -124,6 +132,33 @@ export function detectProviderFromCommit(commitMessage?: string): Partial<Provid
     return {
       provider: "windsurf",
       model: "claude-3-5-sonnet",
+      confidence: 0.80,
+      mode: "observed"
+    };
+  }
+
+  if (msg.includes("cline") || msg.includes("roo code") || msg.includes("roo-cline")) {
+    return {
+      provider: "cline",
+      model: "claude-3-7-sonnet",
+      confidence: 0.80,
+      mode: "observed"
+    };
+  }
+
+  if (msg.includes("opencode")) {
+    return {
+      provider: "opencode",
+      model: "claude-3-5-sonnet",
+      confidence: 0.80,
+      mode: "observed"
+    };
+  }
+
+  if (msg.includes("codex")) {
+    return {
+      provider: "codex",
+      model: "gpt-4o",
       confidence: 0.80,
       mode: "observed"
     };

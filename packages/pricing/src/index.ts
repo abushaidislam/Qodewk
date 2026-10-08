@@ -218,6 +218,15 @@ export const MODEL_ALIASES: Record<string, string> = {
   "claude-5-5-opus": "claude-opus-4-6-thinking",
   "cursor-fast": "claude-3-5-sonnet",
   "cursor-small": "claude-3-5-haiku",
+  "anthropic/claude-3-7-sonnet": "claude-3-7-sonnet",
+  "anthropic/claude-3-7-sonnet-latest": "claude-3-7-sonnet",
+  "anthropic/claude-3-7-sonnet-20250219": "claude-3-7-sonnet",
+  "anthropic/claude-3-5-sonnet": "claude-3-5-sonnet",
+  "anthropic/claude-3-5-sonnet-latest": "claude-3-5-sonnet",
+  "anthropic/claude-3-5-sonnet-20241022": "claude-3-5-sonnet",
+  "anthropic/claude-3-5-haiku": "claude-3-5-haiku",
+  "openrouter/anthropic/claude-3.5-sonnet": "claude-3-5-sonnet",
+  "openrouter/anthropic/claude-3.7-sonnet": "claude-3-7-sonnet",
 
   // OpenAI aliases
   "chatgpt-4o-latest": "gpt-4o",
@@ -227,6 +236,10 @@ export const MODEL_ALIASES: Record<string, string> = {
   "o1-preview": "o1",
   "o1-2024-12-17": "o1",
   "o3": "o3-mini",
+  "openai/gpt-4o": "gpt-4o",
+  "openai/gpt-4o-mini": "gpt-4o-mini",
+  "openai/o1": "o1",
+  "openai/o3-mini": "o3-mini",
 
   // Google aliases
   "gemini-3": "gemini-3-8-flash",

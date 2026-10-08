@@ -3,6 +3,8 @@ import { harvestClaudeFootprints } from "./claude.js";
 import { harvestCursorFootprints } from "./cursor.js";
 import { harvestAiderFootprints } from "./aider.js";
 import { harvestWindsurfFootprints } from "./windsurf.js";
+import { harvestClineFootprints } from "./cline.js";
+import { harvestOpenCodeFootprints } from "./opencode.js";
 import { selectPrimaryFootprint } from "./scoring.js";
 import { AgentFootprint, HarvestOptions } from "./types.js";
 import { harvestTrailerFootprints } from "../discovery.js";
@@ -15,6 +17,8 @@ export * from "./claude.js";
 export * from "./cursor.js";
 export * from "./aider.js";
 export * from "./windsurf.js";
+export * from "./cline.js";
+export * from "./opencode.js";
 
 export function parseSinceOption(since?: string | Date): Date | undefined {
   if (!since) return undefined;
@@ -107,7 +111,19 @@ export async function harvestUniversalFootprints(
     allFootprints.push(...windsurfFootprints);
   }
 
-  // 6. Harvest Git Commit Trailers (Copilot, Claude, Cursor, Aider, Windsurf co-authors)
+  // 6. Harvest Cline / Roo Code IDE extension
+  if (!options.platform || options.platform === "all" || options.platform === "cline") {
+    const clineFootprints = harvestClineFootprints(options.repoPath, sinceDate);
+    allFootprints.push(...clineFootprints);
+  }
+
+  // 7. Harvest OpenCode CLI
+  if (!options.platform || options.platform === "all" || options.platform === "opencode") {
+    const opencodeFootprints = harvestOpenCodeFootprints(options.repoPath, sinceDate);
+    allFootprints.push(...opencodeFootprints);
+  }
+
+  // 8. Harvest Git Commit Trailers (Copilot, Claude, Cursor, Aider, Windsurf, Cline, OpenCode co-authors)
   if (options.gitContext?.commitMessage) {
     const trailerFps = harvestTrailerFootprints(
       options.repoPath,

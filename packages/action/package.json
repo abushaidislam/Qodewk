@@ -1,6 +1,6 @@
 {
   "name": "@qodewk/action",
-  "version": "0.9.1",
+  "version": "0.9.2",
   "description": "GitHub Action to generate privacy-safe digital receipts for PRs",
   "type": "module",
   "main": "dist/index.js",
