@@ -15,9 +15,10 @@ export function extractReleaseNotes(version, changelogPath = "CHANGELOG.md") {
 	let capturing = false;
 	const capturedLines = [];
 
-	// Target header regex: ## [0.9.2] or ## [v0.9.2] or ## 0.9.2
+	// Target header regex: ## [0.10.0] or ## [v0.10.0] or ## 0.10.0
 	const headerRegex = new RegExp(`^##\\s+\\[?v?${cleanVersion.replace(/\./g, "\\.")}\\]?`, "i");
-	const nextHeaderRegex = /^##\s+/;
+	// Stop ONLY when hitting the next SemVer release heading (e.g. ## [0.9.2]), allowing package sub-headers (## `qodewk`, ## Contributors)
+	const nextVersionRegex = /^##\s+\[?v?\d+\.\d+\.\d+\]?/i;
 
 	for (const line of lines) {
 		if (!capturing) {
@@ -25,8 +26,8 @@ export function extractReleaseNotes(version, changelogPath = "CHANGELOG.md") {
 				capturing = true;
 			}
 		} else {
-			// Stop if we hit the next version heading (e.g. ## [0.9.1])
-			if (nextHeaderRegex.test(line.trim())) {
+			// Stop if we hit the next version heading
+			if (nextVersionRegex.test(line.trim()) && !headerRegex.test(line.trim())) {
 				break;
 			}
 			capturedLines.push(line);

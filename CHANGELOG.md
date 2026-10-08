@@ -5,29 +5,47 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [0.10.0] — 2026-10-08
 
-### 🚀 Added
-- **`qodewk doctor` System Health & Diagnostic Suite (`packages/core/src/doctor.ts`, `packages/cli/src/doctor-view.ts`):**
-  - Added comprehensive terminal diagnostic auditor checking 7 AI agent storage environments (Antigravity, Claude Code, Cursor, Windsurf, Cline/Roo, Aider, OpenCode), Git repository readiness, non-blocking hook boundaries, SQLite storage health (`~/.qodewk/state.db`), and pricing registry sync.
-  - Supports formatted editorial terminal view adhering strictly to Claude Warm Editorial design tokens (`#cc785c`, `#5db8a6`, `#8e8b82`) and machine-readable `--json` output (`overallStatus`, `version`, `agents`, `hooks`, `storage`, `pricing`, `benchmark`).
-  - Added CLI command `qodewk doctor` with `-b, --benchmark`, `-v, --verbose`, and `--json` flags.
-- **Interactive TUI Menu Parity & Diagnostics Panel (`packages/cli/src/menu.ts`):**
-  - Integrated `[8] System Health & Diagnostics` directly into the interactive terminal menu (`qodewk menu` / `npx qodewk -i`), enabling one-keypress execution of full doctor audits without memorizing shell flags.
-  - Formally codified Rule 6 (*CLI Command & Interactive Menu Parity*) in `AGENTS.md`: every new root CLI command must be mirrored in the interactive terminal control panel.
-  - Updated `packages/cli/test/menu.test.ts` to enforce 8 core menu items with `0–8` quick-jump navigation and Claude Warm Editorial aesthetics.
-- **High-Resolution Non-Blocking Git Hook Latency Benchmark (`qodewk hook test` / `verify`):**
-  - Added microsecond-accurate detached subprocess latency benchmarking using `process.hrtime.bigint()` to guarantee the core architectural invariant: Git hooks must be non-blocking (< 5ms overhead on developer commits).
-  - Validates hook boundary markers (`# --- BEGIN QODEWK HOOK ---` ... `# --- END QODEWK HOOK ---`), coexistence with Lefthook/Husky, and script executable permissions (`0o755`).
-  - Integrated into interactive terminal menu under `Manage Git Hooks` -> `[3] Test & benchmark hook latency`.
-- **Automated GitHub Release Pipeline & Keep-a-Changelog Extraction (`scripts/extract-release-notes.mjs`, `.github/workflows/release.yml`):**
-  - Added automated release notes extraction script injecting categorized Keep-a-Changelog sections and Quick Install commands directly into GitHub Releases.
-  - Configured native GitHub release label categorization (`.github/release.yml`) for PR-level grouping (`🚀 Features`, `🛡️ Bug Fixes`, `⚠️ Breaking Changes`, `⚡ Performance`, `📦 Dependencies`).
-- **Engineering Blog: Inside `qodewk doctor` & Sub-5ms Git Hook Invariants (`apps/web/content/blogs/qodewk-doctor-and-hook-diagnostics.mdx`):**
-  - Published deep-dive engineering devlog detailing agent session discovery across Windows/macOS/Linux, detached background hook execution architecture, and hardware timer benchmarking.
+## `qodewk`
 
-### 🛡️ Fixed & Changed
-- Multi-trial sampling and resilient standard-deviation outlier filtering for hook latency benchmarks (`packages/core/src/doctor.ts`).
-- Added ESLint to root devDependencies and configured pnpm `peerDependencyRules` for Zod compatibility.
-- Updated `/changelog` fallback releases in `apps/web/app/changelog/page.tsx` with complete v0.10.0 and v0.9.2 metadata.
+> **System Diagnostics & Latency Benchmarks:** Audit local AI agents, SQLite database integrity, and sub-5ms detached git hook latency with the new `qodewk doctor` engine.
+
+### Features
+
+- Added `qodewk doctor` system health and diagnostic command with `--benchmark`, `--verbose`, and `--json` support. ([#16](https://github.com/abushaidislam/Qodewk/pull/16))
+- Integrated `[8] System Health & Diagnostics` directly into the interactive TUI menu (`qodewk menu` / `npx qodewk -i`) enabling 1-click execution without shell flags. ([#16](https://github.com/abushaidislam/Qodewk/pull/16))
+- Added microsecond-accurate detached git hook latency benchmark under `Manage Git Hooks` -> `[3] Test & benchmark hook latency`. ([#16](https://github.com/abushaidislam/Qodewk/pull/16))
+
+For detailed changes, see [`CHANGELOG`](https://github.com/abushaidislam/Qodewk/blob/master/packages/cli/CHANGELOG.md)
+
+## `@qodewk/core`
+
+### Features
+
+- Added `runDoctorDiagnostics` inspecting 7 AI agent environments (Antigravity, Claude Code, Cursor, Windsurf, Cline/Roo, Aider, OpenCode), Git repository status, and SQLite state. ([#16](https://github.com/abushaidislam/Qodewk/pull/16))
+- High-resolution detached subprocess latency benchmarking using `process.hrtime.bigint()` verifying non-blocking commit hooks (< 5ms). ([#16](https://github.com/abushaidislam/Qodewk/pull/16))
+
+### Bug Fixes
+
+- Added multi-trial sampling and resilient standard-deviation outlier filtering for hook latency benchmarks. ([#16](https://github.com/abushaidislam/Qodewk/pull/16))
+
+For detailed changes, see [`CHANGELOG`](https://github.com/abushaidislam/Qodewk/blob/master/packages/core/CHANGELOG.md)
+
+## `@qodewk/web`
+
+### Features
+
+- Published engineering devlog detailing inside `qodewk doctor` and sub-5ms git hook invariants. ([#16](https://github.com/abushaidislam/Qodewk/pull/16))
+- Automated GitHub Release pipeline with Keep-a-Changelog extraction and native PR category grouping. ([#16](https://github.com/abushaidislam/Qodewk/pull/16))
+
+For detailed changes, see [`CHANGELOG`](https://github.com/abushaidislam/Qodewk/blob/master/apps/web/CHANGELOG.md)
+
+## Contributors
+
+Thanks to everyone who contributed to this release:
+
+@abushaidislam
+
+**Full changelog:** [`v0.9.2...v0.10.0`](https://github.com/abushaidislam/Qodewk/compare/v0.9.2...v0.10.0)
 
 ## [0.9.2] — 2026-10-08
 
