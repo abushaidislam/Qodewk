@@ -9,10 +9,13 @@ import {
   writeGitReceiptNote,
   readGitReceiptNote,
   listGitReceiptNotes,
-  resolveApiUrl
+  resolveApiUrl,
+  auditGitHooks,
+  benchmarkHookLatency
 } from "@qodewk/core";
 import { colors, bg, bannerGradient } from "./theme.js";
 import { renderTerminalReceipt } from "./receipt-view.js";
+import { formatHookTestReport } from "./doctor-view.js";
 import {
   resolveGitHooksDir,
   checkHookStatus,
@@ -515,10 +518,11 @@ export async function runInteractiveMenu(): Promise<void> {
     console.log("");
     console.log("  [1] Install non-blocking hooks (< 5ms background recorder)");
     console.log("  [2] Uninstall Qodewk hooks");
+    console.log("  [3] Test & benchmark hook latency (< 5ms invariant)");
     console.log("  [0] Back to main menu");
     console.log("");
 
-    const choice = await askLine("  › Select option [0-2]: ");
+    const choice = await askLine("  › Select option [0-3]: ");
     if (choice === "1") {
       if (status.hooksDir) {
         const targets = ["post-commit", "post-rewrite"] as const;
@@ -535,6 +539,10 @@ export async function runInteractiveMenu(): Promise<void> {
         }
         console.log(colors.green("\n  [✓] Qodewk hooks removed."));
       }
+    } else if (choice === "3") {
+      const hooks = auditGitHooks();
+      const bench = await benchmarkHookLatency();
+      console.log(formatHookTestReport(hooks, bench));
     }
     await waitForKeyToReturn();
   };

@@ -13,12 +13,16 @@ import {
   listGitReceiptNotes,
   loadQodewkEnv,
   resolveApiUrl,
-  resolveAppUrl
+  resolveAppUrl,
+  runDiagnostics,
+  auditGitHooks,
+  benchmarkHookLatency
 } from "@qodewk/core";
 import { ReceiptV1 } from "@qodewk/protocol";
 import { outputReceipt, renderTerminalReceipt, OutputOptions } from "./receipt-view.js";
 import { resolveGitHooksDir, installHookFile, uninstallHookFile } from "./hooks.js";
 import { runInteractiveMenu } from "./menu.js";
+import { formatDoctorReport, formatHookTestReport } from "./doctor-view.js";
 
 // Automatically load local .env, .env.local, and ~/.qodewk/config.env
 loadQodewkEnv();
@@ -148,6 +152,29 @@ program
   .description("Launch interactive terminal control panel")
   .action(async () => {
     await runInteractiveMenu();
+  });
+
+program
+  .command("doctor")
+  .description("Run complete diagnostic health check of AI agents, git hooks, and local telemetry")
+  .option("-j, --json", "Output diagnostic report in machine-readable JSON format")
+  .action(async (options) => {
+    try {
+      const isJson = Boolean(options.json || program.opts().json);
+      const report = await runDiagnostics();
+      if (isJson) {
+        console.log(JSON.stringify(report, null, 2));
+      } else {
+        console.log(formatDoctorReport(report));
+      }
+      if (report.overallStatus === "error") {
+        process.exit(1);
+      }
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error(pc.red(`Error running diagnostics: ${message}`));
+      process.exit(1);
+    }
   });
 
 program
@@ -379,6 +406,31 @@ hookCommand
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       console.error(pc.red(`Failed to uninstall hook: ${message}`));
+      process.exit(1);
+    }
+  });
+
+hookCommand
+  .command("test")
+  .aliases(["verify", "check"])
+  .description("Verify non-blocking Git hook installation and benchmark latency (< 5ms invariant)")
+  .option("-j, --json", "Output benchmark in JSON format")
+  .action(async (options) => {
+    try {
+      const hooks = auditGitHooks();
+      const benchmark = await benchmarkHookLatency();
+      const isJson = Boolean(options.json || program.opts().json);
+      if (isJson) {
+        console.log(JSON.stringify({ hooks, benchmark }, null, 2));
+      } else {
+        console.log(formatHookTestReport(hooks, benchmark));
+      }
+      if (!benchmark.passedInvariant) {
+        process.exit(1);
+      }
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error(pc.red(`Error testing hooks: ${message}`));
       process.exit(1);
     }
   });

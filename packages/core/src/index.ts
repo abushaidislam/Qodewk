@@ -15,6 +15,7 @@ export * from "./db.js";
 export * from "./format.js";
 export * from "./pricing-sync.js";
 export * from "./env.js";
+export * from "./doctor.js";
 
 export interface GenerateReceiptOptions {
   repoPath?: string;
