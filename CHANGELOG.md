@@ -46,7 +46,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   - Established root ESLint flat configuration (`eslint.config.mjs`) and Prettier configs (`.prettierrc`, `.prettierignore`).
   - Repaired `turbo lint` by migrating `apps/web/package.json` from the deprecated Next.js 16 CLI command (`next lint`) to direct `eslint .`.
 - **Turborepo Task Graph Hardening & CI/CD Pipeline Modernization (Phase 4):**
-  - Added cross-platform `clean` scripts (`node -e fs.rmSync`) across all applications and packages (`apps/web`, `@qodewk/protocol`, `@qodewk/pricing`, `@qodewk/core`, `qodewk`, `@qodewk/action`), cleanly clearing `.next`, `.turbo`, `.source`, and `dist` artifacts.
+  - Modernized cross-platform `clean` scripts (`node --input-type=module -e fs.rmSync`) across all applications and packages (`apps/web`, `@qodewk/protocol`, `@qodewk/pricing`, `@qodewk/core`, `qodewk`, `@qodewk/action`), eliminating ESM `require` scope resolution failures.
+  - Added `refactor/**` branch pattern to `.github/workflows/ci.yml` push triggers to ensure automated verification of refactoring branches.
   - Hardened `turbo.json` pipeline configuration with deterministic input hashes (`tsconfig*.json`, `eslint.config.*`, `.prettier*`, `vitest.config.*`) and complete build outputs (`.source/**`, `.next/**`, `dist/**`).
   - Stabilized Next.js 16 production build (`next build --webpack`) and MDX generation across all 80 static/dynamic application routes.
   - Hardened CI quality workflow (`.github/workflows/ci.yml`) by introducing `pnpm lint` as a mandatory pre-build verification gate alongside typechecking, testing, and CLI smoke tests.

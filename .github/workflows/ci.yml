@@ -6,6 +6,7 @@ on:
       - master
       - "feat/**"
       - "fix/**"
+      - "refactor/**"
   pull_request:
     branches:
       - master

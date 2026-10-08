@@ -10,7 +10,7 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "clean": "node -e \"['.next', '.turbo', '.source', 'dist'].forEach(d => require('fs').rmSync(d, { recursive: true, force: true }))\"",
+    "clean": "node --input-type=module -e \"import fs from 'node:fs'; ['.next', '.turbo', '.source', 'dist'].forEach(d => fs.rmSync(d, { recursive: true, force: true }))\"",
     "postinstall": "fumadocs-mdx"
   },
   "dependencies": {
