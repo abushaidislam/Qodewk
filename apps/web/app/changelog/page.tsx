@@ -70,6 +70,24 @@ function getContent(content: string) {
 
 const FALLBACK_RELEASES: GitHubRelease[] = [
 	{
+		id: 100,
+		tag_name: "v0.10.0",
+		name: "v0.10.0 — System Diagnostics, Hook Latency Benchmarks & Release CI",
+		published_at: "2026-10-08T18:00:00Z",
+		prerelease: false,
+		html_url: "https://github.com/abushaidislam/Qodewk/releases/tag/v0.10.0",
+		body: `### 🚀 Added
+- **\`qodewk doctor\` System Diagnostics:** Comprehensive diagnostic engine auditing 7 AI agent storage environments (Antigravity, Claude Code, Cursor, Windsurf, Cline/Roo, Aider, OpenCode), Git hook readiness, SQLite database integrity, and remote pricing registry sync.
+- **Interactive TUI Menu Parity:** Integrated \`[8] System Health & Diagnostics\` into interactive terminal control panel (\`qodewk menu\` / \`npx qodewk -i\`) codifying 100% discoverability.
+- **Sub-5ms Hook Latency Benchmarks:** Microsecond-accurate detached subprocess latency benchmarking using \`process.hrtime.bigint()\` verifying non-blocking commit hooks.
+- **Automated GitHub Release Pipeline:** Automated release notes extraction script injecting Keep-a-Changelog sections and Quick Install commands directly into GitHub Releases.
+- **Engineering Devlog:** Published deep-dive devlog detailing agent discovery mechanics and sub-5ms detached background hooks.
+
+### 🛡️ Fixed & Changed
+- Multi-trial sampling and outlier filtering for hook latency benchmarks.
+- Added ESLint to root devDependencies and configured pnpm peerDependencyRules.`,
+	},
+	{
 		id: 92,
 		tag_name: "v0.9.2",
 		name: "v0.9.2 — Universal Agent Harvesters & MDX Mermaid Diagrams",

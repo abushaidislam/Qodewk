@@ -81,7 +81,7 @@ describe("Doctor Diagnostic Suite (`doctor.ts`)", () => {
       const report = await runDiagnostics();
       expect(report).toBeDefined();
       expect(["healthy", "warning", "error"]).toContain(report.overallStatus);
-      expect(report.version).toBe("0.9.2");
+      expect(report.version).toBe("0.10.0");
       expect(report.timestamp).toBeDefined();
       expect(report.agents).toBeDefined();
       expect(report.hooks).toBeDefined();

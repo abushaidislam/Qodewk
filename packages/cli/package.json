@@ -1,6 +1,6 @@
 {
   "name": "qodewk",
-  "version": "0.9.2",
+  "version": "0.10.0",
   "description": "Universal telemetry and digital receipt generator for the AI coding agent era",
   "type": "module",
   "bin": {

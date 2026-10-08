@@ -11,7 +11,7 @@ describe("Qodewk CLI Doctor & Hook Diagnostics (`doctor.test.ts`)", () => {
     it("renders formatted Claude Warm Editorial diagnostic frame", () => {
       const mockReport: DiagnosticReport = {
         overallStatus: "healthy",
-        version: "0.9.2",
+        version: "0.10.0",
         timestamp: new Date().toISOString(),
         repoPath: "/app",
         agents: [
@@ -46,7 +46,7 @@ describe("Qodewk CLI Doctor & Hook Diagnostics (`doctor.test.ts`)", () => {
 
       const output = formatDoctorReport(mockReport);
       expect(output).toContain("qodewk doctor");
-      expect(output).toContain("v0.9.2");
+      expect(output).toContain("v0.10.0");
       expect(output).toContain("Cursor IDE");
       expect(output).toContain("post-commit hook");
       expect(output).toContain("1.84 ms");
@@ -94,7 +94,7 @@ describe("Qodewk CLI Doctor & Hook Diagnostics (`doctor.test.ts`)", () => {
       const stdout = execSync(`node "${binPath}" doctor --json`, { encoding: "utf-8" });
       const parsed = JSON.parse(stdout);
       expect(parsed).toHaveProperty("overallStatus");
-      expect(parsed).toHaveProperty("version", "0.9.2");
+      expect(parsed).toHaveProperty("version", "0.10.0");
       expect(parsed).toHaveProperty("agents");
       expect(parsed).toHaveProperty("hooks");
       expect(parsed).toHaveProperty("benchmark");

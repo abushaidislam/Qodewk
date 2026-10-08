@@ -3,22 +3,35 @@
 All notable changes to the **Qodewk** monorepo are documented in this file.  
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.9.2] — 2026-10-08
+## [0.10.0] — 2026-10-08
 
 ### 🚀 Added
 - **`qodewk doctor` System Health & Diagnostic Suite (`packages/core/src/doctor.ts`, `packages/cli/src/doctor-view.ts`):**
   - Added comprehensive terminal diagnostic auditor checking 7 AI agent storage environments (Antigravity, Claude Code, Cursor, Windsurf, Cline/Roo, Aider, OpenCode), Git repository readiness, non-blocking hook boundaries, SQLite storage health (`~/.qodewk/state.db`), and pricing registry sync.
   - Supports formatted editorial terminal view adhering strictly to Claude Warm Editorial design tokens (`#cc785c`, `#5db8a6`, `#8e8b82`) and machine-readable `--json` output (`overallStatus`, `version`, `agents`, `hooks`, `storage`, `pricing`, `benchmark`).
-- **Interactive TUI Menu Parity (`packages/cli/src/menu.ts` & `AGENTS.md`):**
-  - Integrated `[7] System Health & Diagnostics` directly into the root interactive menu (`qodewk menu` / `npx qodewk -i`), enabling one-keypress execution of full doctor audits.
-  - Formally codified non-negotiable architectural invariant in `AGENTS.md` (Rule 6: *CLI Command & Interactive Menu Parity*): every new root CLI command must be mirrored in the interactive terminal control panel.
-  - Updated `packages/cli/test/menu.test.ts` to enforce 8 core menu items with `0–7` quick-jump navigation and Claude Warm Editorial aesthetics.
+  - Added CLI command `qodewk doctor` with `-b, --benchmark`, `-v, --verbose`, and `--json` flags.
+- **Interactive TUI Menu Parity & Diagnostics Panel (`packages/cli/src/menu.ts`):**
+  - Integrated `[8] System Health & Diagnostics` directly into the interactive terminal menu (`qodewk menu` / `npx qodewk -i`), enabling one-keypress execution of full doctor audits without memorizing shell flags.
+  - Formally codified Rule 6 (*CLI Command & Interactive Menu Parity*) in `AGENTS.md`: every new root CLI command must be mirrored in the interactive terminal control panel.
+  - Updated `packages/cli/test/menu.test.ts` to enforce 8 core menu items with `0–8` quick-jump navigation and Claude Warm Editorial aesthetics.
 - **High-Resolution Non-Blocking Git Hook Latency Benchmark (`qodewk hook test` / `verify`):**
   - Added microsecond-accurate detached subprocess latency benchmarking using `process.hrtime.bigint()` to guarantee the core architectural invariant: Git hooks must be non-blocking (< 5ms overhead on developer commits).
   - Validates hook boundary markers (`# --- BEGIN QODEWK HOOK ---` ... `# --- END QODEWK HOOK ---`), coexistence with Lefthook/Husky, and script executable permissions (`0o755`).
   - Integrated into interactive terminal menu under `Manage Git Hooks` -> `[3] Test & benchmark hook latency`.
+- **Automated GitHub Release Pipeline & Keep-a-Changelog Extraction (`scripts/extract-release-notes.mjs`, `.github/workflows/release.yml`):**
+  - Added automated release notes extraction script injecting categorized Keep-a-Changelog sections and Quick Install commands directly into GitHub Releases.
+  - Configured native GitHub release label categorization (`.github/release.yml`) for PR-level grouping (`🚀 Features`, `🛡️ Bug Fixes`, `⚠️ Breaking Changes`, `⚡ Performance`, `📦 Dependencies`).
 - **Engineering Blog: Inside `qodewk doctor` & Sub-5ms Git Hook Invariants (`apps/web/content/blogs/qodewk-doctor-and-hook-diagnostics.mdx`):**
-  - Published deep-dive engineering devlog explaining agent session discovery across Windows/macOS/Linux, detached background hook execution architecture, and hardware timer benchmarking.
+  - Published deep-dive engineering devlog detailing agent session discovery across Windows/macOS/Linux, detached background hook execution architecture, and hardware timer benchmarking.
+
+### 🛡️ Fixed & Changed
+- Multi-trial sampling and resilient standard-deviation outlier filtering for hook latency benchmarks (`packages/core/src/doctor.ts`).
+- Added ESLint to root devDependencies and configured pnpm `peerDependencyRules` for Zod compatibility.
+- Updated `/changelog` fallback releases in `apps/web/app/changelog/page.tsx` with complete v0.10.0 and v0.9.2 metadata.
+
+## [0.9.2] — 2026-10-08
+
+### 🚀 Added
 - **Universal Tier B Agent Harvesters (Cline / Roo Code & OpenCode CLI):**
   - Added native `harvestClineFootprints` (`packages/core/src/harvester/cline.ts`) extracting session telemetry, tasks, tool calls, edited files, and verified token usage from VS Code `globalStorage` and repository-local `.cline/tasks` / `.roo/tasks`.
   - Added native `harvestOpenCodeFootprints` (`packages/core/src/harvester/opencode.ts`) extracting pairing sessions from repo-local `.opencode/` and `~/.opencode/sessions`.

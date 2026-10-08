@@ -60,7 +60,7 @@ describe("Qodewk CLI Menu System (`menu.test.ts`)", () => {
       expect(plain).toContain("██████╗");
       expect(plain).toContain("┌");
       expect(plain).toContain("qodewk");
-      expect(plain).toContain("v0.9.2");
+      expect(plain).toContain("v0.10.0");
       expect(plain).toContain("◇");
       expect(plain).toContain("Repository:");
       expect(plain).toContain("◆");
