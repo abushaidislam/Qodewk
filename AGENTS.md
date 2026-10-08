@@ -189,3 +189,55 @@ When prompted to build or expand the codebase, execute according to this structu
 >    - `### ⚠️ Breaking Changes` for any breaking protocol or API changes.
 > 4. **No Version Change Without Changelog:** Never push code with a version change or new release without an accompanying `CHANGELOG.md` update.
 
+---
+
+## 9. Git Commit & Semantic Telemetry Mandate (Non-Negotiable)
+
+> [!CRITICAL]
+> ### 🚨 STRICT CONVENTIONAL COMMITS FOR AUTOMATED CHANGELOG GENERATION
+> The Smart Release Generator (`scripts/smart-release-generator.mjs`) and GitHub Actions pipelines parse Git commit revisions directly from the revision graph to build Better Auth-style changelogs. Autonomous agents and human contributors **MUST NEVER** write ambiguous, generic, or untyped commit messages (e.g. `update`, `fixed bug`, `wip`, `changes`). Every commit message MUST adhere to the **Conventional Commits** standard with an explicit monorepo package scope.
+
+### Commit Format Specification
+```text
+<type>(<scope>): <imperative summary description>
+
+[optional body explaining architectural decisions or context]
+
+[optional footer: BREAKING CHANGE: ... or Fixes #123]
+```
+
+### 1. Allowed Types & Release Categorization
+| Type | Description | Release Notes Target Category |
+| :--- | :--- | :--- |
+| `feat` | New features, capabilities, or user-facing flags | `### Features` |
+| `fix` | Bug fixes, patch corrections, edge-case handling | `### Bug Fixes` |
+| `perf` | Timing optimizations, latency benchmarks (< 5ms hooks) | `### Performance & Refactoring` |
+| `refactor` | Structural code refactoring without behavior change | `### Performance & Refactoring` |
+| `docs` | Documentation, engineering blogs, devlogs, READMEs | `### Documentation` |
+| `test` | Unit, integration, or smoke test additions | Internal / Omitted from public highlights |
+| `chore` | Dependency bumps, build configs, release bumps | `### Dependencies & Maintenance` |
+
+### 2. Mandatory Monorepo Scopes
+The scope MUST match the target package so changes are accurately grouped into Better Auth package headings (`## \`package\``):
+- `(cli)` — `packages/cli` (`qodewk`)
+- `(core)` — `packages/core` (`@qodewk/core`)
+- `(web)` — `apps/web` (`@qodewk/web`)
+- `(pricing)` — `packages/pricing` (`@qodewk/pricing`)
+- `(protocol)` — `packages/protocol` (`@qodewk/protocol`)
+- `(action)` — `packages/action` (`@qodewk/action`)
+- `(ci)` or `(release)` — Workflows, GitHub Actions, or release scripts
+
+### 3. Imperative Writing Rules
+- **Use imperative mood:** "add doctor diagnostics" instead of "added doctor diagnostics" or "adds doctor diagnostics".
+- **Lowercase first letter of summary:** `feat(cli): add ...` instead of `feat(cli): Add ...`.
+- **No trailing period in title:** Keep header concise (< 72 characters).
+- **Include PR/Issue references:** Append `(#16)` or `Closes #16` when working against a pull request.
+- **Breaking Changes:** Suffix type with `!` (e.g. `feat(protocol)!: change ReceiptV1 schema`) to automatically trigger the `### ⚠️ Breaking Changes` release banner.
+
+### 4. Autonomous Agent Pre-Commit Checklist
+Before executing `git commit`, autonomous agents MUST ensure:
+1. `pnpm test` passes (0 test failures).
+2. Monorepo builds or typechecks cleanly (`pnpm typecheck` or `turbo build`).
+3. Commit message strictly conforms to `<type>(<scope>): <summary>` for seamless Better Auth changelog extraction.
+
+
