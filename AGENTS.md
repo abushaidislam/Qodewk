@@ -34,6 +34,10 @@
 5. **Local Mode Must Remain Fully Functional:**
    - Qodewk must generate local terminal receipts and SQLite/Git Notes records without requiring network connectivity or a cloud account.
    - In CI environments (`CI=true` or `--no-db`), use in-memory mode (`:memory:`).
+6. **CLI Command & Interactive Menu Parity (Full TUI Discovery):**
+   - Whenever any new top-level CLI command (e.g. `doctor`, `audit`, `share`, `notes`) or major capability is added, it **MUST** be exposed on the interactive terminal control panel (`packages/cli/src/menu.ts`) with corresponding key mappings (`0–9`, quick jump), clear descriptions, and action handlers.
+   - Developers launching `qodewk menu` or `npx qodewk -i` must have 100% feature discoverability without needing to memorize shell flags.
+   - Unit tests (`packages/cli/test/menu.test.ts`) must be updated in lockstep to verify menu key parity, non-emoji Claude editorial formatting, and action integrity.
 
 ---
 

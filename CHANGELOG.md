@@ -9,6 +9,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **`qodewk doctor` System Health & Diagnostic Suite (`packages/core/src/doctor.ts`, `packages/cli/src/doctor-view.ts`):**
   - Added comprehensive terminal diagnostic auditor checking 7 AI agent storage environments (Antigravity, Claude Code, Cursor, Windsurf, Cline/Roo, Aider, OpenCode), Git repository readiness, non-blocking hook boundaries, SQLite storage health (`~/.qodewk/state.db`), and pricing registry sync.
   - Supports formatted editorial terminal view adhering strictly to Claude Warm Editorial design tokens (`#cc785c`, `#5db8a6`, `#8e8b82`) and machine-readable `--json` output (`overallStatus`, `version`, `agents`, `hooks`, `storage`, `pricing`, `benchmark`).
+- **Interactive TUI Menu Parity (`packages/cli/src/menu.ts` & `AGENTS.md`):**
+  - Integrated `[7] System Health & Diagnostics` directly into the root interactive menu (`qodewk menu` / `npx qodewk -i`), enabling one-keypress execution of full doctor audits.
+  - Formally codified non-negotiable architectural invariant in `AGENTS.md` (Rule 6: *CLI Command & Interactive Menu Parity*): every new root CLI command must be mirrored in the interactive terminal control panel.
+  - Updated `packages/cli/test/menu.test.ts` to enforce 8 core menu items with `0–7` quick-jump navigation and Claude Warm Editorial aesthetics.
 - **High-Resolution Non-Blocking Git Hook Latency Benchmark (`qodewk hook test` / `verify`):**
   - Added microsecond-accurate detached subprocess latency benchmarking using `process.hrtime.bigint()` to guarantee the core architectural invariant: Git hooks must be non-blocking (< 5ms overhead on developer commits).
   - Validates hook boundary markers (`# --- BEGIN QODEWK HOOK ---` ... `# --- END QODEWK HOOK ---`), coexistence with Lefthook/Husky, and script executable permissions (`0o755`).
