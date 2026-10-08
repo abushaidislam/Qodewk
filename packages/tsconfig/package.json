@@ -1,0 +1,11 @@
+{
+  "name": "@qodewk/tsconfig",
+  "version": "0.9.1",
+  "description": "Shared TypeScript configurations for Qodewk monorepo",
+  "private": true,
+  "files": [
+    "base.json",
+    "node.json",
+    "nextjs.json"
+  ]
+}

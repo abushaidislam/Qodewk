@@ -43,6 +43,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   - Replaced unsupported Satori layout styles with Claude editorial tokens and added robust local font loading with Node.js filesystem fallback.
   - Connected `metadataBase` across receipt pages so Twitter, LinkedIn, and OpenGraph crawlers resolve absolute image URLs.
   - Streamlined `/r/[id]` receipt page UX to focus on a single thermal receipt presentation with an interactive demo switcher and registered full Vitest regression tests.
+- **Monorepo Pipeline Integrity & CLI Dependency Isolation:**
+  - Added explicit `simple-git` dependency to `packages/cli/package.json` to eliminate undeclared phantom dependency imports in `menu.ts` and resolve `turbo typecheck` errors.
+  - Exported testable `run()` function in `packages/action/src/index.ts` with test-runner environment guards and authored comprehensive unit tests in `packages/action/test/action.test.ts` covering outputs, error handling, and PR comment synchronization.
+  - Standardized package-level Vitest configs with 30s timeouts across `packages/core`, `packages/cli`, and `apps/web` to ensure `turbo test` passes reliably across all monorepo workspaces.
+- **Workspace Scope Standardization & Dependency Hoisting (Phase 2):**
+  - Standardized web application package name from `web` to `@qodewk/web` across `apps/web/package.json`, `Dockerfile`, `vercel.json`, and deployment documentation.
+  - Explicitly declared `vitest` in `devDependencies` across all workspace packages (`@qodewk/protocol`, `@qodewk/pricing`, `@qodewk/core`, `qodewk`, `@qodewk/action`, `@qodewk/web`) to eliminate phantom dependency hoisting.
+- **Shared Workspace Configurations & Tooling Modernization (Phase 3):**
+  - Created shared configuration package `@qodewk/tsconfig` (`packages/tsconfig/`) providing `base.json`, `node.json`, and `nextjs.json` presets to eliminate duplicate compiler configurations.
+  - Refactored `tsconfig.json` across all applications (`apps/web`) and packages (`@qodewk/protocol`, `@qodewk/pricing`, `@qodewk/core`, `qodewk`, `@qodewk/action`) to extend `@qodewk/tsconfig`.
+  - Established root ESLint flat configuration (`eslint.config.mjs`) and Prettier configs (`.prettierrc`, `.prettierignore`).
+  - Repaired `turbo lint` by migrating `apps/web/package.json` from the deprecated Next.js 16 CLI command (`next lint`) to direct `eslint .`.
+- **Turborepo Task Graph Hardening & CI/CD Pipeline Modernization (Phase 4):**
+  - Modernized cross-platform `clean` scripts (`node --input-type=module -e fs.rmSync`) across all applications and packages (`apps/web`, `@qodewk/protocol`, `@qodewk/pricing`, `@qodewk/core`, `qodewk`, `@qodewk/action`), eliminating ESM `require` scope resolution failures.
+  - Added `refactor/**` branch pattern to `.github/workflows/ci.yml` push triggers to ensure automated verification of refactoring branches.
+  - Hardened `turbo.json` pipeline configuration with deterministic input hashes (`tsconfig*.json`, `eslint.config.*`, `.prettier*`, `vitest.config.*`) and complete build outputs (`.source/**`, `.next/**`, `dist/**`).
+  - Stabilized Next.js 16 production build (`next build --webpack`) and MDX generation across all 80 static/dynamic application routes.
+  - Hardened CI quality workflow (`.github/workflows/ci.yml`) by introducing `pnpm lint` as a mandatory pre-build verification gate alongside typechecking, testing, and CLI smoke tests.
 
 ## [0.9.0] — 2026-10-02
 

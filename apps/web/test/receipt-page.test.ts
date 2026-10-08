@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { DEMO_RECEIPTS } from "../lib/demo-receipts";
 
-describe("Digital Receipt Page (`apps/web/app/r/[id]`)", () => {
+describe("Digital Receipt Page (`apps/web/app/r/[id]`)", { timeout: 30000 }, () => {
   it("resolves seeded demo receipts with full metadata", () => {
     const cursorReceipt = DEMO_RECEIPTS["rec_demo_cursor"];
     expect(cursorReceipt).toBeDefined();

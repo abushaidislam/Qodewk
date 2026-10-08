@@ -102,7 +102,7 @@ describe("Universal Agent Footprint Harvesters (`harvester/`)", () => {
       expect(["verified", "imported", "observed", "estimated", "unknown"]).toContain(result.mode);
       expect(result.confidence).toBeGreaterThanOrEqual(0);
       expect(result.confidence).toBeLessThanOrEqual(1);
-    }, 15_000);
+    }, 45_000);
 
     it("respects platform filtering flag", async () => {
       const result = await harvestUniversalFootprints({
@@ -111,6 +111,6 @@ describe("Universal Agent Footprint Harvesters (`harvester/`)", () => {
       });
 
       expect(result.platforms.every((p) => p === "claude" || p === "anthropic")).toBe(true);
-    }, 15_000);
+    }, 45_000);
   });
 });

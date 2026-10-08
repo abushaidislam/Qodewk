@@ -25,7 +25,7 @@ COPY --from=deps /app/packages ./packages
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
-RUN pnpm --filter web build
+RUN pnpm --filter @qodewk/web build
 
 # Runner Stage
 FROM node:22-alpine AS runner

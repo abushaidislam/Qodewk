@@ -56,7 +56,7 @@ The Next.js 15 App Router (`apps/web`) is configured with serverless route handl
 ### Project Settings on Vercel
 1. **Framework Preset:** Next.js
 2. **Root Directory:** `apps/web` (or leave as `./` with Turbo monorepo detection)
-3. **Build Command:** `pnpm --filter web build`
+3. **Build Command:** `pnpm --filter @qodewk/web build`
 4. **Output Directory:** `apps/web/.next`
 5. **Install Command:** `pnpm install`
 

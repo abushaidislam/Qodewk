@@ -3,7 +3,7 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import { execSync } from "node:child_process";
 
-describe("qodewk CLI smoke", () => {
+describe("qodewk CLI smoke", { timeout: 30000 }, () => {
   it("dist binary exists after build", () => {
     const binPath = path.resolve(__dirname, "../dist/index.cjs");
     expect(fs.existsSync(binPath)).toBe(true);

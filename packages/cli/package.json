@@ -15,6 +15,7 @@
     "build": "tsup",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "clean": "node --input-type=module -e \"import fs from 'node:fs'; ['dist', '.turbo'].forEach(d => fs.rmSync(d, { recursive: true, force: true }))\"",
     "prepublishOnly": "pnpm run build"
   },
   "publishConfig": {
@@ -43,7 +44,8 @@
   },
   "dependencies": {
     "commander": "^13.1.0",
-    "picocolors": "^1.1.1"
+    "picocolors": "^1.1.1",
+    "simple-git": "^3.27.0"
   },
   "devDependencies": {
     "@qodewk/core": "workspace:*",
@@ -51,6 +53,7 @@
     "@qodewk/protocol": "workspace:*",
     "@types/node": "^22.13.10",
     "tsup": "^8.5.1",
-    "typescript": "^5.8.2"
+    "typescript": "^5.8.2",
+    "vitest": "^5.0.3"
   }
 }

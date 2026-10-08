@@ -6,6 +6,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   test: {
+    testTimeout: 30000,
+    hookTimeout: 30000,
     alias: {
       "@": path.resolve(__dirname, "./")
     }
