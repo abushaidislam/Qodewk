@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { Cpu, History, Palette, PencilLine, Scale, Search } from "lucide-react";
+import { Cpu, History, Palette, PencilLine, Receipt, Scale, Search } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -46,33 +46,11 @@ interface ProductItem {
 }
 
 const FrameworkLogoIcon: React.FC<{ className?: string }> = ({ className }) => (
-	<svg
-		viewBox="0 0 30 45"
-		fill="currentColor"
-		className={`${className ?? ""} rotate-12`}
-		aria-hidden="true"
-	>
-		<path
-			fillRule="evenodd"
-			clipRule="evenodd"
-			d="M0 0H15V15H30V30H15V45H0V30V15V0Z"
-		/>
-	</svg>
+	<Icons.qodewkMark className={cn("size-4", className)} />
 );
 
 const InfraLogoIcon: React.FC<{ className?: string }> = ({ className }) => (
-	<svg
-		viewBox="30 0 30 45"
-		fill="currentColor"
-		className={`${className ?? ""} -rotate-12`}
-		aria-hidden="true"
-	>
-		<path
-			fillRule="evenodd"
-			clipRule="evenodd"
-			d="M45 30V15H30V0H45H60V15V30V45H45H30V30H45Z"
-		/>
-	</svg>
+	<Receipt className={cn("size-4", className)} />
 );
 
 const CommunityIcon: React.FC<{ className?: string }> = ({ className }) => (

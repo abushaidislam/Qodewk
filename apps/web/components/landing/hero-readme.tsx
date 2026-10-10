@@ -946,23 +946,10 @@ function ReadmeFooter({ stats }: { stats: CommunityHeroStats }) {
 		<div className="relative mt-10 pt-8 pb-16 overflow-hidden">
 			{/* Watermark logo */}
 			<div
-				className="absolute -right-10 top-1/2 -translate-y-1/2 pointer-events-none select-none opacity-[0.03] dark:opacity-[0.04]"
+				className="absolute -right-10 top-1/2 -translate-y-1/2 pointer-events-none select-none opacity-[0.04] dark:opacity-[0.05]"
 				aria-hidden="true"
 			>
-				<svg
-					width="300"
-					height="225"
-					viewBox="0 0 60 45"
-					fill="none"
-					xmlns="http://www.w3.org/2000/svg"
-				>
-					<path
-						fillRule="evenodd"
-						clipRule="evenodd"
-						d="M0 0H15V15H30V30H15V45H0V30V15V0ZM45 30V15H30V0H45H60V15V30V45H45H30V30H45Z"
-						className="fill-foreground"
-					/>
-				</svg>
+				<Icons.qodewkMark className="size-[280px]" />
 			</div>
 
 			{/* Dot grid */}
@@ -980,13 +967,13 @@ function ReadmeFooter({ stats }: { stats: CommunityHeroStats }) {
 			{/* CTA */}
 			<div className="relative space-y-6">
 				<p className="text-center text-lg text-balance text-foreground/60 dark:text-foreground/50 tracking-tight">
-					Roll your own auth with confidence in minutes.
+					Generate universal git telemetry receipts with confidence in minutes.
 				</p>
 
 				<div className="flex items-center justify-center gap-2">
 					{stats.npmDownloads > 0 && (
 						<a
-							href="https://www.npmjs.com/package/better-auth"
+							href="https://www.npmjs.com/package/qodewk"
 							target="_blank"
 							rel="noopener noreferrer"
 						>
