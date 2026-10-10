@@ -153,6 +153,37 @@ Estimated Cost:    ${costPrefix}${receipt.ai.cost.toFixed(2)} (${confidencePerce
               <span className="text-foreground">Total Est. Tokens:</span>
               <span className="text-foreground">{totalTokens}</span>
             </div>
+            {receipt.ai.sessions && receipt.ai.sessions.length > 0 && (
+              <div className="pt-2 border-t border-dashed border-foreground/15 space-y-1.5">
+                <div className="text-[10px] text-foreground/50 uppercase tracking-wider font-semibold flex justify-between items-center mb-1">
+                  <span>ITEMIZED SESSIONS ({receipt.ai.sessions.length})</span>
+                  <span>COST</span>
+                </div>
+                {receipt.ai.sessions.slice(0, 5).map((session, idx) => {
+                  const sTitle = session.task
+                    ? (session.task.length > 20 ? session.task.slice(0, 19) + "…" : session.task)
+                    : (session.sessionId ? "#" + session.sessionId.slice(0, 8) : session.provider);
+                  const sModel = (session.model || session.provider).replace(/^(claude-|gemini-|gpt-)/, "");
+                  const sCostPrefix = session.mode === "verified" ? "$" : "~$";
+                  return (
+                    <div key={idx} className="flex justify-between items-center text-[11px]">
+                      <div className="flex items-center space-x-1.5 truncate max-w-[210px]">
+                        <span className="text-foreground/80 truncate">• {sTitle}</span>
+                        <span className="text-[10px] text-foreground/40 font-mono">({sModel})</span>
+                      </div>
+                      <span className="font-mono font-medium text-foreground">
+                        {sCostPrefix}{session.cost.toFixed(2)}
+                      </span>
+                    </div>
+                  );
+                })}
+                {receipt.ai.sessions.length > 5 && (
+                  <div className="text-[10px] text-foreground/40 italic pt-0.5">
+                    + {receipt.ai.sessions.length - 5} more sessions
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Total Cost Box */}
