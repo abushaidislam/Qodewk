@@ -89,14 +89,22 @@ export function buildTerminalReceipt(receipt: ReceiptV1, publicUrl?: string): st
   const provString = receipt.ai.provider + " · " + (receipt.ai.model || "Unknown");
   const cleanProv = provString.length > 40 ? provString.slice(0, 39) + "…" : provString;
   printRow(`Provider: ${cleanProv}`);
-  if (receipt.ai.sessions && receipt.ai.sessions.length > 1) {
-    const others = receipt.ai.sessions
-      .slice(1)
-      .map((s) => s.provider)
-      .filter((p, i, arr) => arr.indexOf(p) === i && p !== receipt.ai.provider);
-    if (others.length > 0) {
-      printRow(pc.dim(`Also seen: ${others.join(", ")}`));
+  if (receipt.ai.sessions && receipt.ai.sessions.length > 0) {
+    printDivider("-");
+    printRow(`ITEMIZED SESSIONS (${receipt.ai.sessions.length}):`);
+    for (const s of receipt.ai.sessions.slice(0, 5)) {
+      const taskLabel = s.task
+        ? (s.task.length > 18 ? s.task.slice(0, 17) + "…" : s.task)
+        : (s.sessionId ? "#" + s.sessionId.slice(0, 8) : s.provider);
+      const cleanMod = (s.model || s.provider).replace(/^(claude-|gemini-|gpt-)/, "");
+      const modelLabel = ` (${cleanMod.length > 11 ? cleanMod.slice(0, 10) + "…" : cleanMod})`;
+      const sCost = s.mode === "verified" ? `$${s.cost.toFixed(2)}` : `~$${s.cost.toFixed(2)}`;
+      printRowSplit(`• ${taskLabel}${pc.dim(modelLabel)}`, teal(sCost));
     }
+    if (receipt.ai.sessions.length > 5) {
+      printRow(pc.dim(`  ... and ${receipt.ai.sessions.length - 5} more sessions`));
+    }
+    printDivider("-");
   }
   if (receipt.ai.aiWrittenRatio !== undefined) {
     const aiPct = Math.round(receipt.ai.aiWrittenRatio * 100);

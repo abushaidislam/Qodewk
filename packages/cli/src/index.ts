@@ -16,13 +16,15 @@ import {
   resolveAppUrl,
   runDiagnostics,
   auditGitHooks,
-  benchmarkHookLatency
+  benchmarkHookLatency,
+  listProjectChats
 } from "@qodewk/core";
 import { ReceiptV1 } from "@qodewk/protocol";
 import { outputReceipt, renderTerminalReceipt, OutputOptions } from "./receipt-view.js";
 import { resolveGitHooksDir, installHookFile, uninstallHookFile } from "./hooks.js";
 import { runInteractiveMenu } from "./menu.js";
 import { formatDoctorReport, formatHookTestReport } from "./doctor-view.js";
+import { buildTerminalChatLedger, buildMarkdownChatLedger } from "./chat-view.js";
 
 // Automatically load local .env, .env.local, and ~/.qodewk/config.env
 loadQodewkEnv();
@@ -152,6 +154,40 @@ program
   .description("Launch interactive terminal control panel")
   .action(async () => {
     await runInteractiveMenu();
+  });
+
+program
+  .command("chats")
+  .description("Inspect AI chat sessions and model cost ledger for current workspace")
+  .option("-s, --since <duration>", "Filter chats since duration (e.g. today, 24h, 7d, 30d)")
+  .option("--today", "Filter chats for today")
+  .option("--all", "Show all-time workspace chats (bypass 30-day default window)")
+  .option("-p, --platform <platform>", "Filter agent platform (antigravity, claude, cursor, etc.)")
+  .option("-j, --json", "Output chat telemetry report in machine-readable JSON format")
+  .option("-f, --format <format>", "Output format (terminal, json, markdown)", "terminal")
+  .action(async (options) => {
+    try {
+      const since = options.today ? "today" : options.since;
+      const report = await listProjectChats({
+        repoPath: process.cwd(),
+        since,
+        platform: options.platform,
+        all: options.all
+      });
+
+      const isJson = Boolean(options.json || program.opts().json || options.format === "json");
+      if (isJson) {
+        console.log(JSON.stringify(report, null, 2));
+      } else if (options.format === "markdown") {
+        console.log(buildMarkdownChatLedger(report));
+      } else {
+        console.log(buildTerminalChatLedger(report));
+      }
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error(pc.red(`Error listing workspace chats: ${message}`));
+      process.exit(1);
+    }
   });
 
 program

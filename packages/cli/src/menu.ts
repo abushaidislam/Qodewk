@@ -13,12 +13,14 @@ import {
   auditGitHooks,
   benchmarkHookLatency,
   runDiagnostics,
-  discoverAntigravityEnvironment
+  discoverAntigravityEnvironment,
+  listProjectChats
 } from "@qodewk/core";
 import { ReceiptV1 } from "@qodewk/protocol";
 import { colors, bg, bannerGradient } from "./theme.js";
 import { renderTerminalReceipt } from "./receipt-view.js";
 import { formatHookTestReport, formatDoctorReport } from "./doctor-view.js";
+import { buildTerminalChatLedger } from "./chat-view.js";
 import {
   resolveGitHooksDir,
   checkHookStatus,
@@ -86,6 +88,12 @@ export const MENU_ITEMS: MenuItem[] = [
     key: "7",
     label: "System Health & Diagnostics",
     description: "Audit AI agents, Git hooks, SQLite & pricing registry (doctor)"
+  },
+  {
+    id: "chats",
+    key: "8",
+    label: "Workspace Chats & Cost Ledger",
+    description: "Inspect all agent conversation sessions and model costs (chats)"
   },
   {
     id: "exit",
@@ -183,7 +191,7 @@ export function buildMenuFrame(
   selectedIndex: number,
   items: MenuItem[] = MENU_ITEMS,
   title = "Telemetry Control Panel",
-  subtitle = "↑↓ move · enter select · 0-7 quick jump · q quit",
+  subtitle = "↑↓ move · enter select · 0-8 quick jump · q quit",
   options: BuildMenuFrameOptions = {}
 ): string {
   const lines: string[] = [];
@@ -637,6 +645,11 @@ export async function runInteractiveMenu(): Promise<void> {
         break;
       }
 
+      case "chats": {
+        await showChatsAction();
+        break;
+      }
+
       case "exit": {
         active = false;
         cleanup();
@@ -825,6 +838,24 @@ export async function runInteractiveMenu(): Promise<void> {
     await waitForKeyToReturn();
   };
 
+  const showChatsAction = async () => {
+    console.log(pc.bold(pc.white("\n  Qodewk Workspace Chat Telemetry & Cost Ledger")));
+    console.log(pc.dim("  ──────────────────────────────────────────────────────────"));
+    console.log(pc.dim("  [·] Scanning local IDE transcripts (Antigravity, Cursor, Claude, Windsurf, Cline)...\n"));
+
+    try {
+      const report = await listProjectChats({
+        repoPath: process.cwd()
+      });
+      console.log(buildTerminalChatLedger(report));
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error(pc.red(`  Failed to inspect workspace chats: ${message}`));
+    }
+
+    await waitForKeyToReturn();
+  };
+
   // Main interactive keypress loop
   readline.emitKeypressEvents(process.stdin);
 
@@ -868,8 +899,10 @@ export async function runInteractiveMenu(): Promise<void> {
         return;
       }
 
-      // Direct key mapping for numbers
-      const itemByKey = items.findIndex((item) => item.key === key.name || item.key === _str);
+      // Direct key mapping for numbers and hotkeys
+      const itemByKey = items.findIndex(
+        (item) => item.key === key.name || item.key === _str || (_str && _str.toLowerCase() === "c" && item.id === "chats")
+      );
       if (itemByKey !== -1) {
         selectedIndex = itemByKey;
         render();
