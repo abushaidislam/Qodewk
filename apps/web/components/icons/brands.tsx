@@ -11,21 +11,15 @@ export const brandIcons = {
 				aria-label="Qodewk"
 				className={className || "w-35 h-auto"}
 			>
-				<g transform="scale(0.75)">
-					<circle
-						cx="28"
-						cy="28"
-						r="20"
-						fill="none"
-						strokeWidth="9"
-						className="stroke-foreground"
+				<g transform="translate(2.78 0.17) scale(0.04663)">
+					<path
+						className="fill-foreground"
+						d="M 454 126 L 494 126 L 518 128 L 559 135 L 585 142 L 585 254 L 450 254 L 448 256 L 448 357 L 380 358 L 380 664 L 448 665 L 448 766 L 450 768 L 585 768 L 585 867 L 542 878 L 503 883 L 467 884 L 426 881 L 387 874 L 355 865 L 319 851 L 291 837 L 263 820 L 231 796 L 213 780 L 183 748 L 161 719 L 142 688 L 128 660 L 112 618 L 101 573 L 96 535 L 95 493 L 98 456 L 105 417 L 118 374 L 130 345 L 151 306 L 167 282 L 193 250 L 219 224 L 251 198 L 285 176 L 316 160 L 348 147 L 385 136 L 422 129 L 454 126 Z M 732 126 L 903 126 L 903 296 L 789 296 L 788 330 L 761 294 L 722 257 L 681 229 L 645 212 L 731 212 L 732 126 Z M 788 683 L 789 727 L 903 727 L 903 897 L 732 897 L 731 811 L 617 811 L 653 798 L 682 783 L 707 767 L 731 748 L 756 724 L 774 703 L 788 683 Z"
 					/>
-					<g transform="translate(28 28) rotate(45)">
-						<path
-							fill="#cc785c"
-							d="M12 -6H34L38 -4L34 -2L38 0L34 2L38 4L34 6H12Z"
-						/>
-					</g>
+					<path
+						fill="#cc785c"
+						d="M 617 203 L 645 213 L 676 228 L 717 255 L 734 269 L 760 295 L 788 332 L 788 382 L 674 382 L 673 468 L 616 469 L 616 554 L 673 555 L 673 640 L 788 641 L 788 681 L 756 722 L 739 739 L 714 760 L 668 789 L 619 809 L 617 809 L 616 725 L 503 725 L 503 641 L 501 639 L 445 639 L 445 384 L 501 384 L 503 382 L 503 298 L 617 297 L 617 203 Z"
+					/>
 				</g>
 				<path
 					className="fill-foreground"
@@ -38,25 +32,19 @@ export const brandIcons = {
 		return (
 			<svg
 				xmlns="http://www.w3.org/2000/svg"
-				viewBox="0 0 64 64"
+				viewBox="0 0 1024 1024"
 				role="img"
 				aria-label="Qodewk"
 				className={className || "size-5"}
 			>
-				<circle
-					cx="28"
-					cy="28"
-					r="20"
-					fill="none"
-					strokeWidth="9"
-					className="stroke-foreground"
+				<path
+					className="fill-foreground"
+					d="M 454 126 L 494 126 L 518 128 L 559 135 L 585 142 L 585 254 L 450 254 L 448 256 L 448 357 L 380 358 L 380 664 L 448 665 L 448 766 L 450 768 L 585 768 L 585 867 L 542 878 L 503 883 L 467 884 L 426 881 L 387 874 L 355 865 L 319 851 L 291 837 L 263 820 L 231 796 L 213 780 L 183 748 L 161 719 L 142 688 L 128 660 L 112 618 L 101 573 L 96 535 L 95 493 L 98 456 L 105 417 L 118 374 L 130 345 L 151 306 L 167 282 L 193 250 L 219 224 L 251 198 L 285 176 L 316 160 L 348 147 L 385 136 L 422 129 L 454 126 Z M 732 126 L 903 126 L 903 296 L 789 296 L 788 330 L 761 294 L 722 257 L 681 229 L 645 212 L 731 212 L 732 126 Z M 788 683 L 789 727 L 903 727 L 903 897 L 732 897 L 731 811 L 617 811 L 653 798 L 682 783 L 707 767 L 731 748 L 756 724 L 774 703 L 788 683 Z"
 				/>
-				<g transform="translate(28 28) rotate(45)">
-					<path
-						fill="#cc785c"
-						d="M12 -6H34L38 -4L34 -2L38 0L34 2L38 4L34 6H12Z"
-					/>
-				</g>
+				<path
+					fill="#cc785c"
+					d="M 617 203 L 645 213 L 676 228 L 717 255 L 734 269 L 760 295 L 788 332 L 788 382 L 674 382 L 673 468 L 616 469 L 616 554 L 673 555 L 673 640 L 788 641 L 788 681 L 756 722 L 739 739 L 714 760 L 668 789 L 619 809 L 617 809 L 616 725 L 503 725 L 503 641 L 501 639 L 445 639 L 445 384 L 501 384 L 503 382 L 503 298 L 617 297 L 617 203 Z"
+				/>
 			</svg>
 		);
 	},
