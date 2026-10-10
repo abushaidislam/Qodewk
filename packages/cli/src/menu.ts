@@ -1,6 +1,7 @@
 import * as readline from "node:readline";
 import * as path from "node:path";
 import * as fs from "node:fs";
+import { fileURLToPath } from "node:url";
 import pc from "picocolors";
 import {
   generateReceipt,
@@ -190,11 +191,28 @@ export interface BuildMenuFrameOptions {
 
 export function resolveMenuCliVersion(): string {
   try {
-    const argv1 = process.argv[1] ? path.dirname(path.resolve(process.argv[1])) : process.cwd();
+    let currentDir = "";
+    if (typeof import.meta !== "undefined" && import.meta && typeof import.meta.url === "string") {
+      try {
+        currentDir = path.dirname(fileURLToPath(import.meta.url));
+      } catch {
+        // ignore
+      }
+    }
+    const argv1 = typeof process !== "undefined" && process.argv && process.argv[1]
+      ? path.dirname(path.resolve(process.argv[1]))
+      : "";
+    const cwd = typeof process !== "undefined" && process.cwd ? process.cwd() : "";
+
     const candidates = [
-      path.join(argv1, "..", "package.json"),
-      path.join(argv1, "package.json")
-    ];
+      currentDir ? path.join(currentDir, "..", "package.json") : "",
+      currentDir ? path.join(currentDir, "package.json") : "",
+      argv1 ? path.join(argv1, "..", "package.json") : "",
+      argv1 ? path.join(argv1, "package.json") : "",
+      cwd ? path.join(cwd, "packages", "cli", "package.json") : "",
+      cwd ? path.join(cwd, "package.json") : ""
+    ].filter(Boolean);
+
     for (const candidate of candidates) {
       if (!fs.existsSync(candidate)) continue;
       const pkg = JSON.parse(fs.readFileSync(candidate, "utf-8")) as {
@@ -206,7 +224,7 @@ export function resolveMenuCliVersion(): string {
   } catch {
     // fall through
   }
-  return "0.11.1";
+  return "0.0.0-development";
 }
 
 export function computeMenuSubtitle(items: MenuItem[], isSubmenu = false): string {

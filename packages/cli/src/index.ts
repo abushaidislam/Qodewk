@@ -22,7 +22,7 @@ import {
 import { ReceiptV1 } from "@qodewk/protocol";
 import { outputReceipt, renderTerminalReceipt, OutputOptions } from "./receipt-view.js";
 import { resolveGitHooksDir, installHookFile, uninstallHookFile } from "./hooks.js";
-import { runInteractiveMenu } from "./menu.js";
+import { runInteractiveMenu, resolveMenuCliVersion } from "./menu.js";
 import { formatDoctorReport, formatHookTestReport } from "./doctor-view.js";
 import { buildTerminalChatLedger, buildMarkdownChatLedger } from "./chat-view.js";
 
@@ -40,26 +40,7 @@ type HarvestCliOptions = {
   anon?: boolean;
 };
 
-function resolveCliVersion(): string {
-  try {
-    const argv1 = process.argv[1] ? path.dirname(path.resolve(process.argv[1])) : process.cwd();
-    const candidates = [
-      path.join(argv1, "..", "package.json"),
-      path.join(argv1, "package.json")
-    ];
-    for (const candidate of candidates) {
-      if (!fs.existsSync(candidate)) continue;
-      const pkg = JSON.parse(fs.readFileSync(candidate, "utf-8")) as {
-        name?: string;
-        version?: string;
-      };
-      if (pkg.name === "qodewk" && pkg.version) return pkg.version;
-    }
-  } catch {
-    // fall through
-  }
-  return "0.11.1";
-}
+const resolveCliVersion = resolveMenuCliVersion;
 
 function resolveSince(options: HarvestCliOptions): string | undefined {
   return options.today ? "today" : options.since;

@@ -1,4 +1,6 @@
 import { describe, it, expect } from "vitest";
+import * as fs from "node:fs";
+import * as path from "node:path";
 import {
   auditAgentEnvironments,
   auditGitHooks,
@@ -7,6 +9,8 @@ import {
   auditPricingSync,
   runDiagnostics
 } from "../src/index.js";
+
+const corePkg = JSON.parse(fs.readFileSync(path.resolve(__dirname, "../package.json"), "utf-8"));
 
 describe("Doctor Diagnostic Suite (`doctor.ts`)", () => {
   describe("auditAgentEnvironments", () => {
@@ -81,7 +85,8 @@ describe("Doctor Diagnostic Suite (`doctor.ts`)", () => {
       const report = await runDiagnostics();
       expect(report).toBeDefined();
       expect(["healthy", "warning", "error"]).toContain(report.overallStatus);
-      expect(report.version).toBe("0.11.1");
+      expect(report.version).toBe(corePkg.version);
+      expect(report.version).toMatch(/^\d+\.\d+\.\d+/);
       expect(report.timestamp).toBeDefined();
       expect(report.agents).toBeDefined();
       expect(report.hooks).toBeDefined();

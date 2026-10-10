@@ -1,10 +1,12 @@
 import { describe, it, expect } from "vitest";
 import { execSync } from "node:child_process";
 import * as path from "node:path";
+import * as fs from "node:fs";
 import { formatDoctorReport, formatHookTestReport } from "../src/doctor-view.js";
 import { DiagnosticReport } from "@qodewk/core";
 
 const binPath = path.resolve(__dirname, "../dist/index.cjs");
+const cliPkg = JSON.parse(fs.readFileSync(path.resolve(__dirname, "../package.json"), "utf-8"));
 
 describe("Qodewk CLI Doctor & Hook Diagnostics (`doctor.test.ts`)", () => {
   describe("formatDoctorReport", () => {
@@ -94,7 +96,8 @@ describe("Qodewk CLI Doctor & Hook Diagnostics (`doctor.test.ts`)", () => {
       const stdout = execSync(`node "${binPath}" doctor --json`, { encoding: "utf-8" });
       const parsed = JSON.parse(stdout);
       expect(parsed).toHaveProperty("overallStatus");
-      expect(parsed).toHaveProperty("version", "0.11.1");
+      expect(parsed).toHaveProperty("version", cliPkg.version);
+      expect(parsed.version).toMatch(/^\d+\.\d+\.\d+/);
       expect(parsed).toHaveProperty("agents");
       expect(parsed).toHaveProperty("hooks");
       expect(parsed).toHaveProperty("benchmark");

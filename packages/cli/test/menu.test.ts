@@ -12,8 +12,10 @@ import { checkHookStatus } from "../src/hooks.js";
 import { stripAnsi } from "../src/theme.js";
 import { execSync } from "node:child_process";
 import path from "node:path";
+import * as fs from "node:fs";
 
 const binPath = path.resolve(__dirname, "../dist/index.cjs");
+const cliPkg = JSON.parse(fs.readFileSync(path.resolve(__dirname, "../package.json"), "utf-8"));
 
 // Pictographic emojis (e.g. 🧾, 🔍, 🌐, ⚓, ❌, 🚀, etc.)
 const EMOJI_REGEX = /[\u{1F300}-\u{1F5FF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{1F900}-\u{1F9FF}\u{1FA70}-\u{1FAFF}\u{274C}\u{274E}\u{2705}]/u;
@@ -81,7 +83,7 @@ describe("Qodewk CLI Menu System (`menu.test.ts`)", () => {
       expect(plain).toContain("██████╗");
       expect(plain).toContain("┌");
       expect(plain).toContain("qodewk");
-      expect(plain).toContain("v0.11.1");
+      expect(plain).toContain(`v${cliPkg.version}`);
       expect(plain).toContain("◇");
       expect(plain).toContain("Repository:");
       expect(plain).toContain("◆");
@@ -166,6 +168,7 @@ describe("Qodewk CLI Menu System (`menu.test.ts`)", () => {
 
     it("resolves CLI version dynamically from package manifest", () => {
       const ver = resolveMenuCliVersion();
+      expect(ver).toBe(cliPkg.version);
       expect(ver).toMatch(/^\d+\.\d+\.\d+/);
       const frame = stripAnsi(buildMenuFrame(0));
       expect(frame).toContain(`v${ver}`);
