@@ -135,6 +135,16 @@ export const RATE_CARDS: Record<string, ModelRateCard> = {
     cacheWritePerMTok: 0.1,
     contextWindow: 1_000_000
   },
+  "gemini-3-6-flash": {
+    id: "gemini-3-6-flash",
+    provider: "google",
+    name: "Gemini 3.6 Flash",
+    inputPerMTok: 0.1,
+    outputPerMTok: 0.4,
+    cacheReadPerMTok: 0.025,
+    cacheWritePerMTok: 0.1,
+    contextWindow: 1_000_000
+  },
   "gemini-2-5-pro": {
     id: "gemini-2-5-pro",
     provider: "google",
@@ -248,9 +258,14 @@ export const MODEL_ALIASES: Record<string, string> = {
   "gemini-3-1-pro": "gemini-2-5-pro",
   "gemini-3-pro": "gemini-2-5-pro",
   "gemini-3-1-flash": "gemini-3-8-flash",
+  "gemini-3.8-flash": "gemini-3-8-flash",
+  "gemini-3.6-flash": "gemini-3-6-flash",
+  "gemini-3-6": "gemini-3-6-flash",
   "gemini-2.0-flash": "gemini-2-0-flash",
   "gemini-1.5-pro": "gemini-1-5-pro",
   "gemini-1.5-flash": "gemini-2-0-flash",
+  "google/gemini-3.8-flash": "gemini-3-8-flash",
+  "google/gemini-3.6-flash": "gemini-3-6-flash",
 
   // DeepSeek aliases
   "deepseek-chat": "deepseek-v3",
