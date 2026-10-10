@@ -183,8 +183,14 @@ export function auditAgentEnvironments(repoPath: string = process.cwd()): AgentA
  * Resolves the Git hooks directory, supporting normal git repos and worktrees.
  */
 export function resolveHooksDir(cwd: string = process.cwd()): string | null {
-  const gitPath = path.join(cwd, ".git");
-  if (!fs.existsSync(gitPath)) return null;
+  let curr = path.resolve(cwd);
+  let gitPath = path.join(curr, ".git");
+  while (!fs.existsSync(gitPath)) {
+    const parent = path.dirname(curr);
+    if (parent === curr) return null;
+    curr = parent;
+    gitPath = path.join(curr, ".git");
+  }
 
   try {
     const stat = fs.statSync(gitPath);
@@ -199,7 +205,7 @@ export function resolveHooksDir(cwd: string = process.cwd()): string | null {
 
     let gitDir = match[1].trim();
     if (!path.isAbsolute(gitDir)) {
-      gitDir = path.resolve(cwd, gitDir);
+      gitDir = path.resolve(curr, gitDir);
     }
 
     const commonFile = path.join(gitDir, "commondir");
@@ -383,7 +389,7 @@ export async function runDiagnostics(options: { repoPath?: string } = {}): Promi
 
   return {
     overallStatus,
-    version: "0.10.1",
+    version: "0.11.0",
     timestamp: new Date().toISOString(),
     repoPath,
     agents,

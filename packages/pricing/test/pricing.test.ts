@@ -24,6 +24,9 @@ describe("@qodewk/pricing", () => {
     it("fuzzy matches Gemini model strings", () => {
       expect(getRateCard("google/gemini-2.0-flash-exp")).toEqual(RATE_CARDS["gemini-3-8-flash"]);
       expect(getRateCard("gemini-1.5-pro-latest")).toEqual(RATE_CARDS["gemini-2-5-pro"]);
+      expect(getRateCard("gemini-3.8-flash")).toEqual(RATE_CARDS["gemini-3-8-flash"]);
+      expect(getRateCard("gemini-3.6-flash")).toEqual(RATE_CARDS["gemini-3-6-flash"]);
+      expect(getRateCard("gemini-3-6")).toEqual(RATE_CARDS["gemini-3-6-flash"]);
     });
 
     it("falls back to default rate card for unrecognized model strings", () => {

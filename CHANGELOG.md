@@ -3,6 +3,22 @@
 All notable changes to the **Qodewk** monorepo are documented in this file.  
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.0] — 2026-10-10
+
+### 🚀 Added
+
+- **Workspace Chat Telemetry Ledger (`qodewk chats`):** Introduced a dedicated CLI command and core engine that inspects all AI agent chat sessions (Antigravity, Cursor, Claude Code, Windsurf, Cline) across the active workspace, calculating token usage and dollar cost for each individual conversation session alongside a grand total workspace spend.
+- **Itemized Sessions on Digital Receipts:** Terminal receipt (`qodewk`) and Web thermal receipt card (`apps/web` on `/r/[id]`) now display an itemized breakdown of contributing chat sessions, showing task/chat titles, detected model badges, token metrics, and individual dollar costs.
+- **Interactive TUI Menu Parity:** Integrated `[8] Workspace Chats & Cost Ledger` (with `8` and `C` hotkey jump) into the interactive terminal control panel (`qodewk menu` / `npx qodewk -i`), ensuring 100% discoverability without requiring shell flags.
+- **Enriched ProviderSession Protocol Contract:** Updated `ProviderSessionSchema` in `@qodewk/protocol` to optionally record `sessionId`, `turnsCount`, and `createdAt` ISO timestamps while maintaining strict backward compatibility with `ReceiptV1`.
+- **Expanded Rate Cards & Model Aliases:** Added Gemini 3.6 Flash rate card and dotted model aliases (`gemini-3.8-flash`, `gemini-3.6-flash`, `gemini-3-6`) to `@qodewk/pricing`.
+- **Refined Brand Identity & Vector Marks:** Updated high-resolution logo mark, clean wordmark, and 3D hero brand visual assets across `apps/web`.
+
+### 🛡️ Fixed & Changed
+
+- **Cross-Platform Path Sanitization:** Enhanced file path normalization in harvester scoring to strip JSON-escaped quotes and redundant slashes from Antigravity and Cursor transcripts.
+- **Git Hooks Discovery in Monorepos:** Made `resolveHooksDir` in `@qodewk/core` recursively traverse parent directories to reliably locate `.git` repository roots when invoked from nested workspace packages.
+
 ## [0.10.1] — 2026-10-08
 
 ### 🛡️ Fixed & Changed

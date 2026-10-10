@@ -1,3 +1,4 @@
+import * as path from "node:path";
 import { harvestAntigravityFootprints } from "./antigravity.js";
 import { harvestClaudeFootprints } from "./claude.js";
 import { harvestCursorFootprints } from "./cursor.js";
@@ -74,6 +75,140 @@ export interface UniversalHarvestResult {
   confidence: number;
 }
 
+export function harvestRawPlatformFootprints(
+  repoPath: string,
+  alias: string,
+  sinceDate?: Date,
+  platform?: string
+): AgentFootprint[] {
+  const allFootprints: AgentFootprint[] = [];
+
+  // 1. Harvest Google Antigravity
+  if (!platform || platform === "all" || platform === "antigravity") {
+    const agFootprints = harvestAntigravityFootprints(repoPath, sinceDate);
+    allFootprints.push(...agFootprints);
+  }
+
+  // 2. Harvest Claude Code CLI
+  if (!platform || platform === "all" || platform === "claude") {
+    const claudeFootprints = harvestClaudeFootprints(repoPath, alias, sinceDate);
+    allFootprints.push(...claudeFootprints);
+  }
+
+  // 3. Harvest Cursor IDE
+  if (!platform || platform === "all" || platform === "cursor") {
+    const cursorFootprints = harvestCursorFootprints(repoPath, sinceDate);
+    allFootprints.push(...cursorFootprints);
+  }
+
+  // 4. Harvest Aider CLI
+  if (!platform || platform === "all" || platform === "aider") {
+    const aiderFootprints = harvestAiderFootprints(repoPath, sinceDate);
+    allFootprints.push(...aiderFootprints);
+  }
+
+  // 5. Harvest Windsurf IDE
+  if (!platform || platform === "all" || platform === "windsurf") {
+    const windsurfFootprints = harvestWindsurfFootprints(repoPath, sinceDate);
+    allFootprints.push(...windsurfFootprints);
+  }
+
+  // 6. Harvest Cline / Roo Code IDE extension
+  if (!platform || platform === "all" || platform === "cline") {
+    const clineFootprints = harvestClineFootprints(repoPath, sinceDate);
+    allFootprints.push(...clineFootprints);
+  }
+
+  // 7. Harvest OpenCode CLI
+  if (!platform || platform === "all" || platform === "opencode") {
+    const opencodeFootprints = harvestOpenCodeFootprints(repoPath, sinceDate);
+    allFootprints.push(...opencodeFootprints);
+  }
+
+  return allFootprints;
+}
+
+export interface ProjectChatsOptions {
+  repoPath?: string;
+  projectAlias?: string;
+  since?: string | Date;
+  platform?: string;
+  all?: boolean;
+}
+
+export interface ProjectChatsReport {
+  repoPath: string;
+  projectAlias: string;
+  windowDescription: string;
+  totalCost: number;
+  totalTokens: {
+    input: number;
+    output: number;
+    cached: number;
+  };
+  totalSteps: number;
+  sessionsCount: number;
+  chats: AgentFootprint[];
+}
+
+export async function listProjectChats(
+  options: ProjectChatsOptions = {}
+): Promise<ProjectChatsReport> {
+  const repoPath = options.repoPath || process.cwd();
+  const alias = options.projectAlias || path.basename(path.resolve(repoPath)) || "project";
+
+  let sinceDate: Date | undefined;
+  let windowDescription = "All-time";
+
+  if (!options.all) {
+    if (options.since) {
+      sinceDate = parseSinceOption(options.since);
+      windowDescription =
+        typeof options.since === "string"
+          ? `Since ${options.since}`
+          : `Since ${options.since.toISOString().slice(0, 10)}`;
+    } else {
+      // Default to last 30 days
+      sinceDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+      windowDescription = "Last 30 Days";
+    }
+  }
+
+  const allFootprints = harvestRawPlatformFootprints(repoPath, alias, sinceDate, options.platform);
+
+  // Sort newest first
+  allFootprints.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
+  let totalInput = 0;
+  let totalOutput = 0;
+  let totalCached = 0;
+  let totalCost = 0;
+  let totalSteps = 0;
+
+  for (const fp of allFootprints) {
+    totalInput += fp.tokens.input;
+    totalOutput += fp.tokens.output;
+    totalCached += fp.tokens.cached;
+    totalCost += fp.cost;
+    totalSteps += fp.stepsCount || 0;
+  }
+
+  return {
+    repoPath,
+    projectAlias: alias,
+    windowDescription,
+    totalCost: Number(totalCost.toFixed(4)),
+    totalTokens: {
+      input: totalInput,
+      output: totalOutput,
+      cached: totalCached
+    },
+    totalSteps,
+    sessionsCount: allFootprints.length,
+    chats: allFootprints
+  };
+}
+
 export async function harvestUniversalFootprints(
   options: HarvestOptions
 ): Promise<UniversalHarvestResult> {
@@ -82,49 +217,12 @@ export async function harvestUniversalFootprints(
   // that occurred just before the commit boundary (e.g. working late at night, committing next morning).
   const sinceDate = parsedSince ? new Date(parsedSince.getTime() - 24 * 60 * 60 * 1000) : undefined;
   const alias = options.projectAlias || "";
-  let allFootprints: AgentFootprint[] = [];
-
-  // 1. Harvest Google Antigravity
-  if (!options.platform || options.platform === "all" || options.platform === "antigravity") {
-    const agFootprints = harvestAntigravityFootprints(options.repoPath, sinceDate);
-    allFootprints.push(...agFootprints);
-  }
-
-  // 2. Harvest Claude Code CLI
-  if (!options.platform || options.platform === "all" || options.platform === "claude") {
-    const claudeFootprints = harvestClaudeFootprints(options.repoPath, alias, sinceDate);
-    allFootprints.push(...claudeFootprints);
-  }
-
-  // 3. Harvest Cursor IDE
-  if (!options.platform || options.platform === "all" || options.platform === "cursor") {
-    const cursorFootprints = harvestCursorFootprints(options.repoPath, sinceDate);
-    allFootprints.push(...cursorFootprints);
-  }
-
-  // 4. Harvest Aider CLI
-  if (!options.platform || options.platform === "all" || options.platform === "aider") {
-    const aiderFootprints = harvestAiderFootprints(options.repoPath, sinceDate);
-    allFootprints.push(...aiderFootprints);
-  }
-
-  // 5. Harvest Windsurf IDE
-  if (!options.platform || options.platform === "all" || options.platform === "windsurf") {
-    const windsurfFootprints = harvestWindsurfFootprints(options.repoPath, sinceDate);
-    allFootprints.push(...windsurfFootprints);
-  }
-
-  // 6. Harvest Cline / Roo Code IDE extension
-  if (!options.platform || options.platform === "all" || options.platform === "cline") {
-    const clineFootprints = harvestClineFootprints(options.repoPath, sinceDate);
-    allFootprints.push(...clineFootprints);
-  }
-
-  // 7. Harvest OpenCode CLI
-  if (!options.platform || options.platform === "all" || options.platform === "opencode") {
-    const opencodeFootprints = harvestOpenCodeFootprints(options.repoPath, sinceDate);
-    allFootprints.push(...opencodeFootprints);
-  }
+  let allFootprints: AgentFootprint[] = harvestRawPlatformFootprints(
+    options.repoPath,
+    alias,
+    sinceDate,
+    options.platform
+  );
 
   // 8. Harvest Git Commit Trailers (Copilot, Claude, Cursor, Aider, Windsurf, Cline, OpenCode co-authors)
   if (options.gitContext?.commitMessage) {
@@ -137,7 +235,7 @@ export async function harvestUniversalFootprints(
     allFootprints.push(...trailerFps);
   }
 
-  // 7. Score, rank, and filter footprints using commit-bound attribution
+  // Score, rank, and filter footprints using commit-bound attribution
   const { primary, rankedFootprints } = selectPrimaryFootprint(allFootprints, options.gitContext);
   
   // Filter out irrelevant/stale sessions that received penalties (score < 0.10)

@@ -12,12 +12,12 @@ const EMOJI_REGEX = /[\u{1F300}-\u{1F5FF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\
 
 describe("Qodewk CLI Menu System (`menu.test.ts`)", () => {
   describe("Menu Items Definition", () => {
-    it("defines 8 core menu options covering 100% of CLI features", () => {
-      expect(MENU_ITEMS).toHaveLength(8);
+    it("defines 9 core menu options covering 100% of CLI features", () => {
+      expect(MENU_ITEMS).toHaveLength(9);
       const keys = MENU_ITEMS.map((item) => item.key);
       const uniqueKeys = new Set(keys);
-      expect(uniqueKeys.size).toBe(8);
-      expect(keys).toEqual(["1", "2", "3", "4", "5", "6", "7", "0"]);
+      expect(uniqueKeys.size).toBe(9);
+      expect(keys).toEqual(["1", "2", "3", "4", "5", "6", "7", "8", "0"]);
       expect(MENU_ITEMS.map((m) => m.id)).toEqual([
         "receipt",
         "audit",
@@ -26,6 +26,7 @@ describe("Qodewk CLI Menu System (`menu.test.ts`)", () => {
         "storage",
         "notes",
         "doctor",
+        "chats",
         "exit"
       ]);
     });
@@ -72,7 +73,7 @@ describe("Qodewk CLI Menu System (`menu.test.ts`)", () => {
       expect(plain).toContain("██████╗");
       expect(plain).toContain("┌");
       expect(plain).toContain("qodewk");
-      expect(plain).toContain("v0.10.1");
+      expect(plain).toContain("v0.11.0");
       expect(plain).toContain("◇");
       expect(plain).toContain("Repository:");
       expect(plain).toContain("◆");
@@ -112,10 +113,15 @@ describe("Qodewk CLI Menu System (`menu.test.ts`)", () => {
       expect(frame6).toContain("› 7  System Health & Diagnostics");
       expect(frame6).not.toContain("› 6  Git Notes Management");
 
-      // Selected index 7 -> 0 Exit
+      // Selected index 7 -> 8 Workspace Chats & Cost Ledger
       const frame7 = stripAnsi(buildMenuFrame(7));
-      expect(frame7).toContain("› 0  Exit");
+      expect(frame7).toContain("› 8  Workspace Chats & Cost Ledger");
       expect(frame7).not.toContain("› 7  System Health & Diagnostics");
+
+      // Selected index 8 -> 0 Exit
+      const frame8 = stripAnsi(buildMenuFrame(8));
+      expect(frame8).toContain("› 0  Exit");
+      expect(frame8).not.toContain("› 8  Workspace Chats & Cost Ledger");
     });
 
     it("keeps line count stable across menu selection changes for flicker-free redraws", () => {

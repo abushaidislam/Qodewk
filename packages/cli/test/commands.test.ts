@@ -91,4 +91,17 @@ describe("qodewk CLI Command Execution (`commands.test.ts`)", { timeout: 20000 }
     expect(parsed.ai.provider).toBe("anthropic");
     expect(parsed.ai.model).toBe("claude-sonnet-4");
   });
+
+  it("executes qodewk chats --json and returns workspace chats ledger", () => {
+    const rawOut = execSync(`node "${binPath}" chats --json`, {
+      encoding: "utf-8",
+      cwd: process.cwd()
+    });
+
+    const parsed = JSON.parse(rawOut);
+    expect(parsed.repoPath).toBeDefined();
+    expect(parsed.windowDescription).toBeDefined();
+    expect(typeof parsed.totalCost).toBe("number");
+    expect(Array.isArray(parsed.chats)).toBe(true);
+  });
 });

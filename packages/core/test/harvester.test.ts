@@ -4,7 +4,8 @@ import {
   harvestAntigravityFootprints,
   harvestClaudeFootprints,
   harvestCursorFootprints,
-  harvestUniversalFootprints
+  harvestUniversalFootprints,
+  listProjectChats
 } from "../src/harvester/index.js";
 import path from "node:path";
 import os from "node:os";
@@ -111,6 +112,46 @@ describe("Universal Agent Footprint Harvesters (`harvester/`)", () => {
       });
 
       expect(result.platforms.every((p) => p === "claude" || p === "anthropic")).toBe(true);
+    }, 45_000);
+  });
+
+  describe("listProjectChats", () => {
+    it("returns a structured ProjectChatsReport with default 30-day window", async () => {
+      const report = await listProjectChats({
+        repoPath: process.cwd()
+      });
+
+      expect(report).toBeDefined();
+      expect(report.repoPath).toBe(process.cwd());
+      expect(report.windowDescription).toBe("Last 30 Days");
+      expect(typeof report.totalCost).toBe("number");
+      expect(report.totalTokens).toHaveProperty("input");
+      expect(report.totalTokens).toHaveProperty("output");
+      expect(report.totalTokens).toHaveProperty("cached");
+      expect(typeof report.sessionsCount).toBe("number");
+      expect(Array.isArray(report.chats)).toBe(true);
+      expect(report.chats.length).toBe(report.sessionsCount);
+    }, 45_000);
+
+    it("respects options.all by setting windowDescription to All-time", async () => {
+      const report = await listProjectChats({
+        repoPath: process.cwd(),
+        all: true
+      });
+
+      expect(report.windowDescription).toBe("All-time");
+      expect(Array.isArray(report.chats)).toBe(true);
+    }, 45_000);
+
+    it("handles non-existent repository path gracefully without errors", async () => {
+      const report = await listProjectChats({
+        repoPath: path.join(os.tmpdir(), "qodewk-nonexistent-project-xyz"),
+        all: true
+      });
+
+      expect(report.sessionsCount).toBe(0);
+      expect(report.totalCost).toBe(0);
+      expect(report.chats).toEqual([]);
     }, 45_000);
   });
 });
