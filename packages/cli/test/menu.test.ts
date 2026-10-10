@@ -1,5 +1,13 @@
 import { describe, it, expect } from "vitest";
-import { buildMenuFrame, MENU_ITEMS, RECEIPT_HORIZON_ITEMS, SHARE_HORIZON_ITEMS, BANNER_LINES } from "../src/menu.js";
+import {
+  buildMenuFrame,
+  computeMenuSubtitle,
+  resolveMenuCliVersion,
+  MENU_ITEMS,
+  RECEIPT_HORIZON_ITEMS,
+  SHARE_HORIZON_ITEMS,
+  BANNER_LINES
+} from "../src/menu.js";
 import { checkHookStatus } from "../src/hooks.js";
 import { stripAnsi } from "../src/theme.js";
 import { execSync } from "node:child_process";
@@ -73,7 +81,7 @@ describe("Qodewk CLI Menu System (`menu.test.ts`)", () => {
       expect(plain).toContain("██████╗");
       expect(plain).toContain("┌");
       expect(plain).toContain("qodewk");
-      expect(plain).toContain("v0.11.0");
+      expect(plain).toContain("v0.11.1");
       expect(plain).toContain("◇");
       expect(plain).toContain("Repository:");
       expect(plain).toContain("◆");
@@ -132,6 +140,35 @@ describe("Qodewk CLI Menu System (`menu.test.ts`)", () => {
       }
       const allEqual = counts.every((c) => c === counts[0]);
       expect(allEqual).toBe(true);
+    });
+
+    it("dynamically calculates quick jump range in subtitle based on menu items", () => {
+      // Main menu (keys 1-8 and 0) -> 0-8 quick jump
+      const mainSub = computeMenuSubtitle(MENU_ITEMS, false);
+      expect(mainSub).toBe("↑↓ move · enter select · 0-8 quick jump · q quit");
+
+      // Submenu (keys 1-5 and 0) -> 0-5 quick jump
+      const subSub = computeMenuSubtitle(RECEIPT_HORIZON_ITEMS, true);
+      expect(subSub).toBe("↑↓ move · enter select · 0-5 quick jump · esc / 0 back");
+
+      // Custom menu with 9 items -> 0-9 quick jump
+      const extendedItems = [
+        ...MENU_ITEMS.filter((i) => i.key !== "0"),
+        { id: "extra", key: "9", label: "Extra Feature", description: "Test" },
+        { id: "exit", key: "0", label: "Exit", description: "Return" }
+      ];
+      expect(computeMenuSubtitle(extendedItems, false)).toBe("↑↓ move · enter select · 0-9 quick jump · q quit");
+
+      // Frame includes dynamic subtitle by default
+      const frame = stripAnsi(buildMenuFrame(0));
+      expect(frame).toContain("0-8 quick jump");
+    });
+
+    it("resolves CLI version dynamically from package manifest", () => {
+      const ver = resolveMenuCliVersion();
+      expect(ver).toMatch(/^\d+\.\d+\.\d+/);
+      const frame = stripAnsi(buildMenuFrame(0));
+      expect(frame).toContain(`v${ver}`);
     });
   });
 

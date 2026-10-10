@@ -50,10 +50,10 @@ export function useCommandMenu() {
 // ─── AI Suggestions ──────────────────────────────────────────────────────────
 
 const suggestions = [
-	"How to configure Sqlite database?",
-	"How to require email verification?",
-	"How to change session expiry?",
-	"How to share cookies across subdomains?",
+	"How to generate a privacy-safe digital receipt?",
+	"How to configure non-blocking Git hooks (< 5ms)?",
+	"How are multi-model rate cards calculated?",
+	"How to inspect workspace chat sessions and costs?",
 ];
 
 // ─── Provider ────────────────────────────────────────────────────────────────
@@ -488,7 +488,7 @@ function AIMode({
 						onChange={setInput}
 						onSubmit={onStart}
 						disabled={isLoading}
-						placeholder={isLoading ? "Answering..." : "Ask BA Bot..."}
+						placeholder={isLoading ? "Answering..." : "Ask Qodewk Bot..."}
 					/>
 					{isLoading ? (
 						<button
@@ -523,25 +523,7 @@ function AIMode({
 					<div className="flex flex-col gap-3">
 						<p className="text-xs text-muted-foreground">Try asking:</p>
 						<p className="text-xs text-muted-foreground/80">
-							We also offer{" "}
-							<a
-								href="https://docs.inkeep.com/talk-to-your-agents/vercel-ai-sdk/inkeep-provider#installation"
-								target="_blank"
-								rel="noreferrer"
-								className="underline hover:text-foreground transition-colors"
-							>
-								Skills
-							</a>{" "}
-							and{" "}
-							<a
-								href="https://docs.inkeep.com/talk-to-your-agents/vercel-ai-sdk/inkeep-provider#installation"
-								target="_blank"
-								rel="noreferrer"
-								className="underline hover:text-foreground transition-colors"
-							>
-								MCP servers
-							</a>{" "}
-							for local development integrations.
+							Qodewk provides universal telemetry and digital receipts across Antigravity, Cursor, Claude Code, Windsurf, and Cline.
 						</p>
 						<div className="flex flex-wrap gap-2">
 							{suggestions.map((s) => (

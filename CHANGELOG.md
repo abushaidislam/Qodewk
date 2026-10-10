@@ -3,13 +3,22 @@
 All notable changes to the **Qodewk** monorepo are documented in this file.  
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.1] — 2026-10-11
+
+### 🛡️ Fixed & Changed
+
+- **Dynamic CLI Menu Navigation & Subtitles:** Made terminal control panel quick-jump hints dynamically compute based on active menu items (`computeMenuSubtitle`), resolved CLI version from package manifests dynamically (`resolveMenuCliVersion`), eliminated double Enter prompts in storage management, and fixed submenu exit key `0` returning immediately without extra prompts.
+- **Graceful Terminal Signal Handling:** Added immediate clean exit handling for `Ctrl+C` (`SIGINT`) during interactive raw keypress waiting states.
+- **Submenu Selection State Persistence:** Preserved active menu item cursor position across submenu transitions instead of resetting to index 0.
+- **Web Command Menu Modernization:** Replaced stale Better Auth question prompts and placeholders with Qodewk-native AI queries and updated documentation search collection references.
+
 ## [0.11.0] — 2026-10-10
 
 ### 🚀 Added
 
 - **Workspace Chat Telemetry Ledger (`qodewk chats`):** Introduced a dedicated CLI command and core engine that inspects all AI agent chat sessions (Antigravity, Cursor, Claude Code, Windsurf, Cline) across the active workspace, calculating token usage and dollar cost for each individual conversation session alongside a grand total workspace spend.
 - **Itemized Sessions on Digital Receipts:** Terminal receipt (`qodewk`) and Web thermal receipt card (`apps/web` on `/r/[id]`) now display an itemized breakdown of contributing chat sessions, showing task/chat titles, detected model badges, token metrics, and individual dollar costs.
-- **Interactive TUI Menu Parity:** Integrated `[8] Workspace Chats & Cost Ledger` (with `8` and `C` hotkey jump) into the interactive terminal control panel (`qodewk menu` / `npx qodewk -i`), ensuring 100% discoverability without requiring shell flags.
+- **Interactive TUI Menu Parity:** Integrated `[8] Workspace Chats & Cost Ledger` into the interactive terminal control panel (`qodewk menu` / `npx qodewk -i`), ensuring 100% discoverability without requiring shell flags.
 - **Enriched ProviderSession Protocol Contract:** Updated `ProviderSessionSchema` in `@qodewk/protocol` to optionally record `sessionId`, `turnsCount`, and `createdAt` ISO timestamps while maintaining strict backward compatibility with `ReceiptV1`.
 - **Expanded Rate Cards & Model Aliases:** Added Gemini 3.6 Flash rate card and dotted model aliases (`gemini-3.8-flash`, `gemini-3.6-flash`, `gemini-3-6`) to `@qodewk/pricing`.
 - **Refined Brand Identity & Vector Marks:** Updated high-resolution logo mark, clean wordmark, and 3D hero brand visual assets across `apps/web`.

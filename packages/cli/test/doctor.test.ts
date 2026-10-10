@@ -94,7 +94,7 @@ describe("Qodewk CLI Doctor & Hook Diagnostics (`doctor.test.ts`)", () => {
       const stdout = execSync(`node "${binPath}" doctor --json`, { encoding: "utf-8" });
       const parsed = JSON.parse(stdout);
       expect(parsed).toHaveProperty("overallStatus");
-      expect(parsed).toHaveProperty("version", "0.11.0");
+      expect(parsed).toHaveProperty("version", "0.11.1");
       expect(parsed).toHaveProperty("agents");
       expect(parsed).toHaveProperty("hooks");
       expect(parsed).toHaveProperty("benchmark");

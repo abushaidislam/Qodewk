@@ -389,7 +389,7 @@ export async function runDiagnostics(options: { repoPath?: string } = {}): Promi
 
   return {
     overallStatus,
-    version: "0.11.0",
+    version: "0.11.1",
     timestamp: new Date().toISOString(),
     repoPath,
     agents,

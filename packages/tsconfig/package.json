@@ -1,6 +1,6 @@
 {
   "name": "@qodewk/tsconfig",
-  "version": "0.11.0",
+  "version": "0.11.1",
   "description": "Shared TypeScript configurations for Qodewk monorepo",
   "private": true,
   "files": [

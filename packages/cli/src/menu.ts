@@ -1,5 +1,6 @@
 import * as readline from "node:readline";
 import * as path from "node:path";
+import * as fs from "node:fs";
 import pc from "picocolors";
 import {
   generateReceipt,
@@ -187,15 +188,58 @@ export interface BuildMenuFrameOptions {
   showBanner?: boolean;
 }
 
+export function resolveMenuCliVersion(): string {
+  try {
+    const argv1 = process.argv[1] ? path.dirname(path.resolve(process.argv[1])) : process.cwd();
+    const candidates = [
+      path.join(argv1, "..", "package.json"),
+      path.join(argv1, "package.json")
+    ];
+    for (const candidate of candidates) {
+      if (!fs.existsSync(candidate)) continue;
+      const pkg = JSON.parse(fs.readFileSync(candidate, "utf-8")) as {
+        name?: string;
+        version?: string;
+      };
+      if (pkg.name === "qodewk" && pkg.version) return pkg.version;
+    }
+  } catch {
+    // fall through
+  }
+  return "0.11.1";
+}
+
+export function computeMenuSubtitle(items: MenuItem[], isSubmenu = false): string {
+  const numericKeys = items
+    .map((item) => parseInt(item.key, 10))
+    .filter((n) => !isNaN(n) && n > 0);
+
+  const hasZero = items.some((item) => item.key === "0");
+  const maxKey = numericKeys.length > 0 ? Math.max(...numericKeys) : 0;
+
+  const jumpText =
+    hasZero && maxKey > 0
+      ? `0-${maxKey} quick jump`
+      : maxKey > 0
+      ? `1-${maxKey} quick jump`
+      : "enter select";
+
+  if (isSubmenu) {
+    return `↑↓ move · enter select · ${jumpText} · esc / 0 back`;
+  }
+  return `↑↓ move · enter select · ${jumpText} · q quit`;
+}
+
 export function buildMenuFrame(
   selectedIndex: number,
   items: MenuItem[] = MENU_ITEMS,
   title = "Telemetry Control Panel",
-  subtitle = "↑↓ move · enter select · 0-8 quick jump · q quit",
+  subtitle?: string,
   options: BuildMenuFrameOptions = {}
 ): string {
   const lines: string[] = [];
   const push = (line: string) => lines.push(line);
+  const effectiveSubtitle = subtitle ?? computeMenuSubtitle(items, items !== MENU_ITEMS);
 
   // 1. Layered Shadow Banner (if enabled)
   if (options.showBanner ?? true) {
@@ -209,7 +253,8 @@ export function buildMenuFrame(
   // 2. Top rail start with pill badge
   push("");
   const badge = bg.teal(pc.bold(colors.ink(" qodewk ")));
-  push(`  ${colors.mutedSoft("┌")}  ${badge}  ${pc.dim("v0.11.0")}`);
+  const cliVer = resolveMenuCliVersion();
+  push(`  ${colors.mutedSoft("┌")}  ${badge}  ${pc.dim(`v${cliVer}`)}`);
   push(`  ${colors.mutedSoft("│")}`);
 
   // 3. Status/Context nodes (◇)
@@ -264,7 +309,7 @@ export function buildMenuFrame(
   push(`  ${colors.mutedSoft("│")}`);
 
   // 7. Navigation footer and Trust badge
-  push(`  ${colors.mutedSoft("│")}  ${pc.dim(subtitle)}`);
+  push(`  ${colors.mutedSoft("│")}  ${pc.dim(effectiveSubtitle)}`);
   push(`  ${colors.mutedSoft("│")}  ${colors.green("[✓]")} ${pc.dim("Source code was never uploaded to Qodewk")}`);
   push(`  ${colors.mutedSoft("└")}`);
   push("");
@@ -295,9 +340,14 @@ function waitForKeyToReturn(): Promise<void> {
     const wasRaw = process.stdin.isRaw;
     process.stdin.setRawMode(true);
     process.stdin.resume();
-    const onKey = () => {
+    const onKey = (data?: Buffer) => {
       process.stdin.removeListener("data", onKey);
       if (wasRaw !== undefined) process.stdin.setRawMode(wasRaw);
+      if (data && (data[0] === 3 || data.toString() === "\u0003")) {
+        process.stdout.write("\x1b[?25h");
+        console.log(pc.dim("\n  Exited Qodewk.\n"));
+        process.exit(0);
+      }
       resolve();
     };
     process.stdin.once("data", onKey);
@@ -318,6 +368,11 @@ function waitForKeyOrAction(promptText: string): Promise<string> {
       process.stdin.removeListener("data", onKey);
       if (wasRaw !== undefined) process.stdin.setRawMode(wasRaw);
       const str = data.toString();
+      if (data[0] === 3 || str === "\u0003") {
+        process.stdout.write("\x1b[?25h");
+        console.log(pc.dim("\n  Exited Qodewk.\n"));
+        process.exit(0);
+      }
       resolve(str);
     };
     process.stdin.once("data", onKey);
@@ -429,6 +484,7 @@ export async function runInteractiveMenu(): Promise<void> {
 
   let currentScreen: "main" | "receipt_horizon" | "share_horizon" = "main";
   let selectedIndex = 0;
+  let savedMainIndex = 0;
   let active = true;
   let lastRenderedLinesCount = 0;
 
@@ -446,10 +502,7 @@ export async function runInteractiveMenu(): Promise<void> {
         : currentScreen === "receipt_horizon"
         ? "Generate Local Receipt"
         : "Publish Receipt to Cloud";
-    const subtitle =
-      currentScreen === "main"
-        ? "↑↓ move · enter select · 0-7 quick jump · q quit"
-        : "↑↓ move · enter select · 0-5 quick jump · esc / 0 back";
+    const subtitle = computeMenuSubtitle(items, currentScreen !== "main");
     const actionContext =
       currentScreen === "receipt_horizon"
         ? "Generate Local Receipt"
@@ -533,7 +586,7 @@ export async function runInteractiveMenu(): Promise<void> {
       await waitForKeyToReturn();
     }
     currentScreen = "main";
-    selectedIndex = 0;
+    selectedIndex = savedMainIndex;
   };
 
   const executeShareHorizon = async (item: MenuItem) => {
@@ -573,7 +626,7 @@ export async function runInteractiveMenu(): Promise<void> {
     }
     await waitForKeyToReturn();
     currentScreen = "main";
-    selectedIndex = 0;
+    selectedIndex = savedMainIndex;
   };
 
   const executeSelectedAction = async () => {
@@ -687,7 +740,9 @@ export async function runInteractiveMenu(): Promise<void> {
     console.log("");
 
     const choice = await askLine("  › Select option [0-3]: ");
-    if (choice === "1") {
+    if (choice === "0" || !choice) {
+      return;
+    } else if (choice === "1") {
       if (status.hooksDir) {
         const targets = ["post-commit", "post-rewrite"] as const;
         for (const t of targets) {
@@ -695,6 +750,7 @@ export async function runInteractiveMenu(): Promise<void> {
         }
         console.log(colors.green("\n  [✓] Non-blocking hooks installed successfully."));
       }
+      await waitForKeyToReturn();
     } else if (choice === "2") {
       if (status.hooksDir) {
         const targets = ["post-commit", "post-rewrite"] as const;
@@ -703,12 +759,16 @@ export async function runInteractiveMenu(): Promise<void> {
         }
         console.log(colors.green("\n  [✓] Qodewk hooks removed."));
       }
+      await waitForKeyToReturn();
     } else if (choice === "3") {
       const hooks = auditGitHooks();
       const bench = await benchmarkHookLatency();
       console.log(formatHookTestReport(hooks, bench));
+      await waitForKeyToReturn();
+    } else {
+      console.log(pc.yellow(`\n  Option '${choice}' is not recognized.`));
+      await waitForKeyToReturn();
     }
-    await waitForKeyToReturn();
   };
 
   const manageGitNotesSubmenu = async () => {
@@ -722,7 +782,9 @@ export async function runInteractiveMenu(): Promise<void> {
     console.log("");
 
     const choice = await askLine("  › Select option [0-3]: ");
-    if (choice === "1") {
+    if (choice === "0" || !choice) {
+      return;
+    } else if (choice === "1") {
       try {
         const shas = await listGitReceiptNotes();
         if (shas.length === 0) {
@@ -737,6 +799,7 @@ export async function runInteractiveMenu(): Promise<void> {
         const message = err instanceof Error ? err.message : String(err);
         console.error(pc.red(`\n  Error listing Git notes: ${message}`));
       }
+      await waitForKeyToReturn();
     } else if (choice === "2") {
       const commit = (await askLine("  › Commit SHA or ref [default: HEAD]: ")) || "HEAD";
       try {
@@ -750,6 +813,7 @@ export async function runInteractiveMenu(): Promise<void> {
         const message = err instanceof Error ? err.message : String(err);
         console.error(pc.red(`\n  Error reading Git note: ${message}`));
       }
+      await waitForKeyToReturn();
     } else if (choice === "3") {
       const commit = (await askLine("  › Commit SHA to attach note [default: HEAD]: ")) || "HEAD";
       try {
@@ -763,8 +827,11 @@ export async function runInteractiveMenu(): Promise<void> {
         const message = err instanceof Error ? err.message : String(err);
         console.error(pc.red(`\n  Error writing Git note: ${message}`));
       }
+      await waitForKeyToReturn();
+    } else {
+      console.log(pc.yellow(`\n  Option '${choice}' is not recognized.`));
+      await waitForKeyToReturn();
     }
-    await waitForKeyToReturn();
   };
 
   const showStorageStatus = async () => {
@@ -784,6 +851,10 @@ export async function runInteractiveMenu(): Promise<void> {
 
       if (recent.length === 0) {
         console.log(pc.dim("  No stored receipts yet. Run 'Generate Local Receipt' to record your first."));
+        console.log("");
+        console.log(`  ${colors.green("[✓]")} ${pc.dim("Privacy guarantee: raw source code is never stored in SQLite")}`);
+        await waitForKeyToReturn();
+        return;
       } else {
         console.log(pc.dim("  Recent Receipts:"));
         console.log(pc.dim("  " + "ID".padEnd(26) + "DATE".padEnd(12) + "BRANCH".padEnd(18) + "COST"));
@@ -811,15 +882,18 @@ export async function runInteractiveMenu(): Promise<void> {
             return;
           } else {
             console.log(pc.yellow(`  No stored receipt matching '${ans}' found.`));
+            await waitForKeyToReturn();
+            return;
           }
+        } else {
+          return;
         }
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       console.error(pc.red(`  Failed to inspect storage: ${message}`));
+      await waitForKeyToReturn();
     }
-
-    await waitForKeyToReturn();
   };
 
   const runDoctorDiagnosticsAction = async () => {
@@ -865,6 +939,45 @@ export async function runInteractiveMenu(): Promise<void> {
     process.stdin.resume();
     render();
 
+    const executeItem = async (selected: MenuItem) => {
+      if (currentScreen === "main") {
+        if (selected.id === "receipt") {
+          savedMainIndex = selectedIndex;
+          currentScreen = "receipt_horizon";
+          selectedIndex = 0;
+          if (active) startLoop();
+          return;
+        }
+        if (selected.id === "share") {
+          savedMainIndex = selectedIndex;
+          currentScreen = "share_horizon";
+          selectedIndex = 0;
+          if (active) startLoop();
+          return;
+        }
+        await executeSelectedAction();
+      } else if (currentScreen === "receipt_horizon") {
+        if (selected.id === "back") {
+          currentScreen = "main";
+          selectedIndex = savedMainIndex;
+          if (active) startLoop();
+          return;
+        }
+        await executeReceiptHorizon(selected);
+      } else if (currentScreen === "share_horizon") {
+        if (selected.id === "back") {
+          currentScreen = "main";
+          selectedIndex = savedMainIndex;
+          if (active) startLoop();
+          return;
+        }
+        await executeShareHorizon(selected);
+      }
+      if (active) {
+        startLoop();
+      }
+    };
+
     const onKeypress = async (_str: string, key: readline.Key) => {
       if (!active) return;
 
@@ -872,13 +985,14 @@ export async function runInteractiveMenu(): Promise<void> {
 
       if (key.ctrl && key.name === "c") {
         cleanup();
+        console.log(pc.dim("\n  Exited Qodewk.\n"));
         process.exit(0);
       }
 
       if (key.name === "q" || key.name === "escape") {
         if (currentScreen !== "main") {
           currentScreen = "main";
-          selectedIndex = 0;
+          selectedIndex = savedMainIndex;
           render();
           return;
         }
@@ -899,89 +1013,21 @@ export async function runInteractiveMenu(): Promise<void> {
         return;
       }
 
-      // Direct key mapping for numbers and hotkeys
+      // Direct key mapping for numbers / keys
       const itemByKey = items.findIndex(
-        (item) => item.key === key.name || item.key === _str || (_str && _str.toLowerCase() === "c" && item.id === "chats")
+        (item) => item.key === key.name || item.key === _str
       );
       if (itemByKey !== -1) {
         selectedIndex = itemByKey;
         render();
         process.stdin.removeListener("keypress", onKeypress);
-        const selected = items[selectedIndex];
-        if (currentScreen === "main") {
-          if (selected.id === "receipt") {
-            currentScreen = "receipt_horizon";
-            selectedIndex = 0;
-            if (active) startLoop();
-            return;
-          }
-          if (selected.id === "share") {
-            currentScreen = "share_horizon";
-            selectedIndex = 0;
-            if (active) startLoop();
-            return;
-          }
-          await executeSelectedAction();
-        } else if (currentScreen === "receipt_horizon") {
-          if (selected.id === "back") {
-            currentScreen = "main";
-            selectedIndex = 0;
-            if (active) startLoop();
-            return;
-          }
-          await executeReceiptHorizon(selected);
-        } else if (currentScreen === "share_horizon") {
-          if (selected.id === "back") {
-            currentScreen = "main";
-            selectedIndex = 0;
-            if (active) startLoop();
-            return;
-          }
-          await executeShareHorizon(selected);
-        }
-        if (active) {
-          startLoop();
-        }
+        await executeItem(items[selectedIndex]);
         return;
       }
 
       if (key.name === "return" || key.name === "enter") {
         process.stdin.removeListener("keypress", onKeypress);
-        const selected = items[selectedIndex];
-        if (currentScreen === "main") {
-          if (selected.id === "receipt") {
-            currentScreen = "receipt_horizon";
-            selectedIndex = 0;
-            if (active) startLoop();
-            return;
-          }
-          if (selected.id === "share") {
-            currentScreen = "share_horizon";
-            selectedIndex = 0;
-            if (active) startLoop();
-            return;
-          }
-          await executeSelectedAction();
-        } else if (currentScreen === "receipt_horizon") {
-          if (selected.id === "back") {
-            currentScreen = "main";
-            selectedIndex = 0;
-            if (active) startLoop();
-            return;
-          }
-          await executeReceiptHorizon(selected);
-        } else if (currentScreen === "share_horizon") {
-          if (selected.id === "back") {
-            currentScreen = "main";
-            selectedIndex = 0;
-            if (active) startLoop();
-            return;
-          }
-          await executeShareHorizon(selected);
-        }
-        if (active) {
-          startLoop();
-        }
+        await executeItem(items[selectedIndex]);
         return;
       }
     };
