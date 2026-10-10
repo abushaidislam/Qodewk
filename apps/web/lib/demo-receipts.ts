@@ -161,8 +161,23 @@ export const DEMO_RECEIPTS: Record<string, ReceiptV1> = {
           provider: "antigravity",
           model: "claude-sonnet-4-6-thinking",
           task: "Distributed tensor checkpointing",
-          tokens: { input: 65000, output: 7200, cached: 40000 },
-          cost: 0.34,
+          sessionId: "ag-sess-9b0d4e3f",
+          turnsCount: 8,
+          createdAt: "2026-10-02T11:20:00.000Z",
+          tokens: { input: 45000, output: 5200, cached: 28000 },
+          cost: 0.24,
+          confidence: 0.95,
+          mode: "verified"
+        },
+        {
+          provider: "antigravity",
+          model: "gemini-3-6-flash",
+          task: "Telemetry pipeline & buffer sync",
+          sessionId: "ag-sess-8a7c2b1e",
+          turnsCount: 4,
+          createdAt: "2026-10-02T11:38:00.000Z",
+          tokens: { input: 20000, output: 2000, cached: 12000 },
+          cost: 0.10,
           confidence: 0.95,
           mode: "verified"
         }

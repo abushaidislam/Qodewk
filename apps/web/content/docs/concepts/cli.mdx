@@ -65,6 +65,54 @@ qodewk audit --base origin/main
 
 ---
 
+### `qodewk chats`
+
+Audits workspace conversation sessions, turns, token consumption, and model-level cost across all supported AI coding agents (Antigravity, Cursor, Claude Code, Windsurf, Cline, OpenCode, Aider):
+
+```bash
+# List all agent chats from today with styled cost ledger
+qodewk chats --today
+
+# Filter by duration and specific AI platform
+qodewk chats -s 48h -p antigravity
+
+# Export chat breakdown as markdown or JSON
+qodewk chats --format markdown
+qodewk chats --json
+```
+
+#### Options:
+* `-s, --since <duration>` - Time window filter (`today`, `24h`, `7d`).
+* `--today` - Harvest chats active today.
+* `--all` - Harvest all available workspace chats without horizon limits.
+* `-p, --provider <provider>` - Filter by agent provider (`antigravity`, `claude`, `cursor`, `windsurf`, etc.).
+* `-j, --json` - Output chat ledger as machine-readable JSON.
+* `-f, --format <format>` - Output format (`terminal`, `json`, `markdown`).
+
+---
+
+### `qodewk doctor`
+
+Audits local AI agent environments, SQLite database integrity, Git configuration, and verifies sub-5ms detached hook latency:
+
+```bash
+# Run standard system diagnostics
+qodewk doctor
+
+# Run high-resolution detached hook latency benchmark
+qodewk doctor --benchmark
+
+# Verbose diagnostics with raw environment paths
+qodewk doctor --verbose
+```
+
+#### Options:
+* `--benchmark` - Measure detached Git hook invocation latency using `process.hrtime.bigint()`.
+* `--verbose` - Display full diagnostic detail across all 7 AI coding environments.
+* `--json` - Export system health metrics as JSON.
+
+---
+
 ### `qodewk share`
 
 Publishes a privacy-sanitized receipt payload to the public registry under the strict 50 KB ceiling and returns a public URL:

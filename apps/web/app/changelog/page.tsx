@@ -70,6 +70,119 @@ function getContent(content: string) {
 
 const FALLBACK_RELEASES: GitHubRelease[] = [
 	{
+		id: 110,
+		tag_name: "v0.11.0",
+		name: "v0.11.0 — Workspace Chat Telemetry & Itemized Receipt Ledgers",
+		published_at: "2026-10-10T16:18:08Z",
+		prerelease: false,
+		html_url: "https://github.com/abushaidislam/Qodewk/releases/tag/v0.11.0",
+		body: `## \`qodewk\`
+
+### Features
+
+- Added \`qodewk chats\` command with time filters (\`-s\`, \`--today\`, \`--all\`), provider flags, and JSON/markdown export formats. ([#19](https://github.com/abushaidislam/Qodewk/pull/19))
+- Integrated \`[8] Workspace Chats & Cost Ledger\` into interactive terminal control panel (\`qodewk menu\`, hotkey \`C\`). ([#19](https://github.com/abushaidislam/Qodewk/pull/19))
+- Added itemized session ledger breakdown directly to monospace terminal receipts. ([#19](https://github.com/abushaidislam/Qodewk/pull/19))
+
+For detailed changes, see [\`CHANGELOG\`](https://github.com/abushaidislam/Qodewk/blob/master/packages/cli/CHANGELOG.md)
+
+## \`@qodewk/core\`
+
+### Features
+
+- Added \`listProjectChats\` and \`harvestRawPlatformFootprints\` harvesting raw conversation sessions across 7 AI coding environments. ([#19](https://github.com/abushaidislam/Qodewk/pull/19))
+- Added session attribution scoring with token and model cost estimation per conversation. ([#19](https://github.com/abushaidislam/Qodewk/pull/19))
+
+### Bug Fixes
+
+- Strip wrapping quotes and sanitize absolute path normalization in harvester scoring. ([#19](https://github.com/abushaidislam/Qodewk/pull/19))
+
+For detailed changes, see [\`CHANGELOG\`](https://github.com/abushaidislam/Qodewk/blob/master/packages/core/CHANGELOG.md)
+
+## \`@qodewk/web\`
+
+### Features
+
+- Render itemized contributing chat sessions with model badges and cost ledger on \`ThermalReceipt\` card. ([#19](https://github.com/abushaidislam/Qodewk/pull/19))
+- Updated main logo mark, wordmark and 3D hero brand assets. ([#17](https://github.com/abushaidislam/Qodewk/pull/17), [#18](https://github.com/abushaidislam/Qodewk/pull/18))
+
+For detailed changes, see [\`CHANGELOG\`](https://github.com/abushaidislam/Qodewk/blob/master/apps/web/CHANGELOG.md)
+
+## \`@qodewk/pricing\`
+
+### Features
+
+- Added Gemini 3.6 Flash rate card ($0.10 input / $0.40 output / $0.025 cache read per MTok) and dotted aliases. ([#19](https://github.com/abushaidislam/Qodewk/pull/19))
+
+For detailed changes, see [\`CHANGELOG\`](https://github.com/abushaidislam/Qodewk/blob/master/packages/pricing/CHANGELOG.md)
+
+## \`@qodewk/protocol\`
+
+### Features
+
+- Enriched \`ProviderSessionSchema\` with \`sessionId\`, \`turnsCount\`, and \`createdAt\` for backward-compatible chat tracing. ([#19](https://github.com/abushaidislam/Qodewk/pull/19))
+
+For detailed changes, see [\`CHANGELOG\`](https://github.com/abushaidislam/Qodewk/blob/master/packages/protocol/CHANGELOG.md)
+
+## Contributors
+
+Thanks to everyone who contributed to this release:
+
+@abushaidislam
+
+**Full changelog:** [\`v0.10.1...v0.11.0\`](https://github.com/abushaidislam/Qodewk/compare/v0.10.1...v0.11.0)`,
+	},
+	{
+		id: 101,
+		tag_name: "v0.10.1",
+		name: "v0.10.1 — Conventional Commits Pipeline & Time Horizon Padding",
+		published_at: "2026-10-08T15:01:15Z",
+		prerelease: false,
+		html_url: "https://github.com/abushaidislam/Qodewk/releases/tag/v0.10.1",
+		body: `## \`qodewk\`
+
+### Features
+
+- Codify Conventional Commits mandate for automated changelog generation.
+- Add time-horizon submenu for cloud share in interactive menu.
+- Integrate smart Better Auth release generator pipeline and test suite.
+
+### Bug Fixes
+
+- Pad harvester time horizon and normalize file overlap ratio for v0.10.1.
+
+For detailed changes, see [\`CHANGELOG\`](https://github.com/abushaidislam/Qodewk/blob/master/packages/cli/CHANGELOG.md)
+
+## \`@qodewk/core\`
+
+### Bug Fixes
+
+- Pad harvester time horizon and normalize file overlap ratio for v0.10.1.
+
+For detailed changes, see [\`CHANGELOG\`](https://github.com/abushaidislam/Qodewk/blob/master/packages/core/CHANGELOG.md)
+
+## \`@qodewk/web\`
+
+### Features
+
+- Align v0.10.0 release notes with Better Auth package-level structure and contributors.
+
+### Bug Fixes
+
+- Pad harvester time horizon and normalize file overlap ratio for v0.10.1.
+- Set 60-second ISR revalidation for /changelog instead of static caching.
+
+For detailed changes, see [\`CHANGELOG\`](https://github.com/abushaidislam/Qodewk/blob/master/apps/web/CHANGELOG.md)
+
+## Contributors
+
+Thanks to everyone who contributed to this release:
+
+@abushaidislam
+
+**Full changelog:** [\`v0.10.0...v0.10.1\`](https://github.com/abushaidislam/Qodewk/compare/v0.10.0...v0.10.1)`,
+	},
+	{
 		id: 100,
 		tag_name: "v0.10.0",
 		name: "v0.10.0 — System Diagnostics, Hook Latency Benchmarks & Release CI",

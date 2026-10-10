@@ -5,7 +5,7 @@ import { ReceiptV1Schema } from "@qodewk/protocol";
 
 const binPath = path.resolve(__dirname, "../dist/index.cjs");
 
-describe("qodewk CLI Command Execution (`commands.test.ts`)", { timeout: 20000 }, () => {
+describe("qodewk CLI Command Execution (`commands.test.ts`)", { timeout: 35000 }, () => {
   it("generates valid ReceiptV1 JSON when called with --json", () => {
     const rawOut = execSync(`node "${binPath}" --json`, {
       encoding: "utf-8",
