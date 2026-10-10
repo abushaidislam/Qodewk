@@ -1,3 +1,4 @@
+import * as path from "node:path";
 import { harvestAntigravityFootprints } from "./antigravity.js";
 import { harvestClaudeFootprints } from "./claude.js";
 import { harvestCursorFootprints } from "./cursor.js";
@@ -154,7 +155,7 @@ export async function listProjectChats(
   options: ProjectChatsOptions = {}
 ): Promise<ProjectChatsReport> {
   const repoPath = options.repoPath || process.cwd();
-  const alias = options.projectAlias || "";
+  const alias = options.projectAlias || path.basename(path.resolve(repoPath)) || "project";
 
   let sinceDate: Date | undefined;
   let windowDescription = "All-time";

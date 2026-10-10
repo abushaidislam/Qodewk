@@ -5,7 +5,8 @@ import { AgentFootprint, GitAttributionContext } from "./types.js";
  * Handles Windows drive letters, backslashes, leading ./ and casing.
  */
 export function normalizeFilePath(filePath: string, repoPath?: string): string {
-  let p = filePath.replace(/\\/g, "/").trim();
+  let p = filePath.trim().replace(/^["']|["']$/g, "").replace(/\\/g, "/");
+  p = p.replace(/\/+/g, "/");
 
   // Strip file:// prefix if present
   p = p.replace(/^file:\/\/\/?/, "");
