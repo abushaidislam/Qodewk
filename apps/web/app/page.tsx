@@ -21,43 +21,43 @@ export default async function HomePage() {
 						    keep next/image from resampling the grain away. */}
 						<div className="hidden lg:flex justify-center h-full absolute items-center left-1/2 -translate-x-1/2 w-full pointer-events-auto select-none animate-logo-reveal z-[1]">
 							{/* Dark mode logos */}
-							<div className="group max-w-[300px] w-full max-h-[200px] -mt-[30%] hidden dark:flex justify-center opacity-100">
+							<div className="group relative w-[240px] h-[230px] -mt-[30%] hidden dark:flex justify-center items-center opacity-100">
 								<Image
 									src="/left-3d-logo.webp"
 									alt=""
-									width={311}
-									height={400}
-									className="h-auto max-h-[200px] object-contain z-10 animate-logo-snap-left transition-transform duration-300 ease-out group-hover:-translate-x-3 group-hover:-rotate-5"
+									width={870}
+									height={832}
+									className="absolute inset-0 w-full h-full object-contain z-10 animate-logo-snap-left transition-transform duration-300 ease-out group-hover:-translate-x-3 group-hover:-rotate-5 pointer-events-none"
 									unoptimized
 									draggable={false}
 								/>
 								<Image
 									src="/right-3d-logo.webp"
 									alt=""
-									width={321}
-									height={400}
-									className="h-auto object-contain -ml-28 -mt-3 max-h-[200px] animate-logo-snap-right transition-transform duration-300 ease-out group-hover:translate-x-3 group-hover:rotate-5"
+									width={870}
+									height={832}
+									className="absolute inset-0 w-full h-full object-contain z-10 animate-logo-snap-right transition-transform duration-300 ease-out group-hover:translate-x-3 group-hover:rotate-5 pointer-events-none"
 									unoptimized
 									draggable={false}
 								/>
 							</div>
 							{/* Light mode logos */}
-							<div className="group max-w-[300px] w-full max-h-[200px] -mt-[30%] flex dark:hidden justify-center opacity-100">
+							<div className="group relative w-[240px] h-[230px] -mt-[30%] flex dark:hidden justify-center items-center opacity-100">
 								<Image
 									src="/left-3d-logo-light.webp"
 									alt=""
-									width={311}
-									height={400}
-									className="h-auto max-h-[200px] object-contain z-10 animate-logo-snap-left transition-transform duration-300 ease-out group-hover:-translate-x-3 group-hover:-rotate-5"
+									width={870}
+									height={832}
+									className="absolute inset-0 w-full h-full object-contain z-10 animate-logo-snap-left transition-transform duration-300 ease-out group-hover:-translate-x-3 group-hover:-rotate-5 pointer-events-none"
 									unoptimized
 									draggable={false}
 								/>
 								<Image
 									src="/right-3d-logo-light.webp"
 									alt=""
-									width={321}
-									height={400}
-									className="h-auto object-contain -ml-28 -mt-3 max-h-[200px] animate-logo-snap-right transition-transform duration-300 ease-out group-hover:translate-x-3 group-hover:rotate-5"
+									width={870}
+									height={832}
+									className="absolute inset-0 w-full h-full object-contain z-10 animate-logo-snap-right transition-transform duration-300 ease-out group-hover:translate-x-3 group-hover:rotate-5 pointer-events-none"
 									unoptimized
 									draggable={false}
 								/>
