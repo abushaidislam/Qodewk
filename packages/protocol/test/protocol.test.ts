@@ -37,6 +37,32 @@ describe("@qodewk/protocol", () => {
       expect(parsed.confidence).toBe(0.95);
     });
 
+    it("validates an enriched provider session with sessionId, turnsCount, and createdAt", () => {
+      const chatSession = {
+        sessionId: "e9e65f13-4a66-410c-97e7-5f0cdddc6de2",
+        provider: "antigravity",
+        model: "gemini-3-8-flash",
+        task: "Redesigning Agent Chat Architecture",
+        filesTouched: ["packages/protocol/src/index.ts"],
+        turnsCount: 74,
+        tokens: {
+          input: 42000,
+          output: 3500,
+          cached: 28000
+        },
+        cost: 0.0056,
+        confidence: 0.95,
+        mode: "verified" as const,
+        createdAt: "2026-10-10T15:24:47.000Z"
+      };
+
+      const parsed = ProviderSessionSchema.parse(chatSession);
+      expect(parsed.sessionId).toBe("e9e65f13-4a66-410c-97e7-5f0cdddc6de2");
+      expect(parsed.turnsCount).toBe(74);
+      expect(parsed.createdAt).toBe("2026-10-10T15:24:47.000Z");
+      expect(parsed.model).toBe("gemini-3-8-flash");
+    });
+
     it("defaults token values when omitted or defaults applied", () => {
       const minSession = {
         provider: "openai",
