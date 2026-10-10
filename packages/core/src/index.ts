@@ -96,14 +96,17 @@ export async function generateReceipt(options: GenerateReceiptOptions = {}): Pro
     (harvestResult.tasks.length > 0 ? harvestResult.tasks[0] : undefined);
 
   const sessions: ProviderSession[] = harvestResult.footprints.map((fp) => ({
+    sessionId: fp.sessionId,
     provider: fp.platform,
     model: fp.model,
     task: fp.taskTitle,
     filesTouched: fp.filesEdited,
+    turnsCount: fp.stepsCount,
     tokens: fp.tokens,
     cost: fp.cost,
     confidence: fp.confidence,
-    mode: fp.mode
+    mode: fp.mode,
+    createdAt: fp.timestamp
   }));
 
   const aiWrittenRatio = computeAiWrittenRatio(
