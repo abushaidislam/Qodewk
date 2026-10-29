@@ -3,6 +3,18 @@
 All notable changes to the **Qodewk** monorepo are documented in this file.  
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### 🛡️ Fixed & Changed
+
+- **Immutable Public Receipts:** `/api/receipts` no longer lets a second publish overwrite an existing receipt ID in the memory cache. Duplicates return `409` with the existing URL, Supabase inserts no longer request merge-duplicates, and the cache is written only after the durable insert succeeds.
+- **50 KB Body Cap Enforced on Actual Bytes:** The cap now counts the bytes received, so chunked requests and understated `Content-Length` headers can no longer bypass it. Malformed JSON returns `400` instead of `500`.
+- **Spoof-Resistant, Shared Rate Limiting:** Client IPs come from Vercel-set `x-real-ip` / `x-forwarded-for`, not the client-controllable `cf-connecting-ip`. The limit is shared across serverless instances through Upstash Redis when `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` are set, with the in-memory limiter as fallback.
+- **No Internal Error Leakage:** `500` and `503` responses return generic messages, and details go to server logs.
+- **Supabase RLS Lockdown:** Removed the `"Allow service role insert"` policy, which applied to every role and let anon-key holders read, modify or delete all receipts. Re-run `supabase/schema.sql` on existing databases. Publishing requires `SUPABASE_SERVICE_ROLE_KEY`.
+- **CLI Re-Share Handling:** `qodewk share` and the menu's share option report "Already published" with the existing URL on `409`, keeping the original local claim token.
+- **Lockfile Drift Caught in CI:** Synced `pnpm-lock.yaml` with the root `package.json`, and CI now installs with `--frozen-lockfile`.
+
 ## [0.11.1] — 2026-10-11
 
 ### 🛡️ Fixed & Changed

@@ -1,30 +1,70 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ReceiptV1Schema } from "@qodewk/protocol";
 import * as crypto from "node:crypto";
-import { saveReceiptToStore, getReceiptFromStore } from "@/lib/storage";
-import { checkRateLimit } from "@/lib/ratelimit";
+import { saveReceiptToStore, getReceiptFromStore, ReceiptConflictError } from "@/lib/storage";
+import { checkDistributedRateLimit } from "@/lib/ratelimit";
+import { getClientIP } from "@/lib/ai-chat/rate-limit";
 
-function getClientIp(req: NextRequest): string {
-  const cfIp = req.headers.get("cf-connecting-ip");
-  if (cfIp) return cfIp.trim();
+const MAX_BODY_BYTES = 51200; // 50 KB
 
-  const realIp = req.headers.get("x-real-ip");
-  if (realIp) return realIp.trim();
+/**
+ * Reads the request body while counting actual bytes, so the cap also holds for
+ * chunked requests and requests with a missing or understated `Content-Length`.
+ * Returns `null` as soon as the body exceeds `maxBytes`.
+ */
+async function readBodyWithLimit(req: NextRequest, maxBytes: number): Promise<string | null> {
+  if (!req.body) return "";
 
-  const forwarded = req.headers.get("x-forwarded-for");
-  if (forwarded) {
-    const parts = forwarded.split(",");
-    if (parts[0]) return parts[0].trim();
+  const reader = req.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let received = 0;
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    received += value.byteLength;
+    if (received > maxBytes) {
+      await reader.cancel().catch(() => {});
+      return null;
+    }
+    chunks.push(value);
   }
 
-  return "127.0.0.1";
+  const bytes = new Uint8Array(received);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return new TextDecoder().decode(bytes);
+}
+
+function resolveBaseUrl(req: NextRequest): string {
+  const reqHost = req.headers?.get ? (req.headers.get("x-forwarded-host") || req.headers.get("host")) : null;
+  const reqProto = req.headers?.get ? (req.headers.get("x-forwarded-proto") || "https") : "https";
+  const detectedOrigin = reqHost ? `${reqProto}://${reqHost}` : null;
+
+  return (
+    process.env.NEXT_PUBLIC_APP_URL ||
+    process.env.QODEWK_APP_URL ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
+    detectedOrigin ||
+    "http://localhost:3000"
+  ).replace(/\/$/, "");
+}
+
+function payloadTooLarge() {
+  return NextResponse.json(
+    { error: "Payload exceeds 50 KB maximum request limit." },
+    { status: 413 }
+  );
 }
 
 export async function POST(req: NextRequest) {
   try {
     // 1. Rate limiting & abuse protection (max 30 req/min per IP)
-    const clientIp = getClientIp(req);
-    const rateLimit = checkRateLimit(clientIp);
+    const clientIp = getClientIP(req);
+    const rateLimit = await checkDistributedRateLimit(clientIp);
 
     if (!rateLimit.allowed) {
       const retryAfter = Math.max(rateLimit.reset - Math.ceil(Date.now() / 1000), 1);
@@ -42,16 +82,24 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 2. Enforce 50 KB payload cap
+    // 2. Enforce 50 KB payload cap: reject early on a declared oversize body,
+    //    then count the bytes actually received
     const contentLength = Number(req.headers.get("content-length") || 0);
-    if (contentLength > 51200) { // 50 KB in bytes
-      return NextResponse.json(
-        { error: "Payload exceeds 50 KB maximum request limit." },
-        { status: 413 }
-      );
+    if (contentLength > MAX_BODY_BYTES) {
+      return payloadTooLarge();
     }
 
-    const body = await req.json();
+    const rawBody = await readBodyWithLimit(req, MAX_BODY_BYTES);
+    if (rawBody === null) {
+      return payloadTooLarge();
+    }
+
+    let body: unknown;
+    try {
+      body = JSON.parse(rawBody);
+    } catch {
+      return NextResponse.json({ error: "Request body is not valid JSON" }, { status: 400 });
+    }
 
     // 3. Validate against canonical ReceiptV1Schema
     const parsed = ReceiptV1Schema.safeParse(body);
@@ -63,38 +111,38 @@ export async function POST(req: NextRequest) {
     }
 
     const receipt = parsed.data;
+    const publicUrl = `${resolveBaseUrl(req)}/r/${receipt.receipt.id}`;
     const claimToken = `clm_${crypto.randomBytes(16).toString("hex")}`;
     const claimTokenHash = crypto.createHash("sha256").update(claimToken).digest("hex");
 
-    // 4. Store in persistence layer
+    // 4. Store in persistence layer. Published receipts are immutable.
     try {
       await saveReceiptToStore(receipt, claimTokenHash);
-    } catch (storageErr: any) {
+    } catch (storageErr: unknown) {
+      if (storageErr instanceof ReceiptConflictError) {
+        return NextResponse.json(
+          {
+            error: "Receipt already published",
+            publicId: receipt.receipt.id,
+            url: publicUrl
+          },
+          { status: 409 }
+        );
+      }
+
       const isProduction = process.env.NODE_ENV === "production" || process.env.VERCEL_ENV === "production";
       if (isProduction) {
+        console.error("[Qodewk Receipts] Durable storage failure:", storageErr);
         return NextResponse.json(
           {
             error: "Durable storage failure",
-            message: storageErr.message
+            message: "Receipt storage is temporarily unavailable. Please try again later."
           },
           { status: 503 }
         );
       }
       throw storageErr;
     }
-
-    const reqHost = req.headers?.get ? (req.headers.get("x-forwarded-host") || req.headers.get("host")) : null;
-    const reqProto = req.headers?.get ? (req.headers.get("x-forwarded-proto") || "https") : "https";
-    const detectedOrigin = reqHost ? `${reqProto}://${reqHost}` : null;
-
-    const baseUrl = (
-      process.env.NEXT_PUBLIC_APP_URL ||
-      process.env.QODEWK_APP_URL ||
-      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
-      detectedOrigin ||
-      "http://localhost:3000"
-    ).replace(/\/$/, "");
-    const publicUrl = `${baseUrl}/r/${receipt.receipt.id}`;
 
     return NextResponse.json(
       {
@@ -110,9 +158,10 @@ export async function POST(req: NextRequest) {
         }
       }
     );
-  } catch (err: any) {
+  } catch (err: unknown) {
+    console.error("[Qodewk Receipts] Unhandled error:", err);
     return NextResponse.json(
-      { error: "Internal server error", message: err.message },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }

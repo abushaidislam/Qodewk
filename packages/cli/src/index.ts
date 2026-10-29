@@ -295,6 +295,24 @@ program
           body
         });
 
+        // Receipt ids are content hashes, so re-sharing the same shipment hits the existing
+        // receipt. Leave the local record untouched: it holds the original claim token.
+        if (response.status === 409) {
+          const existing = (await response.json().catch(() => ({}))) as { url?: string };
+          console.log("");
+          console.log(pc.green("  Already published."));
+          if (existing.url) {
+            console.log(`  ${pc.dim("Public URL:")} ${pc.underline(pc.cyan(existing.url))}`);
+          }
+          console.log(pc.dim("  Your claim token from the first publish is in ~/.qodewk/state.db."));
+          console.log("");
+          await renderTerminalReceipt(sanitized, existing.url);
+          if (options.json) {
+            console.log(JSON.stringify({ url: existing.url ?? null, alreadyPublished: true, receipt: sanitized }, null, 2));
+          }
+          return;
+        }
+
         if (!response.ok) {
           const errText = await response.text().catch(() => "");
           throw new Error(`API responded with status ${response.status}${errText ? `: ${errText.slice(0, 200)}` : ""}`);

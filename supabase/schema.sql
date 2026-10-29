@@ -34,9 +34,13 @@ CREATE INDEX IF NOT EXISTS idx_receipts_project_alias ON public.receipts (projec
 ALTER TABLE public.receipts ENABLE ROW LEVEL SECURITY;
 
 -- Allow public read access to receipts marked as public
+DROP POLICY IF EXISTS "Allow public read access" ON public.receipts;
 CREATE POLICY "Allow public read access" ON public.receipts
     FOR SELECT USING (is_public = true);
 
--- Allow service role full access (used by serverless API)
-CREATE POLICY "Allow service role insert" ON public.receipts
-    FOR ALL USING (true);
+-- Writes are reserved for the serverless API, which uses the service role key.
+-- The service role bypasses RLS, so it needs no policy. An earlier version of this
+-- file created "Allow service role insert" FOR ALL USING (true) without a role,
+-- which let anyone holding the anon key read, modify or delete every receipt.
+-- Drop it on existing databases by re-running this file.
+DROP POLICY IF EXISTS "Allow service role insert" ON public.receipts;

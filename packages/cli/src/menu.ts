@@ -434,6 +434,20 @@ export async function publishReceiptToCloud(
       body
     });
 
+    // Re-sharing the same shipment hits the existing receipt (ids are content hashes).
+    // Leave the local record untouched: it holds the original claim token.
+    if (response.status === 409) {
+      const existing = (await response.json().catch(() => ({}))) as { url?: string };
+      console.log("");
+      console.log(colors.green("  [✓] Already published."));
+      if (existing.url) {
+        console.log(`  ${pc.dim("Public URL:")}  ${pc.underline(pc.cyan(existing.url))}`);
+      }
+      console.log(pc.dim("  (Your claim token from the first publish is in ~/.qodewk/state.db)\n"));
+      await renderTerminalReceipt(sanitized, existing.url);
+      return null;
+    }
+
     if (!response.ok) {
       const errText = await response.text().catch(() => "");
       if (response.status === 503) {

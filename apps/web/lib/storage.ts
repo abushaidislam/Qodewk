@@ -23,17 +23,35 @@ export function isDurableStoreConfigured(): boolean {
 }
 
 /**
+ * Thrown when a receipt with the same public ID already exists.
+ * Published receipts are immutable: they are never overwritten.
+ */
+export class ReceiptConflictError extends Error {
+  constructor(public readonly publicId: string) {
+    super(`Receipt ${publicId} already exists`);
+    this.name = "ReceiptConflictError";
+  }
+}
+
+/**
  * Saves a receipt either to Supabase (if configured) or in-memory store.
  * In production, durable storage is strictly required to prevent serverless cold-start receipt loss.
  * Uses zero-native fetch to remain 100% compatible with Edge & Serverless runtimes.
+ *
+ * Throws `ReceiptConflictError` if the public ID is already taken. The memory cache is only
+ * written after the durable insert succeeds, so a rejected insert can never shadow the stored receipt.
  */
 export async function saveReceiptToStore(receipt: ReceiptV1, claimTokenHash: string): Promise<void> {
-  // Always update memory store
-  memoryStore.set(receipt.receipt.id, {
+  const publicId = receipt.receipt.id;
+  if (memoryStore.has(publicId)) {
+    throw new ReceiptConflictError(publicId);
+  }
+
+  const cacheEntry = {
     receipt,
     claimTokenHash,
     createdAt: receipt.receipt.createdAt || new Date().toISOString()
-  });
+  };
 
   const isProduction = process.env.NODE_ENV === "production" || process.env.VERCEL_ENV === "production";
   const supabaseUrl = process.env.SUPABASE_URL;
@@ -52,8 +70,7 @@ export async function saveReceiptToStore(receipt: ReceiptV1, claimTokenHash: str
         headers: {
           "apikey": supabaseKey,
           "Authorization": `Bearer ${supabaseKey}`,
-          "Content-Type": "application/json",
-          "Prefer": "resolution=merge-duplicates"
+          "Content-Type": "application/json"
         },
         body: JSON.stringify({
           public_id: receipt.receipt.id,
@@ -74,6 +91,11 @@ export async function saveReceiptToStore(receipt: ReceiptV1, claimTokenHash: str
         })
       });
 
+      // `public_id` is UNIQUE: PostgREST answers 409 when it is already taken
+      if (res.status === 409) {
+        throw new ReceiptConflictError(publicId);
+      }
+
       if (!res.ok) {
         const errorText = await res.text().catch(() => "");
         const errMsg = `Supabase insert failed with status ${res.status}: ${errorText}`;
@@ -83,12 +105,14 @@ export async function saveReceiptToStore(receipt: ReceiptV1, claimTokenHash: str
         console.warn(`[Qodewk Storage] ${errMsg}`);
       }
     } catch (err: any) {
-      if (isProduction) {
+      if (isProduction || err instanceof ReceiptConflictError) {
         throw err;
       }
       console.warn(`[Qodewk Storage] Supabase sync failed: ${err.message}`);
     }
   }
+
+  memoryStore.set(publicId, cacheEntry);
 }
 
 /**
