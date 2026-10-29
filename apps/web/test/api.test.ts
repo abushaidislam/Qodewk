@@ -106,16 +106,20 @@ describe("/api/receipts API Route Handlers (`api.test.ts`)", () => {
       const uniqueIp = "192.168.100.42";
       const payloadStr = JSON.stringify(validReceipt);
 
-      // Consume up to limit (30 requests)
+      // Consume up to limit (30 requests); each publishes a distinct receipt
       for (let i = 0; i < 30; i++) {
+        const body = JSON.stringify({
+          ...validReceipt,
+          receipt: { ...validReceipt.receipt, id: `rec_ratelimit_${i}` }
+        });
         const req = new NextRequest(new URL("http://localhost:3000/api/receipts"), {
           method: "POST",
           headers: {
             "content-type": "application/json",
-            "content-length": String(payloadStr.length),
+            "content-length": String(body.length),
             "x-forwarded-for": uniqueIp
           },
-          body: payloadStr
+          body
         });
         const res = await POST(req);
         expect(res.status).toBe(200);
@@ -150,7 +154,10 @@ describe("/api/receipts API Route Handlers (`api.test.ts`)", () => {
         delete process.env.SUPABASE_SERVICE_ROLE_KEY;
         delete process.env.SUPABASE_ANON_KEY;
 
-        const payloadStr = JSON.stringify(validReceipt);
+        const payloadStr = JSON.stringify({
+          ...validReceipt,
+          receipt: { ...validReceipt.receipt, id: "rec_durable_unconfigured" }
+        });
         const req = new NextRequest(new URL("http://localhost:3000/api/receipts"), {
           method: "POST",
           headers: {
@@ -165,7 +172,9 @@ describe("/api/receipts API Route Handlers (`api.test.ts`)", () => {
         expect(res.status).toBe(503);
         const json = await res.json();
         expect(json.error).toBe("Durable storage failure");
-        expect(json.message).toContain("Durable storage is required in production");
+        // Internal configuration details stay in server logs
+        expect(json.message).not.toContain("SUPABASE");
+        expect(json.message).toContain("temporarily unavailable");
       } finally {
         (process.env as any).NODE_ENV = prevEnv;
         if (prevSupabaseUrl) process.env.SUPABASE_URL = prevSupabaseUrl;
@@ -190,6 +199,108 @@ describe("/api/receipts API Route Handlers (`api.test.ts`)", () => {
         if (prev) process.env.NEXT_PUBLIC_APP_URL = prev;
         else delete process.env.NEXT_PUBLIC_APP_URL;
       }
+    });
+
+    it("enforces the 50 KB cap on bodies sent without a Content-Length header", async () => {
+      const oversized = JSON.stringify({
+        ...validReceipt,
+        receipt: { ...validReceipt.receipt, id: "rec_chunked_oversize" },
+        padding: "x".repeat(60_000)
+      });
+      const req = new NextRequest(new URL("http://localhost:3000/api/receipts"), {
+        method: "POST",
+        headers: { "content-type": "application/json", "x-forwarded-for": "10.1.0.1" },
+        body: oversized
+      });
+      expect(req.headers.get("content-length")).toBeNull();
+
+      const res = await POST(req);
+      expect(res.status).toBe(413);
+    });
+
+    it("enforces the 50 KB cap when Content-Length understates the body size", async () => {
+      const oversized = JSON.stringify({
+        ...validReceipt,
+        receipt: { ...validReceipt.receipt, id: "rec_understated_oversize" },
+        padding: "x".repeat(60_000)
+      });
+      const req = new NextRequest(new URL("http://localhost:3000/api/receipts"), {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "content-length": "100",
+          "x-forwarded-for": "10.1.0.2"
+        },
+        body: oversized
+      });
+
+      const res = await POST(req);
+      expect(res.status).toBe(413);
+    });
+
+    it("returns 400 for a body that is not valid JSON", async () => {
+      const req = new NextRequest(new URL("http://localhost:3000/api/receipts"), {
+        method: "POST",
+        headers: { "content-type": "application/json", "x-forwarded-for": "10.1.0.3" },
+        body: "{not json"
+      });
+
+      const res = await POST(req);
+      expect(res.status).toBe(400);
+      const json = await res.json();
+      expect(json.error).toBe("Request body is not valid JSON");
+    });
+
+    it("never overwrites a published receipt and returns 409 with its URL", async () => {
+      const id = "rec_immutable_original";
+      const original = { ...validReceipt, receipt: { ...validReceipt.receipt, id } };
+      const forged = {
+        ...original,
+        repository: { ...original.repository, projectAlias: "forged-project" }
+      };
+      const post = (receipt: ReceiptV1) =>
+        POST(
+          new NextRequest(new URL("http://localhost:3000/api/receipts"), {
+            method: "POST",
+            headers: { "content-type": "application/json", "x-forwarded-for": "10.1.0.4" },
+            body: JSON.stringify(receipt)
+          })
+        );
+
+      expect((await post(original)).status).toBe(200);
+
+      const conflict = await post(forged);
+      expect(conflict.status).toBe(409);
+      const json = await conflict.json();
+      expect(json.publicId).toBe(id);
+      expect(json.url).toContain(`/r/${id}`);
+      expect(json.claimToken).toBeUndefined();
+
+      const stored = await GET(
+        new NextRequest(new URL(`http://localhost:3000/api/receipts?id=${id}`))
+      );
+      const storedJson = await stored.json();
+      expect(storedJson.repository.projectAlias).toBe("qodewk-web-api");
+    });
+
+    it("keys rate limits on x-real-ip so a spoofed cf-connecting-ip cannot bypass them", async () => {
+      let lastStatus = 0;
+      for (let i = 0; i < 31; i++) {
+        const req = new NextRequest(new URL("http://localhost:3000/api/receipts"), {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            "x-real-ip": "203.0.113.7",
+            "cf-connecting-ip": `198.51.100.${i}`
+          },
+          body: JSON.stringify({
+            ...validReceipt,
+            receipt: { ...validReceipt.receipt, id: `rec_spoof_${i}` }
+          })
+        });
+        lastStatus = (await POST(req)).status;
+      }
+      expect(lastStatus).toBe(429);
     });
 
     it("dynamically resolves domain from x-forwarded-host header if env is not configured", async () => {

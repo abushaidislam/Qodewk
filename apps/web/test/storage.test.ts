@@ -2,7 +2,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import {
   saveReceiptToStore,
   getReceiptFromStore,
-  isDurableStoreConfigured
+  isDurableStoreConfigured,
+  ReceiptConflictError
 } from "../lib/storage.js";
 import { ReceiptV1 } from "@qodewk/protocol";
 
@@ -87,7 +88,8 @@ describe("Supabase Storage & Durable Persistence (`lib/storage.ts`)", () => {
     expect(options.method).toBe("POST");
     expect(options.headers["apikey"]).toBe("mock-service-key");
     expect(options.headers["Authorization"]).toBe("Bearer mock-service-key");
-    expect(options.headers["Prefer"]).toBe("resolution=merge-duplicates");
+    // Plain insert: an existing public_id must be rejected, never merged
+    expect(options.headers["Prefer"]).toBeUndefined();
 
     const parsedBody = JSON.parse(options.body);
     expect(parsedBody.public_id).toBe(mockReceipt.receipt.id);
@@ -131,5 +133,34 @@ describe("Supabase Storage & Durable Persistence (`lib/storage.ts`)", () => {
 
     const result = await getReceiptFromStore("rec_unreachable_id_000");
     expect(result).toBeNull();
+  });
+  it("throws ReceiptConflictError on a duplicate public_id without touching the memory cache", async () => {
+    process.env.SUPABASE_URL = "https://mock.supabase.co";
+    process.env.SUPABASE_SERVICE_ROLE_KEY = "mock-service-key";
+
+    const id = "rec_supabase_conflict_test";
+    (global.fetch as any).mockResolvedValue({
+      ok: false,
+      status: 409,
+      text: async () => "duplicate key value violates unique constraint"
+    });
+
+    const forged = { ...mockReceipt, receipt: { ...mockReceipt.receipt, id } };
+    await expect(saveReceiptToStore(forged, "forged_hash")).rejects.toBeInstanceOf(ReceiptConflictError);
+
+    // The rejected receipt must not be served from cache: the read goes to Supabase
+    (global.fetch as any).mockResolvedValue({ ok: true, json: async () => [] });
+    expect(await getReceiptFromStore(id)).toBeNull();
+  });
+
+  it("rejects a duplicate public_id already held in the memory cache", async () => {
+    const id = "rec_memory_conflict_test";
+    const receipt = { ...mockReceipt, receipt: { ...mockReceipt.receipt, id } };
+    await saveReceiptToStore(receipt, "first_hash");
+
+    await expect(
+      saveReceiptToStore({ ...receipt, mutation: { ...receipt.mutation, files: 999 } }, "second_hash")
+    ).rejects.toBeInstanceOf(ReceiptConflictError);
+    expect((await getReceiptFromStore(id))?.mutation.files).toBe(5);
   });
 });

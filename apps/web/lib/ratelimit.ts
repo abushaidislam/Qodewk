@@ -1,3 +1,6 @@
+import { Ratelimit } from "@upstash/ratelimit";
+import { Redis } from "@upstash/redis";
+
 export interface RateLimitResult {
   allowed: boolean;
   limit: number;
@@ -80,9 +83,63 @@ export function checkRateLimit(
   };
 }
 
+let _distributed: { limiter: Ratelimit; windowMs: number; maxRequests: number } | null = null;
+
+function getDistributedLimiter(windowMs: number, maxRequests: number): Ratelimit | null {
+  if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
+    return null;
+  }
+  if (!_distributed || _distributed.windowMs !== windowMs || _distributed.maxRequests !== maxRequests) {
+    _distributed = {
+      limiter: new Ratelimit({
+        redis: new Redis({
+          url: process.env.UPSTASH_REDIS_REST_URL,
+          token: process.env.UPSTASH_REDIS_REST_TOKEN
+        }),
+        limiter: Ratelimit.slidingWindow(maxRequests, `${windowMs} ms`),
+        prefix: "receipts"
+      }),
+      windowMs,
+      maxRequests
+    };
+  }
+  return _distributed.limiter;
+}
+
+/**
+ * Rate limiter shared across all serverless instances when Upstash Redis is configured
+ * (`UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN`). The in-memory limiter is
+ * per-instance only, so it is the fallback when Redis is unconfigured or unreachable.
+ */
+export async function checkDistributedRateLimit(
+  ip: string,
+  options: RateLimitOptions = {}
+): Promise<RateLimitResult> {
+  const windowMs = options.windowMs ?? 60_000;
+  const maxRequests = options.maxRequests ?? 30;
+  const limiter = getDistributedLimiter(windowMs, maxRequests);
+
+  if (limiter) {
+    try {
+      const result = await limiter.limit(ip);
+      return {
+        allowed: result.success,
+        limit: result.limit,
+        remaining: result.remaining,
+        reset: Math.ceil(result.reset / 1000)
+      };
+    } catch (err: any) {
+      console.warn(`[Qodewk RateLimit] Upstash unavailable, using in-memory limiter: ${err.message}`);
+    }
+  }
+
+  return checkRateLimit(ip, options);
+}
+
 /**
  * Utility for tests to reset state.
  */
 export function resetRateLimitStore(): void {
   rateLimitStore.clear();
+  _distributed = null;
 }
